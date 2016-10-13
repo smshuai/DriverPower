@@ -12,7 +12,7 @@ import warnings
 import sys
 import os
 
-sns.set(style="white")
+
 
 # helper functions
 def load_coverage(path_coverage):

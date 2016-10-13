@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import seaborn as sns
 from statsmodels.graphics.api import abline_plot
+sns.set(style="white")
 
 def plot_corr(pred, obs):
     ''' Plot predicted value vs. observed value
