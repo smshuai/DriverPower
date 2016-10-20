@@ -1,4 +1,4 @@
-import helperDP as dp 
+import helperDP as dp
 import os
 import sys
 import warnings
@@ -27,16 +27,16 @@ Steps:
 '''
 
 def get_param():
-    path_cg_test  = '/Users/shimin/Desktop/R/MutationRate/COAD-US/exon/cg.exon.collapsed.tsv'
-    path_ct_test  = '/Users/shimin/Desktop/R/MutationRate/COAD-US/exon/COAD-READ.ct.exon.tsv'
-    path_cv_test  = '/Users/shimin/Desktop/R/MutationRate/covar_csv/cv1226_exon.csv'
-    path_cg_train = '/Users/shimin/Desktop/R/MutationRate/COAD-US/lincRNA_prom/cg.strat.tsv'
-    path_ct_train = '/Users/shimin/Desktop/R/MutationRate/COAD-US/lincRNA_prom/CRC.ct.strat.tsv'
-    path_cv_train = '/Users/shimin/Desktop/R/MutationRate/covar_csv/cv1226_strat.csv'
+    path_cg_test  = './cg.exon.collapsed.tsv'
+    path_ct_test  = './CRC.ct.exon.tsv'
+    path_cv_test  = './cv1226_exon_new.csv'
+    path_cg_train = './cg.strat.tsv'
+    path_ct_train = './CRC.ct.strat.tsv'
+    path_cv_train = './cv1226_strat.csv'
     scaler_type   = 'robust'
     skip_fs       = False # bool, skip feature selection
     output_prefix = 'robust_strat'
-    output_dir    = './'
+    output_dir    = '../output/'
     save_data     = True # bool, save pre-processed data
     preprocessed  = False # whether or not the data is pre-processed (in .npy format)
     scale_first   = True # True: scale before filter; False: filter before scale
