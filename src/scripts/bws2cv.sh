@@ -33,9 +33,9 @@ do
 		id=${bw##*/}
 		array=(${id//./ })
 		id=${array[0]}
-		echo "Processing $id"
+        (>&2 echo "Processing $id")
 		# Run bigWigAverageOverBed
-		/u/sshuai/sshuai/final_consensus/src/bigWigAverageOverBed $bw $bed $tmp_dir/${id}.tab
+		bigWigAverageOverBed $bw $bed $tmp_dir/${id}.tab
 		# nrow in tab
 		b=($(wc -l $tmp_dir/${id}.tab))
 		nrow_tab=${b[0]}
@@ -61,4 +61,4 @@ cut -f4 $bed | sort -k1,1 >> $tmp_dir/binID
 paste $tmp_dir/binID $tmp_dir/*.tab > $out_path
 rm -r $tmp_dir
 
-
+exit 0

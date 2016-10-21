@@ -27,15 +27,15 @@ Steps:
 '''
 
 def get_param():
-    path_cg_test  = './cg.exon.collapsed.tsv'
-    path_ct_test  = './CRC.ct.exon.tsv'
-    path_cv_test  = './cv1226_exon_new.csv'
+    path_cg_test  = './cg.prom.collapsed.tsv'
+    path_ct_test  = './CRC.ct.prom.tsv'
+    path_cv_test  = './cv1226_prom.csv'
     path_cg_train = './cg.strat.tsv'
     path_ct_train = './CRC.ct.strat.tsv'
     path_cv_train = './cv1226_strat.csv'
     scaler_type   = 'robust'
     skip_fs       = False # bool, skip feature selection
-    output_prefix = 'robust_strat'
+    output_prefix = 'CRC_prom_robust_strat_scale_first'
     output_dir    = '../output/'
     save_data     = True # bool, save pre-processed data
     preprocessed  = False # whether or not the data is pre-processed (in .npy format)

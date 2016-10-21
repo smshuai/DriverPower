@@ -7,17 +7,18 @@ This script is used to generate coverage over bed for DriverPower.
     Usage:
         generate_cg.sh FASTA BED CALLABLE
     Args:
-        FASTA    - Genome FASTA file, use data/hs37d5.fa 
-        BED      - Input BED, use 4/5 columns
-        CALLABLE - Input callable regions, use data/blacklist_region/callable50p.bed
-        OUT_CG   - Output coverage table. 33 columns. 1st col is binID, 2-33 cols are context based coverage.
+        FASTA     - Genome FASTA file, use data/hs37d5.fa 
+        BED       - Input BED, use 4/5 columns
+        CALLABLE  - Input callable regions, use data/blacklist_region/callable50p.bed
+        OUT_CG    - Output coverage table. 33 columns. 1st col is binID, 2-33 cols are context based coverage.
+        OUT_TOTCG - Output total coverage table. 2 columns. col1 is binID, col2 is the sum of OUT_CG.
 generate_cg.sh
 
 FASTA=$1
 BED=$2
 CALLABLE=$3
 OUT_CG=$4
-
+OUT_TOTCG=$5
 # generate random tmp dir
 tmp_dir=./tmp.`cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32`
 if [[ ! -d $tmp_dir ]]
@@ -29,9 +30,10 @@ else
     rm -r $tmp_dir
     mkdir $tmp_dir
 fi
+(>&2 echo "INFO | save tmp files to `realpath $tmp_dir`")
 
 # filter by CALLABLE
-(>&2 echo "STEP: Intersecting BED with CALLABLE BED")
+(>&2 echo "STEP | Intersecting BED with CALLABLE BED")
 cat $BED | awk '{ sub(/^chr/, "", $0); print }' |
 bedtools intersect -a stdin -b $CALLABLE | # intersect CALLABLE
 awk '
@@ -53,22 +55,23 @@ BEGIN {
     print
 }' > $tmp_dir/bed.callable.bed
 # print extended number of covered bases
-awk 'BEGIN {SUM=0} {SUM += $3-$2} END{print "INFO: Extended number of covered bases = " SUM > "/dev/stderr"}' $tmp_dir/bed.callable.bed
+awk 'BEGIN {SUM=0} {SUM += $3-$2} END{print "INFO | Extended number of covered bases = " SUM > "/dev/stderr"}' $tmp_dir/bed.callable.bed
 
 # extract seq from the genome
-(>&2 echo "STEP: Extracting sequence for BED from genome FASTA")
+(>&2 echo "STEP | Extracting sequence for BED from genome FASTA")
 bedtools getfasta -fi $FASTA -bed $tmp_dir/bed.callable.bed -fo $tmp_dir/tmp.fa
 
 # run fa2cg.R
-(>&2 echo "STEP: Making coverage table from extracted sequences")
+(>&2 echo "STEP | Making coverage table from extracted sequences")
 fa2cg.R $tmp_dir/bed.callable.bed $tmp_dir/tmp.fa $tmp_dir/cg.tsv
 
 # collapse cg by binID
-(>&2 echo "STEP: Collapse coverage table by binID")
-pivot_cg.py $tmp_dir/cg.tsv $tmp_dir/res.tsv
+(>&2 echo "STEP | Collapse coverage table by binID")
+pivot_cg.py $tmp_dir/cg.tsv $BED $tmp_dir/res.tsv $tmp_dir/res.totcg.tsv
 
 mv $tmp_dir/res.tsv $OUT_CG
+mv $tmp_dir/res.totcg.tsv $OUT_TOTCG
 rm -r $tmp_dir
 
-(>&2 echo "STEP: Finished")
+(>&2 echo "STEP | Finished")
 exit 0
