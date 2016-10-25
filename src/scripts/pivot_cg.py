@@ -28,6 +28,7 @@ if nmiss > 0:
 assert np.array_equal(res.index, binID), 'ERROR | binID in cg table does not match binID in BED'
 
 res = res.astype(np.int)
+res.sort_index(inplace=True)
 res.to_csv(sys.argv[3], header=True, sep='\t')
 
 # Calculate total cg (effective size)

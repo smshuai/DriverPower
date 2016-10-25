@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
-<<bws2tbl.sh
+<<bws2cv.sh
 This script is used to avg over bed for a directory of bigwigs (*.bigwig or *.bigWig). Need bigWigAverageOverBed.
     Usage:
-        bws2tbl.sh BW_DIR BED OUT_PATH
-bws2tbl.sh
+        bws2cv.sh BW_DIR BED OUT_PATH
+bws2cv.sh
 
 bw_dir=$1
 bed=$2
-bws="$bw_dir/*.bigwig $bw_dir/*.bigWig"
 out_path=$3
+
+if [[ $bw_dir == "" ]] # no args
+then
+    echo "Usage: bws2cv.sh BW_DIR BED OUT_PATH"
+    exit 1
+fi
+
+
+bws="$bw_dir/*.bigwig $bw_dir/*.bigWig"
+
 # generate random tmp dir
 tmp_dir=$bw_dir/tmp.`cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32`
 if [[ ! -d $tmp_dir ]]
