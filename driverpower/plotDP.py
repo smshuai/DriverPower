@@ -31,15 +31,18 @@ def bar_plot(heights, labels):
     ax.set_xticklabels(labels, rotation='vertical')
     return fig, ax
 
-def pval_qqplot(pvals, labels=None):
+def pval_qqplot(pvals, labels=None, ax=None):
     ''' Plot a pval qqplot and label top points when provided.
     Args:
         pvals - List or np.array of pvals
         labels - List or np.array of top point labels. Default None.
     '''
     obs_pval = -np.log10(np.sort(pvals))
+    # solve p=0 problems by set -logp to max(-logp)+5
+    obs_pval[np.isinf(obs_pval)] = np.max(obs_pval[~np.isinf(obs_pval)])+5
     exp_pval = -np.log10( np.arange(1, len(obs_pval)+1)/float(len(obs_pval+1)))
-    fig, ax = plt.subplots()
+    if not ax:
+        fig, ax = plt.subplots()
     ax.scatter(exp_pval, obs_pval)
     abline_plot(ax=ax, slope=1, intercept=0)
     ax.set_ylabel('Observed p-values')
@@ -48,4 +51,4 @@ def pval_qqplot(pvals, labels=None):
         ntop = len(labels)
         for g, x, y in zip(labels, exp_pval[:ntop], obs_pval[:ntop]):
             ax.annotate(g, xy=(x+0.1, y+0.1))
-    return fig, ax
+    return ax
