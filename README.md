@@ -16,10 +16,10 @@ Mutation count table should be a tab-delimited text file (.tsv) **with** header.
 
 Example:
 
-binID | sid | categ | ct
------ | --- | ----- | --
-KRAS | DO49481 | ACC>A | 1
-KRAS | DO51525 | other | 1
+| binID | sid     | categ | ct |
+|-------|---------|-------|----|
+| KRAS  | DO49481 | ACC>A | 1  |
+| KRAS  | DO51525 | other | 1  |
 
 Note that 'ACC>A' in the first line means ACC to AAC point mutation.
 
@@ -29,10 +29,10 @@ Feature table is also a tab-delimited text file **with** header. The first colum
 
 Example:
 
-binID | GERP | E128-H3K27ac | ...
------ | --- | ----- | --
-KRAS | 4.80287 | 1.19475 | ...
-TP53 | 3.56563 | 2.53435 | ...
+| binID | GERP    | E128-H3K27ac | ... |
+|-------|---------|--------------|-----|
+| KRAS  | 4.80287 | 1.19475      | ... |
+| KRAS  | 3.56563 | 2.53435      | ... |
 
 ### Effective length table
 
@@ -40,8 +40,8 @@ Effective length table is also a tab-delimited text file **with** header. The fi
 
 Example:
 
-binID | ACA | ACC | ...
------ | --- | --- | --
-KRAS | 37 | 12 | ...
-TP53 | 47 | 42 | ...
+| binID | ACA | ACC | ... |
+|-------|-----|-----|-----|
+| KRAS  | 37  | 12  | ... |
+| TP53  | 47  | 42  | ... |
 
