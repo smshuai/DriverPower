@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 ''' Expand a bed, like from genes to exons
 Usage:
     python expand_bed.py < in.bed > out.bed

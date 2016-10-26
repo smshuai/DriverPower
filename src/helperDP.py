@@ -30,30 +30,35 @@ def load_coverage(path_coverage):
 def load_covar(path_covar):
     ''' Load pre-processed covar. table. Return a pd.DF with binID as the key
     '''
-    cv = pd.read_csv(path_covar)
+    cv = pd.read_csv(path_covar, sep='\t', header=0)
     cv = cv.set_index('binID')
     cv.sort_index(inplace=True)
+    na_count = cv.isnull().sum()
+    print(na_count[na_count>0])
+    cv.fillna(0, inplace=True)
     return cv
 
 def load_count(path_count):
-    ''' Load mutatin count data. 5 cols TSV file ['binID', 'sid', 'context', 'to', 'ct']
+    ''' Load mutatin count data. 4 cols TSV file ['binID', 'sid', 'categ', 'ct']
     '''
-    ct = pd.read_csv(path_count, sep='\t', header=None, names=['binID', 'sid', 'context', 'to', 'ct'])
+    ct = pd.read_csv(path_count, sep='\t', header=0)
+    ct.sort_values('binID', inplace=True)
     return ct
 
 def load_all(path_cg, path_ct, path_cv):
     cg = load_coverage(path_cg)
-    ct = load_count(path_ct)
-    cv = load_covar(path_cv)
-    assert np.array_equal(cv.index, cg.index), 'CV and CG binIDs do not match'
-    print('- CT: ', ct.shape)
     print('- CG: ', cg.shape)
+    ct = load_count(path_ct)
+    print('- CT: ', ct.shape)
+    cv = load_covar(path_cv)
     print('- CV: ', cv.shape)
+    assert np.array_equal(cv.index, cg.index), 'CV and CG binIDs do not match'
     return (cg, ct, cv)
 
 def get_response(ct, cg):
     # Response - Test data
     ct_byb = ct.pivot_table(values='ct', index='binID', aggfunc=sum) # count by binID
+    ct_byb.sort_index(inplace=True)
     cg_sum = cg.sum(axis=1).copy()
     cg_sum.name = 'cg'
     ct_byb = pd.concat([ct_byb, cg_sum], axis=1)

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import helperDP as dp
 import os
 import sys
@@ -7,6 +8,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 import scipy as sp
+from scipy.stats import binom_test
 
 import sklearn
 from sklearn.preprocessing import StandardScaler, RobustScaler
@@ -27,19 +29,19 @@ Steps:
 '''
 
 def get_param():
-    path_cg_test  = './cg.prom.collapsed.tsv'
-    path_ct_test  = './CRC.ct.prom.tsv'
-    path_cv_test  = './cv1226_prom.csv'
-    path_cg_train = './cg.strat.tsv'
-    path_ct_train = './CRC.ct.strat.tsv'
-    path_cv_train = './cv1226_strat.csv'
+    path_cg_test  = './coverage/gc19.promDomain.bed.cg'
+    path_ct_test  = './data/CRC/promDomain/CRC.promDomain.ct.tsv'
+    path_cv_test  = './covariates/combined/cv.promDomain.tsv'
+    path_cg_train = './coverage/strat.exon.bed.cg'
+    path_ct_train = './data/CRC/strat/CRC.strat.ct.tsv'
+    path_cv_train = './covariates/combined/cv.strat.tsv'
     scaler_type   = 'robust'
-    skip_fs       = False # bool, skip feature selection
-    output_prefix = 'CRC_prom_robust_strat_scale_first'
-    output_dir    = '../output/'
+    skip_fs       = True # bool, skip feature selection
+    output_prefix = 'CRC_promDomain_robust'
+    output_dir    = './output/'
     save_data     = True # bool, save pre-processed data
     preprocessed  = False # whether or not the data is pre-processed (in .npy format)
-    scale_first   = True # True: scale before filter; False: filter before scale
+    scale_first   = False # True: scale before filter; False: filter before scale
     assert scaler_type in ['standard', 'robust'], 'Scaler must be chosen from "standard" or "robust"'
 
     # print params
@@ -110,7 +112,7 @@ def feature_score(fscore, fnames, cutoff):
     fset = fnames[fidx]
     return fset, fidx
 
-def read_raw_data(path_cg_test, path_ct_test, path_cv_test, 
+def read_raw_data(path_cg_test, path_ct_test, path_cv_test,
     path_cg_train, path_ct_train, path_cv_train):
     ''' Read cg ct and cv data from TSV or CSV files.
     '''
@@ -119,11 +121,25 @@ def read_raw_data(path_cg_test, path_ct_test, path_cv_test,
     print('Training Data')
     cg_train, ct_train, cv_train = dp.load_all(path_cg=path_cg_train, path_ct=path_ct_train, path_cv=path_cv_train)
     assert np.array_equal(cv_test.columns, cv_train.columns), 'Feature names do not match in Training and Testing data'
-    fnames = cv_test.columns.values   
+    fnames = cv_test.columns.values
+    ##
+    # Remove strat bins that overlap exons!
+    ##
+    blackbinID = np.genfromtxt('/u/sshuai/current/annotation/strat.exon.blacklist.txt', dtype=np.str)
+    keep_cv = np.logical_not(cv_train.index.isin(blackbinID))
+    keep_cg = np.logical_not(cg_train.index.isin(blackbinID))
+    keep_ct = np.logical_not(ct_train.binID.isin(blackbinID))
+    cv_train = cv_train[keep_cv]
+    cg_train = cg_train[keep_cg]
+    ct_train = ct_train[keep_ct]
+    print('After blacklist train binID:')
+    print('CV ', cv_train.shape)
+    print('CG ', cg_train.shape)
+    print('CT ', ct_train.shape)
     return (cg_test, ct_test, cv_test.as_matrix(),
         cg_train, ct_train, cv_train.as_matrix(), fnames)
 
-def read_npy_data(path_X_train, path_X_test, path_y_train, 
+def read_npy_data(path_X_train, path_X_test, path_y_train,
     path_y_test, path_gnames, path_fnames, path_grecur):
     ''' Read preprocessed X and y_binom .npy files.
     '''
@@ -164,7 +180,7 @@ def filter(ct_train, ct_test, cg_train, cg_test,
     print('Test data')
     keep_test, grecur  = dp.get_filter(ct=ct_test, cg=cg_test, return_recur=True)
     print('Train data')
-    keep_train = dp.get_filter(ct=ct_train, cg=cg_train)    
+    keep_train = dp.get_filter(ct=ct_train, cg=cg_train)
     # apply filter
     X_test,  ybinom_test  = dp.apply_filter(keep_test,  [Xtest,  ybinom_test])
     X_train, ybinom_train = dp.apply_filter(keep_train, [Xtrain, ybinom_train])
@@ -172,15 +188,15 @@ def filter(ct_train, ct_test, cg_train, cg_test,
     return (X_test, ybinom_test, X_train, ybinom_train, gnames, grecur)
 
 def main():
-    print('DriverPower V0.1')
+    print('DriverPower V0.2')
     start = datetime.now()
     print('Start at {}'.format(start))
     ##
     ## Get parameters
     ##
     print('='*5, 'Obtaining Parameters', '='*5)
-    (path_cg_test, path_ct_test, path_cv_test, path_cg_train, 
-        path_ct_train, path_cv_train, scaler_type, skip_fs, 
+    (path_cg_test, path_ct_test, path_cv_test, path_cg_train,
+        path_ct_train, path_cv_train, scaler_type, skip_fs,
         output_prefix, output_dir, save_data, preprocessed, scale_first) = get_param()
     ##
     ## Read data
@@ -191,8 +207,8 @@ def main():
             gnames, fnames, grecur) = read_npy_data(path_X_train, path_X_test, path_y_train,
             path_y_test, path_gnames, path_fnames, path_grecur)
     else:
-        (cg_test, ct_test, X_test, cg_train, 
-            ct_train, X_train, fnames) = read_raw_data(path_cg_test, path_ct_test, 
+        (cg_test, ct_test, X_test, cg_train,
+            ct_train, X_train, fnames) = read_raw_data(path_cg_test, path_ct_test,
             path_cv_test, path_cg_train, path_ct_train, path_cv_train)
 
     if not preprocessed:
@@ -222,7 +238,7 @@ def main():
                 X_train, X_test, ybinom_train, ybinom_test)
             # scale
             print('='*5, 'Applying {} scaler'.format(scaler_type), '='*5)
-            X_train, X_test = scaling(X_train, X_test, scaler_type)                        
+            X_train, X_test = scaling(X_train, X_test, scaler_type)
         ##
         ## Save data
         ##
@@ -240,10 +256,15 @@ def main():
     ##
     if skip_fs:
         print('='*5, 'Skip feature selection', '='*5)
+        fs_res = pd.read_table('./output/CRC_exon_robust_feature_selection_res.tsv', header=0)
+        assert np.array_equal(fs_res.fname, fnames), 'fnames error'
+        cutoff = 0.5
+        fset_rndlasso, fidx_rndlasso = feature_score(fs_res.rndlasso, fnames, cutoff=cutoff)
+        print('RNDLasso - at cutoff={}, {} selected features are: {}'.format(cutoff, fidx_rndlasso.shape[0], ', '.join(fset_rndlasso)))
     else:
         print('='*5, 'Feature Selection', '='*5)
         lassocv,  fscore_lassocv   = feature_selection(X_train, ylogit_train, 'lassocv')
-        rndlasso, fscore_rndlasso  = feature_selection(X_train, ylogit_train, 'rndlasso', alpha=lassocv.alpha_)       
+        rndlasso, fscore_rndlasso  = feature_selection(X_train, ylogit_train, 'rndlasso', alpha=lassocv.alpha_)
         # select feature by cutoff
         cutoff_rndlasso = 0.5
         fset_rndlasso, fidx_rndlasso = feature_score(fscore_rndlasso, fnames, cutoff=cutoff_rndlasso)
@@ -265,11 +286,15 @@ def main():
     glm = sm.GLM(ybinom_train, X_train, family=sm.families.Binomial())
     glm_res = glm.fit()
     mu_pred = glm_res.predict(X_test)
-    pval = [sp.stats.binom_test(x, n, p, 'greater') for x, n, p in zip(ybinom_test[:, 0], ybinom_test.sum(1), mu_pred)]
+    pval = [binom_test(x, n, p, 'greater') for x, n, p in zip(ybinom_test[:, 0], ybinom_test.sum(1), mu_pred)]
     qval = multipletests(pval, method='fdr_bh')[1]
     glm_res = pd.DataFrame({'binID': gnames, 'Score': -np.log10(pval), 'Pval': pval, 'Qval': qval,
-                     'Length': ybinom_test.sum(1), 'nMut':ybinom_test[:, 0], 'Recur': grecur, 'Mu': mu_pred})
-    glm_res = glm_res.sort_values('Pval')
+                     'Length': ybinom_test.sum(1).astype(np.int), 'nMut':ybinom_test[:, 0].astype(np.int), 'Recur': grecur.astype(np.int), 'Mu': mu_pred})
+    glm_res['Mean'] = (glm_res.Recur + glm_res.nMut)/2
+    glm_res['Mean'] = glm_res.Mean.astype(np.int)
+    glm_res['PvalM'] = [binom_test(x, n, p, 'greater') for x, n, p in zip(glm_res.Mean, glm_res.Length, glm_res.Mu)]
+    glm_res['QvalM'] = multipletests(glm_res.PvalM, method='fdr_bh')[1]
+    glm_res = glm_res.sort_values('PvalM')
     glm_res.set_index('binID', inplace=True)
     # write result to file
     mod_outpath = os.path.join(output_dir, '_'.join([output_prefix, 'glm_res.tsv']))
