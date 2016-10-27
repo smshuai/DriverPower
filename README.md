@@ -1,7 +1,7 @@
 # DriverPower
 version: 0.5
 
-## Input requirements
+## Input data requirements
 
 DriverPower requires three input files: mutation count table, feature (covariates) table and effective length (coverage) table.
 
@@ -45,3 +45,12 @@ Example:
 | KRAS  | 37  | 12  | ... |
 | TP53  | 47  | 42  | ... |
 
+## Parameters
+
+- len_threshold=500
+- recur_threshold=2
+- scaler=['robust', 'standard']
+- feature_seletion=['lassocv', 'rndlasso', 'spearman']
+- model=['glm', 'xboost', 'dnn']
+- func_score=['eigen', 'cadd']
+- func_cutoff=80

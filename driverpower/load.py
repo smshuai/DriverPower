@@ -69,4 +69,4 @@ def load_all(path_cg_test, path_ct_test, path_cv_test,
     ct_train = load_count(path_ct_train)
     cv_train = load_covar(path_cv_train)
     assert np.array_equal(cv_train.index, cg_train.index), 'binIDs in train feature and coverage tables do not match'
-    return (cg_test, ct_test, cv_test, cg_train, ct_train, cv_train)
+    return (cg_test, ct_test, cv_test.as_matrix(), cg_train, ct_train, cv_train.as_matrix())
