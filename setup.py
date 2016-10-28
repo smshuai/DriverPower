@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name='DriverPower',
-    version='0.2',
+    version='0.3',
     author='Shimin Shuai',
     author_email='sshuai@oicr.on.ca',
     url='https://github.com/smshuai/DriverPower',
@@ -14,7 +14,10 @@ setup(
         'pandas >= 0.18.1',
         'scikit-learn >= 0.18',
         'statsmodels >= 0.6.1',
-
+        'pytabix >= 0.0.2',
     ],
+    entry_points = {
+        'console_scripts': ['driverpower=driverpower.cmdline:main'],
+    },
 )
 

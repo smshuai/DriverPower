@@ -1,5 +1,5 @@
 # DriverPower
-version: 0.5
+version: 0.3
 
 ## Input data requirements
 
@@ -74,3 +74,7 @@ Example:
 - model=['glm', 'xboost', 'dnn']
 - func_score=['eigen', 'cadd']
 - func_cutoff=80
+
+## TODO
+- MNP and INDEL support for eigen
+- 

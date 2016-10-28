@@ -8,16 +8,16 @@ import logging
 
 
 logger = logging.getLogger('LOAD')
-logger.setLevel(logging.INFO)
-# create console handler with a higher log level
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-# create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s: %(message)s',
-    datefmt='%m/%d/%Y %H:%M:%S')
-ch.setFormatter(formatter)
-# add the handlers to the logger
-logger.addHandler(ch)
+# logger.setLevel(logging.INFO)
+# # create console handler with a higher log level
+# ch = logging.StreamHandler()
+# ch.setLevel(logging.INFO)
+# # create formatter and add it to the handlers
+# formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s: %(message)s',
+#     datefmt='%m/%d/%Y %H:%M:%S')
+# ch.setFormatter(formatter)
+# # add the handlers to the logger
+# logger.addHandler(ch)
 
 def load_coverage(path_coverage):
     ''' Load covergae table. Return a pd.DF with binID as the key
@@ -74,6 +74,8 @@ def load_mut(path_mut):
     Eight columns are required ['chrom', 'start', 'end', 'type', 'ref', 'alt', 'sid', 'binID']
     Output pd.DF without index
     '''
+    if path_mut is None:
+        return None # read nothing
     mut = pd.read_table(path_mut, sep='\t', header=0)
     # check column names
     need_cols = pd.Series(['chrom', 'start', 'end', 'type', 'ref', 'alt', 'sid', 'binID'])
@@ -82,8 +84,8 @@ def load_mut(path_mut):
     return mut
 
 
-def load_all(path_cg_test, path_ct_test, path_cv_test,
-    path_cg_train, path_ct_train, path_cv_train, path_mut):
+def load_all(path_cg_test, path_ct_test, path_cv_test, path_mut,
+    path_cg_train, path_ct_train, path_cv_train):
     ''' Load all train and test data
     '''
     logger.info('Loading test data')
@@ -99,6 +101,5 @@ def load_all(path_cg_test, path_ct_test, path_cv_test,
     assert np.array_equal(cv_train.index, cg_train.index), 'binIDs in train feature and coverage tables do not match'
     assert np.array_equal(cv_train.columns, cv_test.columns), 'Feature names in train and test sets do not match'
     fnames = cv_train.columns.values
-
     return (cg_test, ct_test, cv_test.as_matrix(), mut,
         cg_train, ct_train, cv_train.as_matrix(), fnames)

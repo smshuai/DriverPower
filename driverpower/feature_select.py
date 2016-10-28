@@ -7,16 +7,16 @@ from scipy.special import logit
 
 # create logger
 logger = logging.getLogger('FEATURE SELECT')
-logger.setLevel(logging.INFO)
-# create console handler
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-# create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s: %(message)s',
-    datefmt='%m/%d/%Y %H:%M:%S')
-ch.setFormatter(formatter)
-# add the handlers to the logger
-logger.addHandler(ch)
+# logger.setLevel(logging.INFO)
+# # create console handler
+# ch = logging.StreamHandler()
+# ch.setLevel(logging.INFO)
+# # create formatter and add it to the handlers
+# formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s: %(message)s',
+#     datefmt='%m/%d/%Y %H:%M:%S')
+# ch.setFormatter(formatter)
+# # add the handlers to the logger
+# logger.addHandler(ch)
 
 
 def run_lasso(X_train, ybinom_train, max_iter=3000, cv=5):
@@ -41,28 +41,11 @@ def run_rndlasso(X_train, ybinom_train, alpha,
 	logger.info('Implementing Randomized Lasso with alpha={}, n_resampling={} and sample_fraction={}'.format(alpha, n_resampling, sample_fraction))
 	# generate logit response
 	ylogit_train = logit(ybinom_train[:,0]/ybinom_train.sum(1))
-	clf = RandomizedLasso(alpha=alpha, n_resampling, sample_fraction, 
+	clf = RandomizedLasso(alpha=alpha, n_resampling=n_resampling,
+		sample_fraction=sample_fraction, 
 		selection_threshold=1e-3, normalize=False)
 	rndlasso = clf.fit(X_train, ylogit_train)
 	return rndlasso
-
-
-def feature_selection(Xtrain, ytrain, fs_method, max_iter=2000, cv=5, alpha=0.00459451108436):
-    '''
-    '''
-    if fs_method == 'lassocv':
-        print('Implementing LassoCV with {} iter. and {}-fold CV'.format(max_iter, cv))
-        clf = LassoCV(max_iter=max_iter, cv=10)
-        lassocv = clf.fit(Xtrain, ytrain)
-        print('LassoCV alpha = ', lassocv.alpha_)
-        return lassocv, abs(lassocv.coef_)
-    elif fs_method == 'rndlasso':
-        # apply rndlasso
-        print('Implementing Random Lasso with alpha={}'.format(alpha))
-        clf = RandomizedLasso(alpha=alpha, sample_fraction=0.4, selection_threshold=1e-3, normalize=False)
-        rndlasso = clf.fit(Xtrain, ytrain)
-        return rndlasso, rndlasso.scores_
-
 
 def feature_score(fscores, fnames, cutoff):
     ''' Select features based on scores and cutoff.
