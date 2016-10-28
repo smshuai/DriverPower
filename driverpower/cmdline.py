@@ -6,7 +6,7 @@ from driverpower.feature_select import fselect
 
 def main():
 	# load all the data. fnames is feature names
-	cg_test, ct_test, X_test, cg_train, ct_train, X_train, fnames = load_all()
+	cg_test, ct_test, X_test, mut, cg_train, ct_train, X_train, fnames = load_all()
 	
 	# get response, filter and scale.
 	## gnames is filtered binIDs in test data
@@ -18,6 +18,7 @@ def main():
 	X_train, X_test, fscores = fselect(X_train, X_test, ybinom_train, fnames, method='rndlasso')
 
 	# model
+	res = model(X_train, ybinom_train, X_test, ybinom_test, gnames, grecur, method='glm')
 
 
 if __name__ == '__main__':

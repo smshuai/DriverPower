@@ -68,14 +68,29 @@ def load_count(path_count):
     logger.info('Successfully load counts for {} mutations across {} samples'.format(nmut, nsample))
     return ct
 
+
+def load_mut(path_mut):
+    ''' Load mutation table.
+    Eight columns are required ['chrom', 'start', 'end', 'type', 'ref', 'alt', 'sid', 'binID']
+    Output pd.DF without index
+    '''
+    mut = pd.read_table(path_mut, sep='\t', header=0)
+    # check column names
+    need_cols = pd.Series(['chrom', 'start', 'end', 'type', 'ref', 'alt', 'sid', 'binID'])
+    assert np.sum(~need_cols.isin(mut.columns))==0, 'Mutation table needs the following columns: {}'.format(", ".join(need_cols))
+    logger.info('Successfully load {} mutations'.format(mut.shape[0]))
+    return mut
+
+
 def load_all(path_cg_test, path_ct_test, path_cv_test,
-    path_cg_train, path_ct_train, path_cv_train):
+    path_cg_train, path_ct_train, path_cv_train, path_mut):
     ''' Load all train and test data
     '''
     logger.info('Loading test data')
     cg_test = load_coverage(path_cg_test)
     ct_test = load_count(path_ct_test)
     cv_test = load_covar(path_cv_test)
+    mut = load_mut(path_mut) # only load mut for test data
     assert np.array_equal(cv_test.index, cg_test.index), 'binIDs in test feature and coverage tables do not match'
     logger.info('Loading train data')
     cg_train = load_coverage(path_cg_train)
@@ -84,4 +99,6 @@ def load_all(path_cg_test, path_ct_test, path_cv_test,
     assert np.array_equal(cv_train.index, cg_train.index), 'binIDs in train feature and coverage tables do not match'
     assert np.array_equal(cv_train.columns, cv_test.columns), 'Feature names in train and test sets do not match'
     fnames = cv_train.columns.values
-    return (cg_test, ct_test, cv_test.as_matrix(), cg_train, ct_train, cv_train.as_matrix(), fnames)
+
+    return (cg_test, ct_test, cv_test.as_matrix(), mut,
+        cg_train, ct_train, cv_train.as_matrix(), fnames)

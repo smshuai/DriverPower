@@ -3,11 +3,31 @@ version: 0.5
 
 ## Input data requirements
 
-DriverPower requires three input files: mutation count table, feature (covariates) table and effective length (coverage) table.
+DriverPower requires four input files: mutation table, count table, feature (covariates) table and effective length (coverage) table. All tables should be in TSV format **with** header. Compressed TSV files (*.gzip, *.bz2, *.zip, *.xz) are also acceptable.
 
-### Mutation counts table
+### Mutation table
 
-Mutation count table should be a tab-delimited text file (.tsv) **with** header. Mutation count table can be derived from somatic variants files (such as VCF or MAF). The following 4 columns are required (with header), additional columns will be truncated:
+Mutation table should be a tab-delimited text file **with** header. Mutation table records mutations (SNPs, MNPs and indels) in test bins and each row in the table corresponds to one mutation. This table can be derived from MAF or VCF files. Only eight columns are required for DriverPower and extra columns in the table will be ignored:
+
+1. `chrom`: Chromosome of the mutation in [1-22, X, Y]. Corresponds to `Chromosome` in [MAF Specification](https://wiki.nci.nih.gov/display/TCGA/Mutation+Annotation+Format+(MAF)+Specification).
+2. `start`: 0-indexed start coordinate of the mutation. Corresponds to `Start_Position - 1` in MAF.
+3. `end`: 1-indexed end coordinate of the mutation. Corresponds to `End_Position` in MAF.
+4. `type`: Type of the mutation, in [SNP, DNP, TNP, ONP, INS, DEL]. Corresponds to `Variant_Type` in MAF.
+5. `ref`: Reference allele of the mutation. Corresponds to `Reference_Allele` in MAF.
+6. `alt`: Mutated allele of the mutation. Corresponds to `Tumor_Seq_Allele2` in MAF.
+7. `sid`: Sample identifier.
+8. `binID`: Bin identifier. 
+
+Example:
+
+| chrom | start   | end     | type | ref | alt   | sid     | binID |
+|-------|---------|---------|------|-----|-------|---------|-------|
+| 17    | 7577604 | 7577606 | INS  | -   | AACCT | DO36801 | TP53  |
+| 17    | 7578405 | 7578406 | SNP  | C   | T     | DO7990  | TP53  |
+
+### Count table
+
+Mutation count table should be a tab-delimited text file (.tsv) **with** header. Mutation count table can be derived from somatic variants files (such as VCF or MAF). The following 4 columns are required:
 
 1. `binID`: The identifier of bins, such as gene or promoter names.
 2. `sid`: The identifier of samples.
