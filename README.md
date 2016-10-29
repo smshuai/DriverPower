@@ -1,6 +1,22 @@
 # DriverPower
-version: 0.3
+version: 0.3.1
 
+## Installation
+
+DriverPower requires Python >= 3.5 and some other packages. If you don't have Python 3.5 or higher, we highly recommend you to install Python with [Anaconda](https://www.continuum.io/downloads). To install DriverPower, you can either download and install it from [Python Package Index (PyPI)](https://pypi.python.org/pypi/DriverPower/) by typing the following command in your terminal
+```bash
+$ pip install driverpower
+```
+or clone this git repository first and install with
+```bash
+$ git clone https://github.com/smshuai/DriverPower.git
+$ cd DriverPower && pip install .
+```
+
+To see usage and help of DriverPower, type
+```bash
+$ driverpower -h
+```
 ## Input data requirements
 
 DriverPower requires four input files: mutation table, count table, feature (covariates) table and effective length (coverage) table. All tables should be in TSV format **with** header. Compressed TSV files (*.gzip, *.bz2, *.zip, *.xz) are also acceptable.
@@ -75,6 +91,13 @@ Example:
 - func_score=['eigen', 'cadd']
 - func_cutoff=80
 
+## LICENSE
+DriverPower is distributed under the terms of the [GNU General Public License 3.0](https://www.gnu.org/licenses/gpl-3.0.txt).
+
+
+
 ## TODO
+
+
 - MNP and INDEL support for eigen
 - 
