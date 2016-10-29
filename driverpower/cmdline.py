@@ -4,6 +4,7 @@ import argparse
 import os
 import logging
 import sys
+import pandas as pd
 from driverpower.load import load_all
 from driverpower.preprocess import preprocess
 from driverpower.feature_select import fselect
@@ -37,9 +38,13 @@ def get_params():
 		help='Path to the feature table for training set')
 	re_parser.add_argument('-L', '--Length', dest='path_cg_train', required=True, type=str,
 		help='Path to the effective length table for training set')	
-	
+
 	# Optional parameters
 	op_parser = parser.add_argument_group(title="optional parameters")
+	op_parser.add_argument('-o', '--outfolder', dest='out', type=str, default='output',
+		help='String (default: output). Output folder name')
+	op_parser.add_argument('-p', '--prefix', dest='pref', type=str, default='driverpower',
+		help='String (default: driverpower). Output file prefix')	
 	op_parser.add_argument('--len_threshold', dest='len_threshold', type=int, default=500,
 		help='Integer (default: 500). Bins with length < len_threshold will be discarded')
 	op_parser.add_argument('--recur_threshold', dest='recur_threshold', type=int, default=2,
@@ -108,13 +113,15 @@ def main():
     ct_train, X_train, args.len_threshold, args.recur_threshold, args.scaler)
 	#
 	# feature selection
-	if is_fselect:
-		
+	if is_fselect:	
 		logger.info('Start feature selection')
 		X_train, X_test, fscores = fselect(X_train, X_test, ybinom_train,
 			fnames, method=args.fselect)
+		fs_res = pd.DataFrame({'fname': fnames, 'fscore': fscores})
+		fs_res.sort_values('fscore', ascending=False)
 	else:
 		logger.info('Skip feature selection')
+		fs_res = None
 	#
 	# model
 	logger.info('Start modelling')
@@ -126,9 +133,21 @@ def main():
 		res = func_adj(res, mut, method='eigen',
 			path_eigen='/u/sshuai/sshuai/func_score/eigen/v1.1',
 			is_coding=args.is_coding, cutoff=85)
+		res.sort_values('Pval', inplace=True)
 	else:
 		logger.info('Skip functional adjustment')
-
+		res.sort_values('PvalM', inplace=True)
+	#
+	# Output
+	out_dir = args.out
+	if not os.path.exists(out_dir):
+		# create output folder
+		os.mkdir(out_dir)
+	# main result
+	res.to_csv(os.path.join(out_dir, args.pref+'.res.tsv'), sep='\t')
+	# feature selection result
+	if fs_res is not None:
+		fs_res.to_csv(os.path.join(out_dir, args.pref+'.fscore.tsv'), sep='\t')
 
 if __name__ == '__main__':
 	main()

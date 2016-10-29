@@ -1,7 +1,8 @@
 ''' Feature selection module for DriverPower
 '''
-from sklearn.linear_model import LassoCV, RandomizedLasso
 import logging
+import numpy as np
+from sklearn.linear_model import LassoCV, RandomizedLasso
 from scipy.special import logit
 
 
@@ -74,7 +75,7 @@ def fselect(X_train, X_test, ybinom_train, fnames, method='rndlasso', cutoff_rnd
 		# run rndlasso
 		rndlasso = run_rndlasso(X_train, ybinom_train, alpha=lassocv.alpha_)
 		# feature importance
-		fscores = rnalasso.scores_
+		fscores = rndlasso.scores_
 		cutoff = cutoff_rndlasso
 	if method == 'lassocv':
 		lassocv = run_lasso(X_train, ybinom_train, max_iter=3000, cv=10)

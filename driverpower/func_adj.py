@@ -5,7 +5,8 @@ import os
 import tabix
 import logging
 import numpy as np
-import pandas as pd
+from statsmodels.sandbox.stats.multicomp import multipletests
+from scipy.stats import binom_test
 
 # create  logger
 logger = logging.getLogger('FUNC ADJ')
