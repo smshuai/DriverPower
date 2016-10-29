@@ -25,9 +25,15 @@ logger = logging.getLogger('FUNC ADJ')
 def get_eigen(mut, path='/u/sshuai/sshuai/func_score/eigen/v1.1', coding=True):
     ''' Get eigen scores with tabix
     '''
+    # make chrom string
+    mut['chrom'] = mut.chrom.astype(str)
+    # eigen only support chr 1-22
+    valid_chrom = [str(i) for i in range(1,23)]
+    mut = mut[mut.chrom.isin(valid_chrom)]
     # create return table
     # SNP only. TO DO: ADD MNP and INDEL Support
     keep = mut['type'] == 'SNP'
+    # chrom != X, Y
     eigen = mut[keep].copy()
     if eigen.shape[0] == 0:
         logger.warning('No mutations left in Eigen adjustment')
@@ -36,10 +42,10 @@ def get_eigen(mut, path='/u/sshuai/sshuai/func_score/eigen/v1.1', coding=True):
         logger.info('Retrieving Eigen Coding Scores')
         # name for version 1.1. A single file for coding.
         name = 'Eigen_hg19_coding_annot_04092016.tab.bgz'
-        file = os.path.join(path, name)
-        assert os.path.isfile(file), 'Cannot find eigen coding in {}'.format(file)
+        file_path = os.path.join(path, name)
+        assert os.path.isfile(file_path), 'Cannot find eigen coding in {}'.format(file_path)
         # open one eigen
-        tb = tabix.open(file)
+        tb = tabix.open(file_path)
         # row apply
         func = lambda x: query_eigen_SNP(tb, x[0], x[1], x[2], x[4], x[5])
         eigen['fscore'] = eigen.apply(func, axis=1)
@@ -108,6 +114,6 @@ def func_adj(res, mut, method, path_eigen, is_coding, cutoff=85):
     ## for bin w/o fscore, MuAdj will be inf.
     res['MuAdj'] = res.Mu * threshold / res.fscore
     # Pval: binom(nMutSample, length, MuAdj)
-    res['Pval'] = [binom_test(x, n, p, 'greater') for x, n, p in zip(res.nMutSample, res.Length, res.MuAdj)]
+    res['Pval'] = [binom_test(x, n, p, 'greater') if p<1 else 1 for x, n, p in zip(res.nMutSample, res.Length, res.MuAdj)]
     res['Qval'] = multipletests(res.Pval, method='fdr_bh')[1]
     return res
