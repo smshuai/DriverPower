@@ -40,7 +40,7 @@ def raw_test(mu_pred, ybinom_test, gnames, grecur):
 	res = pd.DataFrame({'binID': gnames, 'Length': ybinom_test.sum(1).astype(np.int),
 		'nMut':ybinom_test[:, 0].astype(np.int), 'nSample': grecur.astype(np.int), 'Mu': mu_pred})
 	# Raw pval. binom(nMut, length, mu_pred)
-	res['PvalRaw'] = [binom_test(x, n, p, 'greater') for x, n, p in zip(res.nMut, res.length, res.Mu)]
+	res['PvalRaw'] = [binom_test(x, n, p, 'greater') for x, n, p in zip(res.nMut, res.Length, res.Mu)]
 	res['QvalRaw'] = multipletests(res['PvalRaw'], method='fdr_bh')[1]
 	# Mean = (nSample + nMut) / 2
 	res['nMutSample'] = (res.nSample + res.nMut)/2

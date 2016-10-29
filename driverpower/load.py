@@ -76,10 +76,11 @@ def load_mut(path_mut):
     '''
     if path_mut is None:
         return None # read nothing
-    mut = pd.read_table(path_mut, sep='\t', header=0)
+    mut = pd.read_table(path_mut, sep='\t', header=0, index_col=None)
     # check column names
     need_cols = pd.Series(['chrom', 'start', 'end', 'type', 'ref', 'alt', 'sid', 'binID'])
     assert np.sum(~need_cols.isin(mut.columns))==0, 'Mutation table needs the following columns: {}'.format(", ".join(need_cols))
+    mut = mut.loc[:,need_cols] # only keep need cols
     logger.info('Successfully load {} mutations'.format(mut.shape[0]))
     return mut
 

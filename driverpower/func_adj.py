@@ -29,7 +29,10 @@ def get_eigen(mut, path='/u/sshuai/sshuai/func_score/eigen/v1.1', coding=True):
 	# SNP only. TO DO: ADD MNP and INDEL Support
 	keep = mut['type'] == 'SNP'
 	eigen = mut[keep].copy()
-	if coding:
+        if eigen.shape[0] == 0:
+            logger.warning('No mutations left in Eigen adjustment')
+            return None
+        if coding:
 		logger.info('Retrieving Eigen Coding Scores')
 		# name for version 1.1. A single file for coding.
 		name = 'Eigen_hg19_coding_annot_04092016.tab.bgz'

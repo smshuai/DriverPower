@@ -24,7 +24,7 @@ def run_lasso(X_train, ybinom_train, max_iter=3000, cv=5):
 	''' Implement LassoCV provided by sklearn
 	Note:
 		To generate alpha for rnalasso, use max_iter=3000 and cv=5
-		For feature selection purpose, use max_iter=3000 and cv=10 
+		For feature selection purpose, use max_iter=3000 and cv=10
 	'''
 	logger.info('Implementing LassoCV with {} iter. and {}-fold CV'.format(max_iter, cv))
 	# generate logit response
@@ -43,7 +43,7 @@ def run_rndlasso(X_train, ybinom_train, alpha,
 	# generate logit response
 	ylogit_train = logit(ybinom_train[:,0]/ybinom_train.sum(1))
 	clf = RandomizedLasso(alpha=alpha, n_resampling=n_resampling,
-		sample_fraction=sample_fraction, 
+		sample_fraction=sample_fraction,
 		selection_threshold=1e-3, normalize=False)
 	rndlasso = clf.fit(X_train, ylogit_train)
 	return rndlasso
@@ -51,12 +51,12 @@ def run_rndlasso(X_train, ybinom_train, alpha,
 def feature_score(fscores, fnames, cutoff):
     ''' Select features based on scores and cutoff.
     Args:
-    	fscores - np.array. Feature importance scores
-    	fnames  - np.array. Feature names (same length as fscores)
-    	cutoff  - cutoff for feature selection
+        fscores - np.array. Feature importance scores
+        fnames  - np.array. Feature names (same length as fscores)
+        cutoff  - cutoff for feature selection
     Return:
-    	fset - np.array. Names of selected features
-    	fidx - np.array. Numerical index of selected features
+        fset - np.array. Names of selected features
+        fidx - np.array. Numerical index of selected features
     '''
     assert len(fnames) == len(fscores), 'Feature importance scores and names have diffent length'
     fidx = np.where(fscores > cutoff)[0]
@@ -67,9 +67,9 @@ def feature_score(fscores, fnames, cutoff):
 def fselect(X_train, X_test, ybinom_train, fnames, method='rndlasso', cutoff_rndlasso=0.5, cutoff_lasso=0.001):
 	''' Main wrapper function for feature selection
 	'''
-	support_method = ['rnalasso', 'lassocv']
+	support_method = ['rndlasso', 'lassocv']
 	assert method in support_method, 'Invalid feature selection method. Must be chosen from {}'.format(support_method)
-	if method == 'rnalasso':
+	if method == 'rndlasso':
 		# find alpha
 		lassocv  = run_lasso(X_train, ybinom_train, max_iter=3000, cv=5)
 		# run rndlasso

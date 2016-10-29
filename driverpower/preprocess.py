@@ -4,7 +4,7 @@ Pre-process data for DriverPower.
 Pre-process steps are:
 1. Calculate response
 2. Filter
-3. Scale 
+3. Scale
 """
 import pandas as pd
 import numpy as np
@@ -145,5 +145,6 @@ def preprocess(cg_test, ct_test, X_test, cg_train,
     X_test, ybinom_test, X_train, ybinom_train, gnames, grecur = filter(ct_train, ct_test, cg_train, cg_test,
     X_train, X_test, ybinom_train, ybinom_test, len_threshold, recur_threshold)
     # Scale
-    X_train, X_test = scaling(X_train, X_test, scaler_type)
+    if scaler_type != 'none':
+        X_train, X_test = scaling(X_train, X_test, scaler_type)
     return (X_train, ybinom_train, X_test, ybinom_test, gnames, grecur)
