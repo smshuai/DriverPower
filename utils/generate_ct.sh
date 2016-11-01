@@ -90,7 +90,9 @@ nmut_bin=($(wc -l $tmp_dir/mut.in.bin.bed))
 pivot_ct.py $tmp_dir/mut.in.bin.bed $tmp_dir/ct.tsv
 
 
-mv $tmp_dir/mut.in.bin.bed $OUTMUT
+# add header to mut
+head -1 ~/current/data/PDAC/exon/PDAC.exon.mut.tsv > $OUTMUT
+cat $tmp_dir/mut.in.bin.bed >> $OUTMUT
 mv $tmp_dir/ct.tsv $OUTCT
 
 rm -r $tmp_dir

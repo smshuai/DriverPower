@@ -131,7 +131,7 @@ def main():
         logger.info('Start functional adjustment')
         res = func_adj(res, mut, method='eigen',
             path_eigen='/u/sshuai/sshuai/func_score/eigen/v1.1',
-            is_coding=args.is_coding, cutoff=85)
+            is_coding=args.is_coding, cutoff=args.funcadj)
         res.sort_values('Pval', inplace=True)
     else:
         logger.info('Skip functional adjustment')

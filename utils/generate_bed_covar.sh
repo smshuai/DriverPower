@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+module load bedtools/2.24.0
 bed_list=$1
 dirIN=$2
 bed=$3

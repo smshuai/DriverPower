@@ -67,7 +67,7 @@ def feature_score(fscores, fnames, cutoff):
 def fselect(X_train, X_test, ybinom_train, fnames, method='rndlasso', cutoff_rndlasso=0.5, cutoff_lasso=0.001):
     ''' Main wrapper function for feature selection
     '''
-    support_method = ['rndlasso', 'lassocv']
+    support_method = ['rndlasso', 'lasso']
     assert method in support_method, 'Invalid feature selection method. Must be chosen from {}'.format(support_method)
     if method == 'rndlasso':
         # find alpha
@@ -77,7 +77,7 @@ def fselect(X_train, X_test, ybinom_train, fnames, method='rndlasso', cutoff_rnd
         # feature importance
         fscores = rndlasso.scores_
         cutoff = cutoff_rndlasso
-    if method == 'lassocv':
+    if method == 'lasso':
         lassocv = run_lasso(X_train, ybinom_train, max_iter=3000, cv=10)
         fscores = np.abs(lassocv.coef_)
         cutoff = cutoff_lasso

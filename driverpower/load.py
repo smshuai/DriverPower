@@ -42,7 +42,8 @@ def load_covar(path_covar):
     cv = pd.read_csv(path_covar, sep='\t', header=0, index_col='binID')
     # check unique binID
     assert len(cv.index.values) == len(cv.index.unique()), "binID in feature table is not unique."
-    cv.sort_index(inplace=True)
+    cv.sort_index(inplace=True) # sort row index
+    cv.sort_index(1, inplace=True) # sort column index
     na_count = cv.isnull().sum()
     if na_count.sum() > 0:
         na_fnames = na_count.index.values[np.where(na_count>0)]

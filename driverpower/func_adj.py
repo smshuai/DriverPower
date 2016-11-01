@@ -104,8 +104,10 @@ def func_adj(res, mut, method, path_eigen, is_coding, cutoff=85):
     if method == 'eigen':
         eigen = get_eigen(mut, path_eigen, is_coding)
         # mean eigen score per bin
-        ## For coding, mean score of non-silent mutations
-        fscore = eigen.dropna().pivot_table(index='binID', values='fscore', aggfunc=np.mean)
+        ## For coding, mean score of non-silent and silent POINT mutations
+        fscore = eigen.fillna(0).pivot_table(index='binID', values='fscore', aggfunc=np.mean)
+        res['nEigenAll'] = eigen.pivot_table(index='binID', values='fscore', aggfunc=len)
+        res['nEigen'] = eigen.dropna().pivot_table(index='binID', values='fscore', aggfunc=len)
     res['fscore'] = fscore
     # fill bin without fscore with 0
     res.fscore.fillna(0, inplace=True)
