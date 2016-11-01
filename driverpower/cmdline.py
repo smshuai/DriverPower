@@ -60,6 +60,8 @@ def get_params():
         help='Integer between 1 and 99 (default: 85). Strength of functional adjustment. Integer outside of (0, 100) will disable functional adjustment')
     op_parser.add_argument('-m', '--mutation', dest='path_mut', type=str, default=None,
         help='Path to the mutation table for test set')
+    op_parser.add_argument('--memsave', dest='is_memsave', action="store_true",
+        help='Allow for loading data in a memory efficient way')
     #
     args = parser.parse_args()
 
@@ -97,11 +99,15 @@ def main():
     #
     # load all the data. fnames is feature names
     logger.info('Start data loading')
-    (cg_test, ct_test, X_test, mut,
-        cg_train, ct_train, X_train,
-        fnames) = load_all(
-        args.path_cg_test, args.path_ct_test, args.path_cv_test, args.path_mut,
-        args.path_cg_train, args.path_ct_train, args.path_cv_train)
+    if args.is_memsave:
+        # save memory by pre-filtering CV
+        pass
+    else: # the old way
+        (cg_test, ct_test, X_test, mut,
+            cg_train, ct_train, X_train,
+            fnames) = load_all(
+            args.path_cg_test, args.path_ct_test, args.path_cv_test, args.path_mut,
+            args.path_cg_train, args.path_ct_train, args.path_cv_train)
     #
     # get response, filter and scale.
     logger.info('Start data prepocessing')

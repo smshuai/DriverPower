@@ -47,7 +47,7 @@ def get_response(ct, cg):
     return ybinom
 
 
-def get_filter(ct, cg, len_threshold=500, recur_threshold=2, return_recur=False):
+def get_filter(ct, cg, len_threshold=500, recur_threshold=2, return_recur=False, return_tab=False):
     ''' Obtain filter based on length and recurrence.
     Args:
         ct - pd.DF. Count table, 4 cols, no index
@@ -55,9 +55,11 @@ def get_filter(ct, cg, len_threshold=500, recur_threshold=2, return_recur=False)
         len_threshold   - int. Bins with effective length < len_threshold will be discarded
         recur_threshold - int. Bins mutated in < recur_threshold samples will be discarded
         return_recur    - bool. Whether or not return the recur
+        return_tab      - bool. Whether or not return the filter table.
     Return:
         keep  - np.array. Index of bins passed all filters
-        recur - np.Series. Indexed by binID. Recurrence of all bins.
+        recur - pd.Series. Indexed by binID. Recurrence of all bins.
+        filter_tab - pd.DF. Indexed by binID. Two columns, cg and recur
     '''
     # ct pivot by binID and sid
     ct_byb_bys = ct.pivot_table(values='ct', index='binID', columns='sid', aggfunc=sum).fillna(0)
@@ -82,6 +84,8 @@ def get_filter(ct, cg, len_threshold=500, recur_threshold=2, return_recur=False)
     logger.info('{} ({:.2f}%) bins passed all filters'.format(keep.shape[0], keep.shape[0]/nbin*100))
     if return_recur:
         return keep, filter_tab.recur
+    if return_tab:
+        return keep, filter_tab
     return keep # index
 
 

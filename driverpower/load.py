@@ -5,7 +5,7 @@ Load data from DriverPower.
 import pandas as pd
 import numpy as np
 import logging
-
+from driverpower.preprocess import get_filter
 
 logger = logging.getLogger('LOAD')
 # logger.setLevel(logging.INFO)
@@ -101,6 +101,56 @@ def load_all(path_cg_test, path_ct_test, path_cv_test, path_mut,
     ct_train = load_count(path_ct_train)
     cv_train = load_covar(path_cv_train)
     assert np.array_equal(cv_train.index, cg_train.index), 'binIDs in train feature and coverage tables do not match'
+    assert np.array_equal(cv_train.columns, cv_test.columns), 'Feature names in train and test sets do not match'
+    fnames = cv_train.columns.values
+    return (cg_test, ct_test, cv_test.as_matrix(), mut,
+        cg_train, ct_train, cv_train.as_matrix(), fnames)
+
+
+def load_memsave(path_ct, path_cg, path_cv, len_threshold=500, recur_threshold=2):
+    ''' Load CT, CG and CV in a memsave way 
+    '''
+    cg = load_coverage(path_cg)
+    ct = load_count(path_ct)
+    # pre-filter CV
+    keep, tab = get_filter(ct, cg, return_tab=True)
+    out = []
+    with open(path_cv, 'r') as f:
+        cv_header = f.readline().strip().split("\t")
+        for line in f:
+            arr = line.strip().split('\t')
+            binID = arr[0]
+            if tab.recur.loc[binID] >= recur_threshold and tab.cg.loc[binID] >= len_threshold:
+                out.append(arr)
+    cv = pd.DataFrame(out, columns=cv_header) # create pd.DF from out
+    # check unique binID
+    assert len(cv.index.values) == len(cv.index.unique()), "binID in feature table is not unique."
+    cv.sort_index(inplace=True) # sort row index
+    cv.sort_index(1, inplace=True) # sort column index
+    na_count = cv.isnull().sum()
+    if na_count.sum() > 0:
+        na_fnames = na_count.index.values[np.where(na_count>0)]
+        logger.warning('NA values found in features [{}]'.format(', '.join(na_fnames)))
+        logger.warning('Fill NA with 0')
+        cv.fillna(0, inplace=True)
+    logger.info('Successfully load features for {} bins'.format(cv.shape[0]))
+    cg = cg[cg.index.isin(cv.index)] # filter cg
+    assert np.array_equal(cv.index, cg.index), 'binIDs in feature and coverage tables do not match'
+    ct = ct[ct.binID.isin(cv.index)] # filter ct as well
+    return ct, cg, cv
+
+
+def load_all_memsave(path_cg_test, path_ct_test, path_cv_test, path_mut,
+    path_cg_train, path_ct_train, path_cv_train, len_threshold, recur_threshold):
+    ''' Load all data in a memsave way
+    '''
+    logger.info('Loading test data') # no change to test data
+    ct_test, cg_test, cv_test = load_memsave(path_ct_test, path_cg_test, path_cv_test,
+        len_threshold, recur_threshold)
+    mut = load_mut(path_mut) # only load mut for test data
+    logger.info('Loading train data')
+    ct_train, cg_train, cv_train = load_memsave(path_ct_train, path_cg_train, path_cv_train,
+        len_threshold, recur_threshold)
     assert np.array_equal(cv_train.columns, cv_test.columns), 'Feature names in train and test sets do not match'
     fnames = cv_train.columns.values
     return (cg_test, ct_test, cv_test.as_matrix(), mut,
