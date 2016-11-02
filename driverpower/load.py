@@ -123,6 +123,7 @@ def load_memsave(path_ct, path_cg, path_cv, len_threshold=500, recur_threshold=2
             if tab.recur.loc[binID] >= recur_threshold and tab.cg.loc[binID] >= len_threshold:
                 out.append(arr)
     cv = pd.DataFrame(out, columns=cv_header) # create pd.DF from out
+    cv.set_index('binID', inplace=True) # set index
     # check unique binID
     assert len(cv.index.values) == len(cv.index.unique()), "binID in feature table is not unique."
     cv.sort_index(inplace=True) # sort row index
@@ -135,7 +136,8 @@ def load_memsave(path_ct, path_cg, path_cv, len_threshold=500, recur_threshold=2
         cv.fillna(0, inplace=True)
     logger.info('Successfully load features for {} bins'.format(cv.shape[0]))
     cg = cg[cg.index.isin(cv.index)] # filter cg
-    assert np.array_equal(cv.index, cg.index), 'binIDs in feature and coverage tables do not match'
+    assert np.array_equal(cv.index.sort_values(), cg.index.sort_values()), 'binIDs in feature and coverage tables do not match'
+    assert np.array_equal(cv.index, cg.index), 'binIDs in feature and coverage tables are not sorted'
     ct = ct[ct.binID.isin(cv.index)] # filter ct as well
     return ct, cg, cv
 

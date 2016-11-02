@@ -5,7 +5,7 @@ import os
 import logging
 import sys
 import pandas as pd
-from driverpower.load import load_all
+from driverpower.load import load_all, load_all_memsave
 from driverpower.preprocess import preprocess
 from driverpower.feature_select import fselect
 from driverpower.model import model
@@ -101,11 +101,16 @@ def main():
     logger.info('Start data loading')
     if args.is_memsave:
         # save memory by pre-filtering CV
-        pass
+        (cg_test, ct_test, X_test, mut,
+         cg_train, ct_train, X_train,
+         fnames) = load_all_memsave(
+             args.path_cg_test, args.path_ct_test, args.path_cv_test, args.path_mut,
+             args.path_cg_train, args.path_ct_train, args.path_cv_train,
+             args.len_threshold, args.recur_threshold)
     else: # the old way
         (cg_test, ct_test, X_test, mut,
-            cg_train, ct_train, X_train,
-            fnames) = load_all(
+         cg_train, ct_train, X_train,
+         fnames) = load_all(
             args.path_cg_test, args.path_ct_test, args.path_cv_test, args.path_mut,
             args.path_cg_train, args.path_ct_train, args.path_cv_train)
     #
