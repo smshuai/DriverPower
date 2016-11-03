@@ -67,7 +67,7 @@ def run_preprocess(args):
     # y to pd.DF
     ybinom = pd.DataFrame(ybinom, columns=['ct','len_ct'], index=cg.index)
     # write to store
-    store['X'] = cv
+    store.append('X', cv, chunksize=50000)
     store['y'] = ybinom
     store.close()
 
