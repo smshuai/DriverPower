@@ -1,5 +1,5 @@
 # DriverPower
-version: 0.3.1
+version: 0.3.3
 
 ## Installation
 
