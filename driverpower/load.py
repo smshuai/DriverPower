@@ -5,7 +5,7 @@ Load data from DriverPower.
 import pandas as pd
 import numpy as np
 import logging
-from driverpower.preprocess import get_filter
+from driverpower.preprocess import get_filter, get_response
 
 logger = logging.getLogger('LOAD')
 # logger.setLevel(logging.INFO)
@@ -108,22 +108,26 @@ def load_all(path_cg_test, path_ct_test, path_cv_test, path_mut,
 
 
 def load_memsave(path_ct, path_cg, path_cv, len_threshold=500, recur_threshold=2):
-    ''' Load CT, CG and CV in a memsave way 
+    ''' Load CT, CG and CV in a memsave way. Return filtered CT, CG and CV
     '''
     cg = load_coverage(path_cg)
     ct = load_count(path_ct)
     # pre-filter CV
     keep, tab = get_filter(ct, cg, return_tab=True)
-    out = []
-    with open(path_cv, 'r') as f:
-        cv_header = f.readline().strip().split("\t")
-        for line in f:
-            arr = line.strip().split('\t')
-            binID = arr[0]
-            if tab.recur.loc[binID] >= recur_threshold and tab.cg.loc[binID] >= len_threshold:
-                out.append(arr)
-    cv = pd.DataFrame(out, columns=cv_header) # create pd.DF from out
-    cv.set_index('binID', inplace=True) # set index
+    keep_bin = tab.index.values[keep]
+    Nbin  = tab.shape[0]
+    Nchunk = int(Nbin / 50000)
+    chunk_idx = 1
+    # read in chunk and filter
+    logger.info('Start to load and filter features')
+    cv_reader = pd.read_table(path_cv, index_col='binID', chunksize=50000)
+    cv = cv_reader.get_chunk()
+    cv = cv[cv.index.isin(keep_bin)] # cv container
+    for chunk in cv_reader:
+        logger.info('Load features chunk {}/{}'.format(chunk_idx, Nchunk))
+        chunk_idx += 1
+        chunk = chunk[chunk.index.isin(keep_bin)]
+        cv = cv.append(chunk)
     # check unique binID
     assert len(cv.index.values) == len(cv.index.unique()), "binID in feature table is not unique."
     cv.sort_index(inplace=True) # sort row index
