@@ -8,6 +8,7 @@ Pre-process steps are:
 """
 import pandas as pd
 import numpy as np
+import sys
 from sklearn.preprocessing import StandardScaler, RobustScaler
 import logging
 
@@ -25,6 +26,37 @@ logger = logging.getLogger('PREPROCESS')
 # # add the handlers to the logger
 # logger.addHandler(ch)
 
+def sampling(X, y, N):
+    ''' Sample X and y, which are both pd.DF and have the same index.
+    If N in (0,1] sample a fraction of data.
+    If N is interger > 1, sample N data points.
+    '''
+    # check index
+    assert np.array_equal(X.index, y.index), 'X and y have different indexes'
+    if N <= 0:
+        logger.error('Sampling value must > 0. You enter {}'.format(N))
+        sys.exit(1)
+    elif 0 < N < 1:
+        logger.info('Sample {}% of data'.format(N*100))
+        y = y.sample(frac=N, replace=False)
+        y.sort_index(inplace=True)
+        X = X[X.index.isin(y.index)]
+        X.sort_index(inplace=True)
+    elif N==1:
+        # no sampling needed
+        pass
+    elif N>1:
+        N = int(N)
+        if N >= y.shape[0]:
+            logger.warning('Sampling value >= number of data points {}'.format(y.shape[0]))
+            logger.warning('Use all data')
+        logger.info('Sample {} data points'.format(N))
+        y = y.sample(n=N, replace=False)
+        y.sort_index(inplace=True)
+        X = X[X.index.isin(y.index)]
+        X.sort_index(inplace=True)
+    assert np.array_equal(X.index, y.index), 'X and y have different row indexes after sampling'
+    return X, y
 
 def get_response(ct, cg):
     ''' Obtain response from count and coverage table
@@ -125,7 +157,10 @@ def scaling(Xtrain, Xtest=None, scaler_type='robust'):
     Return:
         scaled np.ndarray of Xtrain and Xtest
     '''
-    assert scaler_type in ['standard', 'robust'], 'Scaler must be chosen from [standard, robust]'
+    assert scaler_type in ['standard', 'robust', 'none'], 'Scaler must be chosen from [standard, robust, none]'
+    if scaler_type == 'none':
+        logger.info('Skip data scaling')
+        return None
     logger.info('Scaling data with {} scaler'.format(scaler_type))
     if scaler_type == 'robust':
         scaler = RobustScaler()

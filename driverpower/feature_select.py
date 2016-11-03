@@ -3,7 +3,10 @@
 import logging
 import numpy as np
 from sklearn.linear_model import LassoCV, RandomizedLasso
+from sklearn.feature_selection import f_regression
 from scipy.special import logit
+from scipy.stats import spearmanr
+
 
 
 # create logger
@@ -19,6 +22,19 @@ logger = logging.getLogger('FEATURE SELECT')
 # # add the handlers to the logger
 # logger.addHandler(ch)
 
+def run_spearmanr(X, ybinom):
+    ''' Implement univariate spearmanr
+    '''
+    ylogit = logit(ybinom[:,0]/ybinom.sum(1))
+    rho = np.apply_along_axis(lambda x: spearmanr(x, ylogit)[0], 0, X)
+    return rho
+
+def run_fregression(X, ybinom):
+    ''' Implement uniariate F regression
+    '''
+    ylogit = logit(ybinom[:,0]/ybinom.sum(1))
+    freg = f_regression(X, ylogit, center=False)
+    return freg[0]
 
 def run_lasso(X_train, ybinom_train, max_iter=3000, cv=5):
     ''' Implement LassoCV provided by sklearn
