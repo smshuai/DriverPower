@@ -112,9 +112,12 @@ def run_select(args):
     # y to np.array
     y = y.as_matrix()
     # feature names
-    fnames = X.columns.values 
+    fnames = X.columns.values
     # scale for Xtrain only
-    X = scaling(Xtrain=X.as_matrix(), scaler_type=args.scaler)
+    X = X.as_matrix()
+    logger.info('Training set X shape: {}'.format(X.shape))
+    logger.info('Training set y shape: {}'.format(y.shape))
+    X = scaling(Xtrain=X, scaler_type=args.scaler)
     # spearmanr
     rho = run_spearmanr(X, y)
     # f regression
@@ -124,7 +127,7 @@ def run_select(args):
     # run rndlasso
     rndlasso = run_rndlasso(X, y, lasso.alpha_)
     # results
-    res = pd.DataFrame(np.array([rho, freg, np.abs(lasso.coef_), rndlasso.scores_]).T,
+    res = pd.DataFrame(np.array([rho, freg, lasso.coef_, rndlasso.scores_]).T,
         index=fnames,
         columns=['rho', 'freg','lasso', 'rndlasso'])
     res.index.name = 'fname'

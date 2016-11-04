@@ -50,11 +50,12 @@ def sampling(X, y, N):
         if N >= y.shape[0]:
             logger.warning('Sampling value >= number of data points {}'.format(y.shape[0]))
             logger.warning('Use all data')
-        logger.info('Sample {} data points'.format(N))
-        y = y.sample(n=N, replace=False)
-        y.sort_index(inplace=True)
-        X = X[X.index.isin(y.index)]
-        X.sort_index(inplace=True)
+        else:
+            logger.info('Sample {} data points'.format(N))
+            y = y.sample(n=N, replace=False)
+            y.sort_index(inplace=True)
+            X = X[X.index.isin(y.index)]
+            X.sort_index(inplace=True)
     assert np.array_equal(X.index, y.index), 'X and y have different row indexes after sampling'
     return X, y
 
