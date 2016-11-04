@@ -13,9 +13,45 @@ $ git clone https://github.com/smshuai/DriverPower.git
 $ cd DriverPower && pip install .
 ```
 
-To see usage and help of DriverPower, type
-```bash
+To view available sub-commands and help of DriverPower, type
+```
 $ driverpower -h
+usage: driverpower [-h] [-v] {preprocess,select,model} ...
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         Print the version of DriverPower
+
+The DriverPower sub-commands include:
+  {preprocess,select,model}
+    preprocess          Load and preprocess data
+    select              Run feature selection on preprocessed data
+    model               Modelling module
+```
+
+To view help for a particular sub-commands like `select`, type
+```
+$ driverpower select -h
+usage: driverpower select [-h] -d PATH_DATA [--scaler {robust,standard,none}]
+                          [--sampling SAMPLING] [-o OUT]
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+required arguments:
+  -d PATH_DATA, --data PATH_DATA
+                        Path to the preprocessed training set (HDF5)
+
+optional parameters:
+  --scaler {robust,standard,none}
+                        robust or standard (default: robust). Scaler used to
+                        scale the data
+  --sampling SAMPLING   Number > 0 (default: 1). Sampling the data based on
+                        the provided value. Value in (0,1] is used as a
+                        fraction. Value > 1 is used as the number of data
+                        points.
+  -o OUT, --output OUT  Path to the output file (default:
+                        ./feature_select.tsv)
 ```
 ## Input data requirements
 
