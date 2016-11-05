@@ -96,13 +96,14 @@ def get_cadd():
     pass
 
 
-def func_adj(res, mut, method, path_eigen, is_coding, cutoff=85):
+def func_adj(res, mut, method, dir_func, is_coding, cutoff=85):
     ''' Main wrapper for functional adjustment
     '''
     support_method = ['eigen']
     assert method in support_method, 'Invalid functional score method. Must be chosen from {}'.format(support_method)
     if method == 'eigen':
-        eigen = get_eigen(mut, path_eigen, is_coding)
+        dir_eigen = os.path.join(os.path.expanduser(dir_func), 'eigen')
+        eigen = get_eigen(mut, dir_eigen, is_coding)
         # mean eigen score per bin
         ## For coding, mean score of non-silent and silent POINT mutations
         fscore = eigen.fillna(0).pivot_table(index='binID', values='fscore', aggfunc=np.mean)
@@ -112,10 +113,12 @@ def func_adj(res, mut, method, path_eigen, is_coding, cutoff=85):
     # fill bin without fscore with 0
     res.fscore.fillna(0, inplace=True)
     threshold = np.percentile(res.fscore, cutoff)
+    logger.info('Use functional score {} ({} percentile) to adjust mutation rate'.format(threshold, cutoff))
     # adjusted mutation rate
     ## for bin w/o fscore, MuAdj will be inf.
     res['MuAdj'] = res.Mu * threshold / res.fscore
     # Pval: binom(nMutSample, length, MuAdj)
     res['Pval'] = [binom_test(x, n, p, 'greater') if p<1 else 1 for x, n, p in zip(res.nMutSample, res.Length, res.MuAdj)]
     res['Qval'] = multipletests(res.Pval, method='fdr_bh')[1]
+    res.sort_values('Pval', inplace=True)
     return res

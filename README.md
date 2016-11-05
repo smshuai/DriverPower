@@ -1,5 +1,5 @@
 # DriverPower
-version: 0.3.3
+version: 0.3.4
 
 ## Installation
 
@@ -26,7 +26,8 @@ The DriverPower sub-commands include:
   {preprocess,select,model}
     preprocess          Load and preprocess data
     select              Run feature selection on preprocessed data
-    model               Modelling module
+    model               Find driver bins with preprocessed training and test
+                        data
 ```
 
 To view help for a particular sub-commands like `select`, type

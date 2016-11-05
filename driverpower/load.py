@@ -5,7 +5,7 @@ Load data from DriverPower.
 import pandas as pd
 import numpy as np
 import logging
-from driverpower.preprocess import get_filter, get_response
+from driverpower.preprocess import get_filter
 
 logger = logging.getLogger('LOAD')
 # logger.setLevel(logging.INFO)
@@ -52,6 +52,7 @@ def load_covar(path_covar):
         cv.fillna(0, inplace=True)
     logger.info('Successfully load features for {} bins'.format(cv.shape[0]))
     return cv
+
 
 def load_count(path_count):
     ''' Load mutation count data.
@@ -108,7 +109,7 @@ def load_all(path_cg_test, path_ct_test, path_cv_test, path_mut,
 
 
 def load_memsave(path_ct, path_cg, path_cv, len_threshold=500, recur_threshold=2):
-    ''' Load CT, CG and CV in a memsave way. Return filtered CT, CG and CV
+    ''' Load CT, CG and CV in a memsave way. Return filtered CT, CG, CV and grecur
     '''
     cg = load_coverage(path_cg)
     ct = load_count(path_ct)
@@ -143,7 +144,11 @@ def load_memsave(path_ct, path_cg, path_cv, len_threshold=500, recur_threshold=2
     assert np.array_equal(cv.index.sort_values(), cg.index.sort_values()), 'binIDs in feature and coverage tables do not match'
     assert np.array_equal(cv.index, cg.index), 'binIDs in feature and coverage tables are not sorted'
     ct = ct[ct.binID.isin(cv.index)] # filter ct as well
-    return ct, cg, cv
+    # get recur
+    grecur = tab.recur.loc[keep_bin]
+    grecur.sort_index(inplace=True)
+    assert np.array_equal(cv.index, grecur.index), 'binIDs in feature and recur tables are not equal'
+    return ct, cg, cv, grecur
 
 
 def load_all_memsave(path_cg_test, path_ct_test, path_cv_test, path_mut,
