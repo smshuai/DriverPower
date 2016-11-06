@@ -90,7 +90,7 @@ def get_args():
     op_model.add_argument('--select_criteria', dest='criteria', type=str,
         help='Feature selection criteria')
     op_model.add_argument('--select_cutoff', dest='cutoff', type=float,
-        help='Feature selection cutoff')   
+        help='Feature selection cutoff')
     op_model.add_argument('--coding', dest='is_coding', action="store_true",
         help='Test for coding bins')
     op_model.add_argument('-o', '--output', dest='out', type=str, default='driverpower_result.tsv',
@@ -143,11 +143,11 @@ def run_select(args):
     assert np.array_equal(X.index, y.index), 'X and y have different row indexes'
     logger.info('Successfully load X with shape: {}'.format(X.shape))
     logger.info('Successfully load y with shape: {}'.format(y.shape))
+    # Sampling data
+    X, y = sampling(X, y, args.sampling)
     # silent delete logCG if exist
     if 'logCG' in X.columns.values:
         del X['logCG']
-    # Sampling data
-    X, y = sampling(X, y, args.sampling)
     # y to np.array
     y = y.as_matrix()
     # feature names
