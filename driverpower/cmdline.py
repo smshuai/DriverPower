@@ -204,14 +204,19 @@ def run_model(args):
         else:
             logger.error('Feature selection criteria {} is not in selection table'.format(args.criteria))
     else:
-        logger.info('Use all features')
-    # glm
-    gnames  = ytest.index.values
+        logger.info('Use all features')   
+
     # select features based on names
+    gnames  = ytest.index.values
     Xtrain = Xtrain.loc[:, fset].as_matrix()
     Xtest = Xtest.loc[:, fset].as_matrix()
     ytrain = ytrain.as_matrix()
     ytest = ytest.as_matrix()
+    # scaling
+    logger.info('Training set shapes: X {} and y {}'.format(Xtrain.shape, ytrain.shape))
+    logger.info('Test set shapes: X {} and y {}'.format(Xtest.shape, ytest.shape))
+    Xtrain, Xtest = scaling(Xtrain=Xtrain, Xtest=Xtest, scaler_type=args.scaler)
+    # glm
     res = model(Xtrain, ytrain, Xtest, ytest, gnames, grecur, method='glm')
     # functional adjustment
     if args.path_mut is not None:
