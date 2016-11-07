@@ -70,6 +70,8 @@ def get_args():
     op_select.add_argument('--sampling',
         type=float, dest='sampling', default=1.0,
         help='Number > 0 (default: 1). Sampling the data based on the provided value. Value in (0,1] is used as a fraction. Value > 1 is used as the number of data points.')
+    op_select.add_argument('--gmean', dest='is_gmean', action="store_true",
+        help='Use geometric mean of nMut and nSample as response')
     op_select.add_argument('-o', '--output', dest='out', type=str, default='feature_select.tsv',
         help='Path to the output file (default: ./feature_select.tsv)')
     #
@@ -83,6 +85,8 @@ def get_args():
     re_model.add_argument('--test', dest='path_test', required=True, type=str,
         help='Path to the preprocessed test set (HDF5)')
     op_model = parser_model.add_argument_group(title="optional parameters")
+    op_model.add_argument('--gmean', dest='is_gmean', action="store_true",
+        help='Use geometric mean of nMut and nSample as response')
     op_model.add_argument('--mut', dest='path_mut', type=str,
         help='Path to the mutation table')
     op_model.add_argument('--select', dest='path_select', type=str,
@@ -122,6 +126,7 @@ def get_args():
         print("DriverPower", __version__)
     return args
 
+
 def run_preprocess(args):
     logger.info('DriverPower {} - Preprocess'.format(__version__))
     # initial output HDF5
@@ -146,11 +151,20 @@ def run_preprocess(args):
     store.close()
     logger.info('Pre-process done!')
 
+
 def run_select(args):
     logger.info('DriverPower {} - Select'.format(__version__))
     # load data from HDF5
     X = pd.read_hdf(args.path_data, 'X')
     y = pd.read_hdf(args.path_data, 'y')
+    recur = pd.read_hdf(args.path_data, 'grecur')
+    if args.is_gmean:
+        # use gmean response
+        gmean = np.sqrt(recur * y.ct)
+        len_ct = y.sum(1) - gmean.astype(int)
+        # update y
+        y['ct']     = gmean.astype(int)
+        y['len_ct'] = len_ct
     # check index (binID)
     assert np.array_equal(X.index, y.index), 'X and y have different row indexes'
     logger.info('Successfully load X with shape: {}'.format(X.shape))
@@ -191,6 +205,7 @@ def run_model(args):
     # load training data
     Xtrain = pd.read_hdf(args.path_train, 'X')
     ytrain = pd.read_hdf(args.path_train, 'y')
+    brecur = pd.read_hdf(args.path_train, 'grecur')
     assert np.array_equal(Xtrain.index, ytrain.index), 'Training X and y have different row indexes'
     logger.info('Successfully load X train with shape: {}'.format(Xtrain.shape))
     logger.info('Successfully load y train with shape: {}'.format(ytrain.shape))
@@ -232,7 +247,8 @@ def run_model(args):
         Xtest=Xtest.as_matrix(), scaler_type=args.scaler)
     # glm
     res = model(Xtrain, ytrain.as_matrix(), Xtest,
-        ytest.as_matrix(), gnames, grecur, method='glm', fold=args.fold)
+        ytest.as_matrix(), gnames, grecur, brecur,
+        args.is_gmean, method='glm', fold=args.fold)
     # functional adjustment
     if args.func != 'none':
         # read mutation table

@@ -106,14 +106,29 @@ def raw_test(mu_pred, ybinom_test, gnames, grecur=None):
     return res
 
 
-def model(X_train, ybinom_train, X_test, ybinom_test, gnames, grecur=None, method='glm', fold=1):
+def get_gmean(y, recur):
+    ''' Use binomial response y and recur to produce a new gmean response.
+    '''
+    ynew = np.zeros(y.shape, dtype=int)
+    ynew[:,0] = np.sqrt(recur * y[:,0])
+    ynew[:,1] = y.sum(1) - ynew[:,0]
+    return ynew
+
+
+def model(X_train, ybinom_train, X_test, ybinom_test, gnames,
+    grecur=None, brecur=None, use_gmean=False, method='glm', fold=1):
     support_method = ['glm']
     assert method in support_method, 'Invalid model type. Must be chosen from {}'.format(support_method)
+    if use_gmean:
+        logger.info('Use geometric mean as response')
+        y_train = get_gmean(ybinom_train, brecur)
+    else:
+        y_train = ybinom_train
     logger.info('Build the model with {}-fold'.format(fold))
     if method == 'glm':
         # obtain cg_train and cg_test
         cg_train = ybinom_train.sum(1)
         cg_test = ybinom_test.sum(1)
-        mu_pred = run_glm_fold(X_train, ybinom_train, X_test, cg_train, cg_test, fold)
+        mu_pred = run_glm_fold(X_train, y_train, X_test, cg_train, cg_test, fold)
     res = raw_test(mu_pred, ybinom_test, gnames, grecur)
     return res
