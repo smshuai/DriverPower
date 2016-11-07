@@ -174,6 +174,15 @@ def scaling(Xtrain, Xtest=None, scaler_type='robust'):
     return scaler.transform(Xtrain), scaler.transform(Xtest)
 
 
+def get_gmean(y, recur):
+    ''' Use binomial response y and recur to produce a new gmean response.
+    '''
+    logger.info('Use geometric mean as response')
+    ynew = np.zeros(y.shape, dtype=int)
+    ynew[:,0] = np.sqrt(recur * y[:,0])
+    ynew[:,1] = y.sum(1) - ynew[:,0]
+    return ynew
+
 def preprocess(cg_test, ct_test, X_test, cg_train,
     ct_train, X_train, len_threshold, recur_threshold, scaler_type):
     ''' Main wrapper function for preprocess.

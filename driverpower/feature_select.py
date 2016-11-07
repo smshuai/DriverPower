@@ -1,6 +1,7 @@
 ''' Feature selection module for DriverPower
 '''
 import logging
+import sys
 import numpy as np
 from sklearn.linear_model import LassoCV, RandomizedLasso
 from sklearn.feature_selection import f_regression
@@ -64,6 +65,7 @@ def run_rndlasso(X_train, ybinom_train, alpha,
     rndlasso = clf.fit(X_train, ylogit_train)
     return rndlasso
 
+
 def feature_score(fscores, fnames, cutoff):
     ''' Select features based on scores and cutoff.
     Args:
@@ -77,6 +79,9 @@ def feature_score(fscores, fnames, cutoff):
     assert len(fnames) == len(fscores), 'Feature importance scores and names have diffent length'
     fidx = np.where(fscores > cutoff)[0]
     fset = fnames[fidx]
+    if len(fset) == 0:
+        logger.error('No feature is selected. Please try another cutoff')
+        sys.exit(1)
     return fset, fidx
 
 

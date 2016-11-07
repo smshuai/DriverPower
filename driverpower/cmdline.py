@@ -9,7 +9,7 @@ from driverpower.preprocess import get_response, scaling, sampling
 from driverpower.feature_select import run_lasso, run_rndlasso, run_spearmanr, run_fregression
 from driverpower.feature_select import feature_score
 from driverpower import __version__
-from driverpower.model import model
+from driverpower.model import model, get_gmean
 from driverpower.func_adj import func_adj
 
 
@@ -22,6 +22,7 @@ logger = logging.getLogger('DP')
 
 
 def get_args():
+    logger.info('DriverPower {}'.format(__version__))
     parser = argparse.ArgumentParser(prog='driverpower')
     # global argument
     parser.add_argument('-v', '--version', dest='version', action="store_true",
@@ -84,34 +85,41 @@ def get_args():
         help='Path to the preprocessed training set (HDF5)')
     re_model.add_argument('--test', dest='path_test', required=True, type=str,
         help='Path to the preprocessed test set (HDF5)')
+    # optional parameters
+    ## other options
     op_model = parser_model.add_argument_group(title="optional parameters")
-    op_model.add_argument('--gmean', dest='is_gmean', action="store_true",
-        help='Use geometric mean of nMut and nSample as response')
-    op_model.add_argument('--mut', dest='path_mut', type=str,
-        help='Path to the mutation table')
-    op_model.add_argument('--select', dest='path_select', type=str,
-        help='Path to the feature selection table')
-    op_model.add_argument('--select_criteria', dest='criteria', type=str,
-        help='Feature selection criteria')
-    op_model.add_argument('--select_cutoff', dest='cutoff', type=float,
-        help='Feature selection cutoff')
     op_model.add_argument('--coding', dest='is_coding', action="store_true",
         help='Test for coding bins')
-    op_model.add_argument('-o', '--output', dest='out', type=str, default='driverpower_result.tsv',
-        help='Path to the output file (default: ./driverpower_result.tsv)')
-    op_model.add_argument('--func', choices=['cadd', 'eigen', 'none'],
-        type=str, dest='func', default='none',
-        help='(default: none). Type of functional scores to use')
-    op_model.add_argument('--func_dir', dest='dir_func', type=str, default='~/dp_func/',
-        help='Directory of functional scores (default: ~/dp_func/)')
-    op_model.add_argument('--func_cutoff', dest='funcadj', type=int, default=85,
-        help='Integer between 1 and 99 (default: 85). Strength of functional adjustment. Integer outside of (0, 100) will disable functional adjustment')
-    op_model.add_argument('--scaler', choices=['robust', 'standard', 'none'],
-        type=str, dest='scaler', default='robust',
-        help='robust or standard (default: robust). Scaler used to scale the data')
     op_model.add_argument('--fold',
         type=int, dest='fold', default=1,
         help='Int (default: 1). Split the data into k-folds by effective length')
+    op_model.add_argument('--gmean', dest='is_gmean', action="store_true",
+        help='Use geometric mean of nMut and nSample as response')
+    op_model.add_argument('--scaler', choices=['robust', 'standard', 'none'],
+        type=str, dest='scaler', default='robust',
+        help='robust or standard (default: robust). Scaler used to scale the data')
+    op_model.add_argument('-o', '--output', dest='out', type=str, default='driverpower_result.tsv',
+        help='Path to the output file (default: ./driverpower_result.tsv)')
+    ## feature select
+    op_select_model = parser_model.add_argument_group(title="optional parameters for feature selection")
+    op_select_model.add_argument('--select', dest='path_select', type=str,
+        help='Path to the feature selection table')
+    op_select_model.add_argument('--select_criteria', dest='criteria', type=str, default='rndlasso',
+        help='(default: rndlasso). Feature selection criteria')
+    op_select_model.add_argument('--select_cutoff', dest='cutoff', type=float, default=0.5,
+        help='(default: 0.5). Feature selection cutoff')
+    ## functional adjustment
+    op_func_model = parser_model.add_argument_group(title="optional parameters for functional adjustment")
+    op_func_model.add_argument('--func', choices=['cadd', 'eigen', 'none'],
+        type=str, dest='func', default='none',
+        help='(default: none). Type of functional scores to use')
+    op_func_model.add_argument('--func_dir', dest='dir_func', type=str, default='~/dp_func/',
+        help='Directory of functional scores (default: ~/dp_func/)')
+    op_func_model.add_argument('--func_cutoff', dest='funcadj', type=int, default=85,
+        help='Integer between 1 and 99 (default: 85). Strength of functional adjustment.')
+    op_func_model.add_argument('--mut', dest='path_mut', type=str,
+        help='Path to the mutation table')
+
     # optinal parameters
     args = parser.parse_args()
 
@@ -124,11 +132,87 @@ def get_args():
         parser.exit(1)
     if args.version:
         print("DriverPower", __version__)
+    # check for preprocess
+    if args.subcommand == 'preprocess':
+        # check input files
+        check_file(args.path_ct)
+        check_file(args.path_cg)
+        check_file(args.path_cv)
+        # check output file
+        args.out = check_out(args.out)
+        # check sampling value
+        if args.sampling < 0:
+            logger.error('Sampling value must be greater than 0. You enter {}'.format(args.sampling))
+            sys.exit(1)
+    elif args.subcommand == 'select':
+        # check input file
+        check_file(args.path_data)
+        # check output file
+        args.out = check_out(args.out)
+        # check sampling
+        if args.sampling < 0:
+            logger.error('Sampling value must be greater than 0. You enter {}'.format(args.sampling))
+            sys.exit(1)
+    elif args.subcommand == 'model':
+        # check input file
+        check_file(args.path_train)
+        check_file(args.path_test)
+        if args.path_select is not None:
+            # use selection
+            check_file(args.path_select)
+        if args.func != 'none':
+            # use func adj
+            if args.path_mut is None:
+                logger.error('Please specify mutation table (--mut) for functional adjustment')
+                sys.exit(1)
+            else:
+                check_file(args.path_mut)
+            if args.func_cutoff < 1 or args.func_cutoff > 99:
+                logger.error('--func_cutoff must be an int between 1 and 99. You enter {}'.format(args.func_cutoff))
+                sys.exit(1)
+        # check output file
+        check_out(args.out)
+        # check fold
+        if args.fold < 0:
+            logger.error('Fold value must be greater than 0. You enter {}'.format(args.fold))
+            sys.exit(1)    
     return args
 
 
+def check_file(path):
+    if not os.path.isfile(os.path.expanduser(path)):
+        # no such file
+        logger.error('File not found in {}'.format(path))
+        sys.exit(1)
+    else:
+        return True
+
+
+def check_out(path):
+    ''' Check the output file path.
+    Return a path that is not used and creatable
+    '''
+    path = os.path.expanduser(path)
+    if os.path.isfile(path):
+        # exist already?
+        logger.warning('The output file {} already exists'.format(path))
+        i = 1
+        while os.path.isfile(path):
+            path += '.' + str(i)
+            i += 1
+        logger.warning('Use {} instead'.format(path))
+    else:
+        # creatable?
+        try:
+            open(path, 'w').close()
+        except OSError:
+            logger.error('The output path {} is not valid'.format(path))
+            sys.exit(1)
+    return path
+
+
 def run_preprocess(args):
-    logger.info('DriverPower {} - Preprocess'.format(__version__))
+    logger.info('Sub-command Preprocess'.format(__version__))
     # initial output HDF5
     store = pd.HDFStore(args.out, mode='w')
     ct, cg, cv, grecur = load_memsave(args.path_ct,
@@ -153,18 +237,11 @@ def run_preprocess(args):
 
 
 def run_select(args):
-    logger.info('DriverPower {} - Select'.format(__version__))
+    logger.info('Sub-command Select'.format(__version__))
     # load data from HDF5
     X = pd.read_hdf(args.path_data, 'X')
     y = pd.read_hdf(args.path_data, 'y')
     recur = pd.read_hdf(args.path_data, 'grecur')
-    if args.is_gmean:
-        # use gmean response
-        gmean = np.sqrt(recur * y.ct)
-        len_ct = y.sum(1) - gmean.astype(int)
-        # update y
-        y['ct']     = gmean.astype(int)
-        y['len_ct'] = len_ct
     # check index (binID)
     assert np.array_equal(X.index, y.index), 'X and y have different row indexes'
     logger.info('Successfully load X with shape: {}'.format(X.shape))
@@ -176,6 +253,8 @@ def run_select(args):
         del X['logCG']
     # y to np.array
     y = y.as_matrix()
+    if args.is_gmean:
+        y = get_gmean(y, recur)
     # feature names
     fnames = X.columns.values
     # scale for Xtrain only
@@ -201,7 +280,7 @@ def run_select(args):
 
 
 def run_model(args):
-    logger.info('DriverPower {} - Model'.format(__version__))
+    logger.info('Sub-command - Model'.format(__version__))
     # load training data
     Xtrain = pd.read_hdf(args.path_train, 'X')
     ytrain = pd.read_hdf(args.path_train, 'y')
@@ -231,6 +310,7 @@ def run_model(args):
             logger.info('At cutoff={}, {} selected features are: {}'.format(args.cutoff, len(fset), ", ".join(fset)))
         else:
             logger.error('Feature selection criteria {} is not in selection table'.format(args.criteria))
+            sys.exit(1)
     else:
         is_select = False
         logger.info('Use all features')

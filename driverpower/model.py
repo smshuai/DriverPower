@@ -6,6 +6,7 @@ import pandas as pd
 import statsmodels.api as sm
 from statsmodels.sandbox.stats.multicomp import multipletests
 from scipy.stats import binom_test
+from driverpower.preprocess import get_gmean
 import logging
 
 
@@ -106,21 +107,11 @@ def raw_test(mu_pred, ybinom_test, gnames, grecur=None):
     return res
 
 
-def get_gmean(y, recur):
-    ''' Use binomial response y and recur to produce a new gmean response.
-    '''
-    ynew = np.zeros(y.shape, dtype=int)
-    ynew[:,0] = np.sqrt(recur * y[:,0])
-    ynew[:,1] = y.sum(1) - ynew[:,0]
-    return ynew
-
-
 def model(X_train, ybinom_train, X_test, ybinom_test, gnames,
     grecur=None, brecur=None, use_gmean=False, method='glm', fold=1):
     support_method = ['glm']
     assert method in support_method, 'Invalid model type. Must be chosen from {}'.format(support_method)
     if use_gmean:
-        logger.info('Use geometric mean as response')
         y_train = get_gmean(ybinom_train, brecur)
     else:
         y_train = ybinom_train

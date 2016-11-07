@@ -35,6 +35,7 @@ def load_coverage(path_coverage):
     logger.info('Successfully load coverages for {} bins'.format(cg.shape[0]))
     return cg
 
+
 def load_covar(path_covar):
     ''' Load pre-processed covar. table. Return a pd.DF with binID as the key
     '''
