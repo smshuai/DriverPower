@@ -90,16 +90,53 @@ def query_eigen_indel():
     '''
     pass
 
-def get_cadd():
+def get_cadd(mut, path='/u/sshuai/sshuai/func_score/cadd/v1.3'):
     ''' Get CADD scores with tabix
     '''
-    pass
+    # make chrom string
+    mut['chrom'] = mut.chrom.astype(str)
+    # create return table
+    # SNP only. TO DO: ADD MNP and INDEL Support
+    keep = mut['type'] == 'SNP'
+    cadd = mut[keep].copy()
+    if cadd.shape[0] == 0:
+        logger.warning('No mutations left in CADD adjustment')
+        return None
+    logger.info('Retrieving CADD SNP Scores')
+    # name for version 1.3. A single file for SNP.
+    name = 'whole_genome_SNVs.tsv.gz'
+    file_path = os.path.join(path, name)
+    assert os.path.isfile(file_path), 'Cannot find CADD scores in {}'.format(file_path)
+    # open one CADD
+    tb = tabix.open(file_path)
+    # row apply
+    func = lambda x: query_cadd_SNP(tb, x[0], x[1], x[2], x[4], x[5])
+    cadd['fscore'] = cadd.apply(func, axis=1)
+    return cadd
+    
+
+def query_cadd_SNP(tb, chrom, start, end, ref, alt, phred=True):
+    ''' Find CADD score for a SNP
+    '''
+    if phred:
+        idx = 5 # use CADD phred score
+    else:
+        idx = 4 # use CADD raw score
+    # logger.debug((chrom, start, end, ref, alt))
+    res = tb.query(str(chrom), start, end)
+    for i in res: # iter through records
+        # check ref
+        assert ref == i[2], 'Reference allele in mutation table does not match CADD records'
+        if alt == i[3]:
+            return np.float(i[idx]) # CADD raw or phred
+    # No score found
+    return np.nan
 
 
 def func_adj(res, mut, method, dir_func, is_coding, cutoff=85):
     ''' Main wrapper for functional adjustment
     '''
-    support_method = ['eigen']
+    support_method = ['eigen', 'cadd']
     assert method in support_method, 'Invalid functional score method. Must be chosen from {}'.format(support_method)
     if method == 'eigen':
         dir_eigen = os.path.join(os.path.expanduser(dir_func), 'eigen')
@@ -109,6 +146,12 @@ def func_adj(res, mut, method, dir_func, is_coding, cutoff=85):
         fscore = eigen.fillna(0).pivot_table(index='binID', values='fscore', aggfunc=np.mean)
         res['nEigenAll'] = eigen.pivot_table(index='binID', values='fscore', aggfunc=len)
         res['nEigen'] = eigen.dropna().pivot_table(index='binID', values='fscore', aggfunc=len)
+    elif method == 'cadd':
+        dir_cadd = os.path.join(os.path.expanduser(dir_func), 'cadd', 'v1.3')
+        cadd = get_cadd(mut, dir_cadd)
+        fscore = cadd.fillna(0).pivot_table(index='binID', values='fscore', aggfunc=np.mean)
+        res['nCaddAll'] = cadd.pivot_table(index='binID', values='fscore', aggfunc=len)
+        res['nCadd'] = cadd.dropna().pivot_table(index='binID', values='fscore', aggfunc=len)        
     res['fscore'] = fscore
     # fill bin without fscore with 0
     res.fscore.fillna(0, inplace=True)

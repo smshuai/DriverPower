@@ -95,7 +95,10 @@ def get_args():
         help='Test for coding bins')
     op_model.add_argument('-o', '--output', dest='out', type=str, default='driverpower_result.tsv',
         help='Path to the output file (default: ./driverpower_result.tsv)')
-    op_model.add_argument('--func', dest='dir_func', type=str, default='~/dp_func/',
+    op_model.add_argument('--func', choices=['cadd', 'eigen', 'none'],
+        type=str, dest='func', default='none',
+        help='(default: none). Type of functional scores to use')
+    op_model.add_argument('--func_dir', dest='dir_func', type=str, default='~/dp_func/',
         help='Directory of functional scores (default: ~/dp_func/)')
     op_model.add_argument('--func_cutoff', dest='funcadj', type=int, default=85,
         help='Integer between 1 and 99 (default: 85). Strength of functional adjustment. Integer outside of (0, 100) will disable functional adjustment')
@@ -231,11 +234,11 @@ def run_model(args):
     res = model(Xtrain, ytrain.as_matrix(), Xtest,
         ytest.as_matrix(), gnames, grecur, method='glm', fold=args.fold)
     # functional adjustment
-    if args.path_mut is not None:
+    if args.func != 'none':
         # read mutation table
         mut = load_mut(args.path_mut)
         logger.info('Start functional adjustment')
-        res = func_adj(res, mut, method='eigen',
+        res = func_adj(res, mut, method=args.func,
             dir_func=os.path.expanduser(args.dir_func),
             is_coding=args.is_coding, cutoff=args.funcadj)
     res.to_csv(args.out, sep='\t')
