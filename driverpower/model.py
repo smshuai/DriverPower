@@ -35,8 +35,8 @@ def split_by_cg(cg_train, cg_test=None, fold=4):
     q   = np.linspace(0,100,fold+1)
     cut = np.percentile(cg_train, q)
     # Expand end points. Make sure all data are used.
-    cut[0] = cut[0] - 1
-    cut[fold] = cut[fold] + 1
+    cut[0] = -1
+    cut[fold] = cut[fold] + 1e11
     # split training set for each fold
     for i in np.arange(fold):
         train_spliter[i, :] = np.logical_and(cg_train >= cut[i], cg_train < cut[i+1])
@@ -48,7 +48,8 @@ def split_by_cg(cg_train, cg_test=None, fold=4):
         test_spliter  = np.zeros((fold, cg_test.shape[0]), dtype=bool)
         for i in np.arange(fold):
             test_spliter[i, :]  = np.logical_and(cg_test >= cut[i], cg_test < cut[i+1])
-        assert np.sum(test_spliter.sum(1)) == cg_test.shape[0]
+        assert np.sum(test_spliter.sum(1)) == cg_test.shape[0], \
+        '{} != {}'.format(np.sum(test_spliter.sum(1)), cg_test.shape[0])
         return train_spliter, test_spliter
     return train_spliter
 
@@ -64,7 +65,7 @@ def run_glm(X_train, ybinom_train, X_test):
     return mu_pred
 
 
-def run_glm_fold(X_train, ybinom_train, X_test, cg_train=None, cg_test=None, fold=3):
+def run_glm_fold(X_train, ybinom_train, X_test, cg_train=None, cg_test=None, fold=1):
     if fold == 1:
         mu_pred = run_glm(X_train, ybinom_train, X_test)
     else:
@@ -105,11 +106,14 @@ def raw_test(mu_pred, ybinom_test, gnames, grecur=None):
     return res
 
 
-def model(X_train, ybinom_train, X_test, ybinom_test, gnames, grecur=None, method='glm', fold=3):
+def model(X_train, ybinom_train, X_test, ybinom_test, gnames, grecur=None, method='glm', fold=1):
     support_method = ['glm']
     assert method in support_method, 'Invalid model type. Must be chosen from {}'.format(support_method)
-    logger.info('Build the model')
+    logger.info('Build the model with {}-fold'.format(fold))
     if method == 'glm':
-        mu_pred = run_glm(X_train, ybinom_train, X_test)
+        # obtain cg_train and cg_test
+        cg_train = ybinom_train.sum(1)
+        cg_test = ybinom_test.sum(1)
+        mu_pred = run_glm_fold(X_train, ybinom_train, X_test, cg_train, cg_test, fold)
     res = raw_test(mu_pred, ybinom_test, gnames, grecur)
     return res

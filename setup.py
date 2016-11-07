@@ -20,8 +20,14 @@ setup(
         'statsmodels >= 0.6.1',
         'pytabix >= 0.0.2',
     ],
+    extras_require={
+        'XGB':  ["xgboost>=0.6"],
+    },
     entry_points = {
-        'console_scripts': ['driverpower=driverpower.cmdline:main'],
+        'console_scripts': [
+            'driverpower=driverpower.cmdline:main',
+            'driverpowerGBT=driverpower.run_xgb:main [XGB]',
+        ],
     },
 )
 

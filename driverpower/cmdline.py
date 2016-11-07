@@ -102,6 +102,9 @@ def get_args():
     op_model.add_argument('--scaler', choices=['robust', 'standard', 'none'],
         type=str, dest='scaler', default='robust',
         help='robust or standard (default: robust). Scaler used to scale the data')
+    op_model.add_argument('--fold',
+        type=int, dest='fold', default=1,
+        help='Int (default: 1). Split the data into k-folds by effective length')
     # optinal parameters
     args = parser.parse_args()
 
@@ -226,7 +229,7 @@ def run_model(args):
         Xtest=Xtest.as_matrix(), scaler_type=args.scaler)
     # glm
     res = model(Xtrain, ytrain.as_matrix(), Xtest,
-        ytest.as_matrix(), gnames, grecur, method='glm', fold=3)
+        ytest.as_matrix(), gnames, grecur, method='glm', fold=args.fold)
     # functional adjustment
     if args.path_mut is not None:
         # read mutation table
