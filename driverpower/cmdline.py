@@ -99,7 +99,9 @@ def get_args():
         help='Directory of functional scores (default: ~/dp_func/)')
     op_model.add_argument('--func_cutoff', dest='funcadj', type=int, default=85,
         help='Integer between 1 and 99 (default: 85). Strength of functional adjustment. Integer outside of (0, 100) will disable functional adjustment')
-
+    op_model.add_argument('--scaler', choices=['robust', 'standard', 'none'],
+        type=str, dest='scaler', default='robust',
+        help='robust or standard (default: robust). Scaler used to scale the data')
     # optinal parameters
     args = parser.parse_args()
 
@@ -121,6 +123,9 @@ def run_preprocess(args):
     ct, cg, cv, grecur = load_memsave(args.path_ct,
         args.path_cg, args.path_cv,
         args.len_threshold, args.recur_threshold)
+    # sample IDs
+    sid = pd.Series(ct.sid.unique())
+    sid.name = 'sid'
     # get response
     ybinom = get_response(ct, cg)
     # y to pd.DF
@@ -131,6 +136,7 @@ def run_preprocess(args):
     store.append('X', cv, chunksize=50000)
     store['y'] = ybinom
     store['grecur'] = grecur
+    store['sid'] = sid
     store.close()
     logger.info('Pre-process done!')
 
@@ -196,6 +202,7 @@ def run_model(args):
     assert np.array_equal(Xtest.columns, Xtrain.columns), 'Training and test X have different feature names'
     # obtain feature selection
     if args.path_select is not None:
+        is_select = True
         select_tb = pd.read_table(args.path_select, index_col='fname')
         if args.criteria in select_tb.columns.values:
             logger.info('Use {} as criteria in feature selection'.format(args.criteria))
@@ -204,20 +211,22 @@ def run_model(args):
         else:
             logger.error('Feature selection criteria {} is not in selection table'.format(args.criteria))
     else:
-        logger.info('Use all features')   
-
-    # select features based on names
-    gnames  = ytest.index.values
-    Xtrain = Xtrain.loc[:, fset].as_matrix()
-    Xtest = Xtest.loc[:, fset].as_matrix()
-    ytrain = ytrain.as_matrix()
-    ytest = ytest.as_matrix()
+        is_select = False
+        logger.info('Use all features')
+    # get gnames
+    gnames  = ytest.index.values 
+    if is_select: # feature selection ON
+        # select features based on names
+        Xtrain = Xtrain.loc[:, fset]
+        Xtest = Xtest.loc[:, fset]
     # scaling
     logger.info('Training set shapes: X {} and y {}'.format(Xtrain.shape, ytrain.shape))
     logger.info('Test set shapes: X {} and y {}'.format(Xtest.shape, ytest.shape))
-    Xtrain, Xtest = scaling(Xtrain=Xtrain, Xtest=Xtest, scaler_type=args.scaler)
+    Xtrain, Xtest = scaling(Xtrain=Xtrain.as_matrix(),
+        Xtest=Xtest.as_matrix(), scaler_type=args.scaler)
     # glm
-    res = model(Xtrain, ytrain, Xtest, ytest, gnames, grecur, method='glm')
+    res = model(Xtrain, ytrain.as_matrix(), Xtest,
+        ytest.as_matrix(), gnames, grecur, method='glm', fold=3)
     # functional adjustment
     if args.path_mut is not None:
         # read mutation table

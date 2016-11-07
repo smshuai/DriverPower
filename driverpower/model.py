@@ -23,6 +23,36 @@ logger = logging.getLogger('MODEL')
 # logger.addHandler(ch)
 
 
+def split_by_cg(cg_train, cg_test=None, fold=4):
+    ''' Generate spliters that split the data into k-fold equal-size sets by coverage.
+    Args:
+        cg_train - Vector of coverage in training set
+        cg_test  - Vector of coverage in test set
+    '''
+    # Output format. Each row corresponds to one fold.
+    train_spliter = np.zeros((fold, cg_train.shape[0]), dtype=bool)
+    # percentiles
+    q   = np.linspace(0,100,fold+1)
+    cut = np.percentile(cg_train, q)
+    # Expand end points. Make sure all data are used.
+    cut[0] = cut[0] - 1
+    cut[fold] = cut[fold] + 1
+    # split training set for each fold
+    for i in np.arange(fold):
+        train_spliter[i, :] = np.logical_and(cg_train >= cut[i], cg_train < cut[i+1])
+    # make sure all data points are used once.
+    assert np.sum(train_spliter.sum(1)) == cg_train.shape[0]
+    # test data
+    if cg_test is not None:
+        # split test set as well
+        test_spliter  = np.zeros((fold, cg_test.shape[0]), dtype=bool)
+        for i in np.arange(fold):
+            test_spliter[i, :]  = np.logical_and(cg_test >= cut[i], cg_test < cut[i+1])
+        assert np.sum(test_spliter.sum(1)) == cg_test.shape[0]
+        return train_spliter, test_spliter
+    return train_spliter
+
+
 def run_glm(X_train, ybinom_train, X_test):
     ''' Run binomial glm in statsmodels
     '''
@@ -31,6 +61,21 @@ def run_glm(X_train, ybinom_train, X_test):
     glm = sm.GLM(ybinom_train, X_train, family=sm.families.Binomial())
     glm_res = glm.fit()
     mu_pred = glm_res.predict(X_test)
+    return mu_pred
+
+
+def run_glm_fold(X_train, ybinom_train, X_test, cg_train=None, cg_test=None, fold=3):
+    if fold == 1:
+        mu_pred = run_glm(X_train, ybinom_train, X_test)
+    else:
+        # output vector
+        mu_pred = np.zeros(X_test.shape[0]) 
+        train_spliter, test_spliter = split_by_cg(cg_train, cg_test, fold)
+        for i in np.arange(fold): # pred for each fold
+            idx_train = np.where(train_spliter[i, :])[0]
+            idx_test  = np.where(test_spliter[i, :])[0]
+            mu_pred[idx_test] = \
+                run_glm(X_train[idx_train,:], ybinom_train[idx_train,:], X_test[idx_test,:])
     return mu_pred
 
 
@@ -60,7 +105,7 @@ def raw_test(mu_pred, ybinom_test, gnames, grecur=None):
     return res
 
 
-def model(X_train, ybinom_train, X_test, ybinom_test, gnames, grecur=None, method='glm'):
+def model(X_train, ybinom_train, X_test, ybinom_test, gnames, grecur=None, method='glm', fold=3):
     support_method = ['glm']
     assert method in support_method, 'Invalid model type. Must be chosen from {}'.format(support_method)
     logger.info('Build the model')
