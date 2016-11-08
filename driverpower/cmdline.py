@@ -230,7 +230,7 @@ def run_preprocess(args):
     # write to store
     store.append('X', cv, chunksize=50000)
     store['y'] = ybinom
-    store['grecur'] = grecur
+    store['recur'] = grecur
     store['sid'] = sid
     store.close()
     logger.info('Pre-process done!')
@@ -284,14 +284,15 @@ def run_model(args):
     # load training data
     Xtrain = pd.read_hdf(args.path_train, 'X')
     ytrain = pd.read_hdf(args.path_train, 'y')
-    brecur = pd.read_hdf(args.path_train, 'grecur')
+    brecur = pd.read_hdf(args.path_train, 'recur')
     assert np.array_equal(Xtrain.index, ytrain.index), 'Training X and y have different row indexes'
+    assert np.array_equal(brecur.index, ytrain.index), 'Training recur and y have different row indexes'
     logger.info('Successfully load X train with shape: {}'.format(Xtrain.shape))
     logger.info('Successfully load y train with shape: {}'.format(ytrain.shape))
     # load test data
     Xtest = pd.read_hdf(args.path_test, 'X')
     ytest = pd.read_hdf(args.path_test, 'y')
-    grecur = pd.read_hdf(args.path_test, 'grecur')
+    grecur = pd.read_hdf(args.path_test, 'recur')
     assert np.array_equal(Xtest.index, ytest.index), 'Test X and y have different row indexes'
     assert np.array_equal(grecur.index, ytest.index), 'Test recur and y have different row indexes'
     logger.info('Successfully load X test with shape: {}'.format(Xtest.shape))
