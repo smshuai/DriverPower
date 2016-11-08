@@ -17,8 +17,8 @@ if __name__ == '__main__':
     # pct of 3mer cg, 32 features, 32 in total
     cg_percent = cg.apply(lambda x: x/cg_sum * 100, axis=0)
     # log(cg+1), 1 feature, 33 in total
-    logcg = np.log10(cg_sum+1)
-    logcg.name = 'logCG'
+    # logcg = np.log10(cg_sum+1)
+    # logcg.name = 'logCG'
     # pct of 2mer cg, 14 features, 47 in total
     ## mutate at 5'
     two_mer1 = ['TA', 'TC', 'TG', 'TT', 'CA', 'CC', 'CG', 'CT']
@@ -49,8 +49,8 @@ if __name__ == '__main__':
     two_mer_percent = two_mer.apply(lambda x: x/cg_sum * 100, axis=0)
     two_mer_percent.fillna(0, inplace=True)
 
-    # combine 99 features
-    nuc = pd.concat([logcg, cg_percent, two_mer_percent], axis=1)
+    # combine 98 features without logCG.
+    nuc = pd.concat([cg_percent, two_mer_percent], axis=1)
     nuc.to_csv(path_out, sep='\t')
 
     sys.exit(0)
