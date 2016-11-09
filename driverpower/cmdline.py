@@ -22,7 +22,7 @@ logger = logging.getLogger('DP')
 
 
 def get_args():
-    logger.info('DriverPower {}'.format(__version__))
+    
     parser = argparse.ArgumentParser(prog='driverpower')
     # global argument
     parser.add_argument('-v', '--version', dest='version', action="store_true",
@@ -120,7 +120,7 @@ def get_args():
     op_func_model.add_argument('--mut', dest='path_mut', type=str,
         help='Path to the mutation table')
 
-    # optinal parameters
+    # optional parameters
     args = parser.parse_args()
 
     #
@@ -144,6 +144,7 @@ def get_args():
         if args.sampling < 0:
             logger.error('Sampling value must be greater than 0. You enter {}'.format(args.sampling))
             sys.exit(1)
+    # check for select
     elif args.subcommand == 'select':
         # check input file
         check_file(args.path_data)
@@ -153,6 +154,7 @@ def get_args():
         if args.sampling < 0:
             logger.error('Sampling value must be greater than 0. You enter {}'.format(args.sampling))
             sys.exit(1)
+    # check for model
     elif args.subcommand == 'model':
         # check input file
         check_file(args.path_train)
@@ -175,7 +177,7 @@ def get_args():
         # check fold
         if args.fold < 0:
             logger.error('Fold value must be greater than 0. You enter {}'.format(args.fold))
-            sys.exit(1)    
+            sys.exit(1)
     return args
 
 
@@ -344,6 +346,7 @@ def run_model(args):
 
 def main():
     args = get_args()
+    logger.info('DriverPower {}'.format(__version__))
     if args.subcommand == 'preprocess':
         run_preprocess(args)
     elif args.subcommand == 'select':
