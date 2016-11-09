@@ -26,13 +26,14 @@ logger = logging.getLogger('PREPROCESS')
 # # add the handlers to the logger
 # logger.addHandler(ch)
 
-def sampling(X, y, N):
+def sampling(X, y, recur, N):
     ''' Sample X and y, which are both pd.DF and have the same index.
     If N in (0,1] sample a fraction of data.
     If N is interger > 1, sample N data points.
     '''
     # check index
     assert np.array_equal(X.index, y.index), 'X and y have different indexes'
+    assert np.array_equal(recur.index, y.index), 'recur and y have different row indexes'
     if N <= 0:
         logger.error('Sampling value must > 0. You enter {}'.format(N))
         sys.exit(1)
@@ -40,6 +41,8 @@ def sampling(X, y, N):
         logger.info('Sample {}% of data'.format(N*100))
         y = y.sample(frac=N, replace=False)
         y.sort_index(inplace=True)
+        recur = recur[recur.index.isin(y.index)]
+        recur.sort_index(inplace=True)
         X = X[X.index.isin(y.index)]
         X.sort_index(inplace=True)
     elif N==1:
@@ -54,10 +57,13 @@ def sampling(X, y, N):
             logger.info('Sample {} data points'.format(N))
             y = y.sample(n=N, replace=False)
             y.sort_index(inplace=True)
+            recur = recur[recur.index.isin(y.index)]
+            recur.sort_index(inplace=True)
             X = X[X.index.isin(y.index)]
             X.sort_index(inplace=True)
     assert np.array_equal(X.index, y.index), 'X and y have different row indexes after sampling'
-    return X, y
+    assert np.array_equal(y.index, recur.index), 'recur and y have different row indexes after sampling'
+    return X, y, recur
 
 def get_response(ct, cg):
     ''' Obtain response from count and coverage table

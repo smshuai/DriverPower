@@ -215,7 +215,7 @@ def run_preprocess(args):
     logger.info('Sub-command Preprocess'.format(__version__))
     # initial output HDF5
     store = pd.HDFStore(args.out, mode='w')
-    ct, cg, cv, grecur = load_memsave(args.path_ct,
+    ct, cg, cv, recur = load_memsave(args.path_ct,
         args.path_cg, args.path_cv,
         args.len_threshold, args.recur_threshold)
     # sample IDs
@@ -226,11 +226,11 @@ def run_preprocess(args):
     # y to pd.DF
     ybinom = pd.DataFrame(ybinom, columns=['ct','len_ct'], index=cg.index)
     # sampling
-    cv, ybinom = sampling(cv, ybinom, args.sampling)
+    cv, ybinom, recur = sampling(cv, ybinom, recur, args.sampling)
     # write to store
     store.append('X', cv, chunksize=50000)
     store['y'] = ybinom
-    store['recur'] = grecur
+    store['recur'] = recur
     store['sid'] = sid
     store.close()
     logger.info('Pre-process done!')
@@ -241,13 +241,14 @@ def run_select(args):
     # load data from HDF5
     X = pd.read_hdf(args.path_data, 'X')
     y = pd.read_hdf(args.path_data, 'y')
-    recur = pd.read_hdf(args.path_data, 'grecur')
+    recur = pd.read_hdf(args.path_data, 'recur')
     # check index (binID)
     assert np.array_equal(X.index, y.index), 'X and y have different row indexes'
+    assert np.array_equal(y.index, recur.index), 'recur and y have different row indexes'
     logger.info('Successfully load X with shape: {}'.format(X.shape))
     logger.info('Successfully load y with shape: {}'.format(y.shape))
     # Sampling data
-    X, y = sampling(X, y, args.sampling)
+    X, y, recur = sampling(X, y, recur, args.sampling)
     # silent delete logCG if exist
     if 'logCG' in X.columns.values:
         del X['logCG']

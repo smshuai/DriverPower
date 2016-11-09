@@ -61,7 +61,7 @@ def run_rndlasso(X_train, ybinom_train, alpha,
     ylogit_train = logit(ybinom_train[:,0]/ybinom_train.sum(1))
     clf = RandomizedLasso(alpha=alpha, n_resampling=n_resampling,
         sample_fraction=sample_fraction,
-        selection_threshold=1e-3, normalize=False)
+        selection_threshold=1e-3, max_iter=3000, normalize=False)
     rndlasso = clf.fit(X_train, ylogit_train)
     return rndlasso
 
