@@ -169,7 +169,7 @@ def get_args():
                 sys.exit(1)
             else:
                 check_file(args.path_mut)
-            if args.func_cutoff < 1 or args.func_cutoff > 99:
+            if args.funcadj < 1 or args.funcadj > 99:
                 logger.error('--func_cutoff must be an int between 1 and 99. You enter {}'.format(args.func_cutoff))
                 sys.exit(1)
         # check output file

@@ -97,23 +97,41 @@ def get_cadd(mut, path='/u/sshuai/sshuai/func_score/cadd/v1.3'):
     mut['chrom'] = mut.chrom.astype(str)
     # create return table
     # SNP only. TO DO: ADD MNP and INDEL Support
-    keep = mut['type'] == 'SNP'
+    keep = mut['type'].isin(['SNP','DEL','INS'])
     cadd = mut[keep].copy()
     if cadd.shape[0] == 0:
         logger.warning('No mutations left in CADD adjustment')
         return None
     logger.info('Retrieving CADD SNP Scores')
-    # name for version 1.3. A single file for SNP.
-    name = 'whole_genome_SNVs.tsv.gz'
-    file_path = os.path.join(path, name)
-    assert os.path.isfile(file_path), 'Cannot find CADD scores in {}'.format(file_path)
+    # name for version 1.3.
+    # A single file for SNP.
+    # Use pre-computed PCAWG indel scores
+    snp   = 'whole_genome_SNVs.tsv.gz'
+    indel = 'PCAWG.INDELS.CADD.v1.3.tsv.gz'
+    snp_path = os.path.join(path, snp)
+    indel_path = os.path.join(path, indel)
+    assert os.path.isfile(snp_path), 'Cannot find CADD SNP scores in {}'.format(snp_path)
+    assert os.path.isfile(indel_path), 'Cannot find CADD PCAWG indel scores in {}'.format(indel_path)
     # open one CADD
-    tb = tabix.open(file_path)
+    tb_snp = tabix.open(snp_path)
+    tb_indel = tabix.open(indel_path)
     # row apply
-    func = lambda x: query_cadd_SNP(tb, x[0], x[1], x[2], x[4], x[5])
+    func = lambda x: query_cadd(x[3], tb_snp, tb_indel, x[0], x[1], x[2], x[4], x[5])
     cadd['fscore'] = cadd.apply(func, axis=1)
     return cadd
-    
+
+
+def query_cadd(categ, tb_snp, tb_indel, chrom, start, end, ref, alt, phred=True):
+    ''' Find CADD score for a mutation based on type
+    '''
+    if categ == 'SNP':
+        return query_cadd_SNP(tb_snp, chrom, start, end, ref, alt, phred)
+    elif categ in ['INS', 'DEL']:
+        return query_cadd_indel(tb_indel, chrom, start, end, ref, alt, phred)
+    else:
+        logger.warning('No CADD score because mutation {}:{}-{}({}>{}) is not an indel or a SNP'.format(chrom,start,end,ref,alt))
+        return np.nan
+
 
 def query_cadd_SNP(tb, chrom, start, end, ref, alt, phred=True):
     ''' Find CADD score for a SNP
@@ -133,13 +151,25 @@ def query_cadd_SNP(tb, chrom, start, end, ref, alt, phred=True):
     return np.nan
 
 
+def query_cadd_indel(tb, chrom, start, end, ref, alt, phred=True):
+    ''' Find CADD score for an indel
+    '''
+    idx = 6 if phred else 5
+    res = tb.query(str(chrom), start, end)
+    for i in res:
+        if ref == i[3] and alt == i[4]:
+            return np.float(i[idx])
+    # No score found
+    return np.nan
+
+
 def func_adj(res, mut, method, dir_func, is_coding, cutoff=85):
     ''' Main wrapper for functional adjustment
     '''
     support_method = ['eigen', 'cadd']
     assert method in support_method, 'Invalid functional score method. Must be chosen from {}'.format(support_method)
     if method == 'eigen':
-        dir_eigen = os.path.join(os.path.expanduser(dir_func), 'eigen')
+        dir_eigen = os.path.join(os.path.expanduser(dir_func), 'eigen', 'v1.1')
         eigen = get_eigen(mut, dir_eigen, is_coding)
         # mean eigen score per bin
         ## For coding, mean score of non-silent and silent POINT mutations
@@ -151,7 +181,7 @@ def func_adj(res, mut, method, dir_func, is_coding, cutoff=85):
         cadd = get_cadd(mut, dir_cadd)
         fscore = cadd.fillna(0).pivot_table(index='binID', values='fscore', aggfunc=np.mean)
         res['nCaddAll'] = cadd.pivot_table(index='binID', values='fscore', aggfunc=len)
-        res['nCadd'] = cadd.dropna().pivot_table(index='binID', values='fscore', aggfunc=len)        
+        res['nCadd'] = cadd.dropna().pivot_table(index='binID', values='fscore', aggfunc=len)
     res['fscore'] = fscore
     # fill bin without fscore with 0
     res.fscore.fillna(0, inplace=True)
