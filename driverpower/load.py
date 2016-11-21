@@ -115,7 +115,8 @@ def load_memsave(path_ct, path_cg, path_cv, len_threshold=500, recur_threshold=2
     cg = load_coverage(path_cg)
     ct = load_count(path_ct)
     # pre-filter CV
-    keep, tab = get_filter(ct, cg, return_tab=True)
+    keep, tab = get_filter(ct, cg, len_threshold=len_threshold,
+                           recur_threshold=recur_threshold, return_tab=True)
     keep_bin = tab.index.values[keep]
     Nbin  = tab.shape[0]
     Nchunk = int(Nbin / 50000)
