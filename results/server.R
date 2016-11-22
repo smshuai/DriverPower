@@ -40,7 +40,9 @@ function(input, output, session) {
   resDat <- reactive({
     dat = read.table(
       paste0(
-        './exon/',
+        './',
+        input$type,
+        '/driverpower/',
         input$tumor2,
         '.',
         input$func,
@@ -70,6 +72,12 @@ function(input, output, session) {
   output$qqplot <- renderPlot({
     dat = resDat()
     qqunif.plot(dat$Pval)
+  })
+  
+  output$info <- renderPrint({
+    dat = resDat()
+    nearPoints(dat, input$plot_click, threshold = 10, maxpoints = 1,
+               addDist = TRUE)
   })
 }
 

@@ -6,5 +6,5 @@
 .DS_Store
 
 *.pyc
-
+*.Rhistory
 *.log
