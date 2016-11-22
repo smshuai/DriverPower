@@ -35,7 +35,7 @@ navbarPage("Query DriverPower",
                         selectInput(
                           "type",
                           "Choose a category:",
-                          choices = c("exon"),
+                          choices = c("exon", 'enhancers', 'promDomain'),
                           selected = 'exon'
                         )),
                       column(3,
@@ -374,6 +374,54 @@ navbarPage("Query DriverPower",
                      verbatimTextOutput("ncdSummary"),
                      verbatimTextOutput("ncdPt"),
                      verbatimTextOutput("ncdBr")
+                   )
+                 )
+               )
+             )
+           ),
+           tabPanel(
+             'MutSig',
+             fluidRow(
+               column(3,
+                      selectInput(
+                        "msType",
+                        "Choose a category:",
+                        choices = c("exon"),
+                        selected = 'exon'
+                      )),
+               column(3,
+                      selectInput(
+                        "msTumor",
+                        "Choose a tumor:",
+                        choices = c(
+                          "ColoRect-AdenoCA",
+                          "Skin-Melanoma",
+                          "Liver-HCC",
+                          "Eso-AdenoCa",
+                          "Lung-SCC",
+                          "Stomach-AdenoCA",
+                          "Panc-AdenoCA",
+                          'Lung-AdenoCA'
+                        ), selected = "ColoRect-AdenoCA"
+                      ))
+             ),
+             tabsetPanel(
+               tabPanel(
+                 'Table',
+                 DT::dataTableOutput('msTab')
+               ),
+               tabPanel(
+                 'Plot',
+                 fluidRow(
+                   column(
+                     6,
+                     plotOutput('msPlot', width = '600px', height = '600px', click = "msClick", brush = "msBrush")
+                   ),
+                   column(
+                     6,
+                     verbatimTextOutput("msSummary"),
+                     verbatimTextOutput("msPt"),
+                     verbatimTextOutput("msBr")
                    )
                  )
                )

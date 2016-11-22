@@ -451,6 +451,63 @@ function(input, output, session) {
     brushedPoints(dat, input$ncdBrush)
   })
   
+  # MutSig (ms)
+  msDat <- reactive({
+    dat = read.table(paste0(input$msType,'/MutSig/',input$msTumor,'.CDS.MutSig.observed.txt'),
+                     header=TRUE, sep='\t', check.names = FALSE)
+    dat[, 'gene'] = tstrsplit(dat$gene, '::', fixed = T)[[3]]
+    dat[,'Qval'] = p.adjust(dat[,'p'], method = 'BH')
+    dat = dat[, c('gene', 'p', 'Qval')]
+    colnames(dat) = c('binID', 'Pval', 'Qval')
+    # order by pvalue
+    dat = dat[order(dat$Pval, decreasing = F),]
+    rownames(dat) = 1:nrow(dat)
+    dat[, 'o'] = -log10(dat$Pval)
+    dat[, 'e'] = -log10(1:length(dat$o)/length(dat$o))
+    dat
+  })
+  
+  output$msTab <- DT::renderDataTable({
+    msDat()
+  }, options = list(rownames = TRUE,
+                    order = list(3, 'asc')))  
+  output$msPlot <- renderPlot({
+    dat = msDat()
+    genes = dat[dat$Qval<=0.1, ]
+    genes = na.omit(genes)
+    p = ggplot(data = dat, aes(x=e, y=o)) + geom_point() + geom_abline(intercept=0,slope=1, col="red")
+    p = p + xlab(expression(Expected~~-log[10](italic(p)))) +
+      ylab(expression(Observed~~-log[10](italic(p)))) +
+      theme(axis.text=element_text(size=12),
+            axis.title=element_text(size=14,face="bold"))
+    p = p + geom_text(data = genes, aes(x=e, y=o, label = binID), check_overlap = TRUE, hjust = 0, nudge_x = 0.1)
+    p
+  })
+  output$msSummary <- renderText({
+    dat = msDat()
+    genes = dat[dat$Qval<=0.1, ]
+    genes = na.omit(genes)
+    paste0(
+      "Number of samples: ",
+      as.character(project[input$msTumor, 'Num_Donors']),
+      "\nNumber of significant (q<0.1) bins: ",
+      as.character(nrow(genes)),
+      "\nOverall mutation rate (/Mbp): ",
+      as.character(project[input$msTumor, 'WG_Mu'])
+    )
+  })
+  
+  output$msPt <- renderPrint({
+    dat = msDat()
+    
+    nearPoints(dat, input$msClick, threshold = 10, maxpoints = 1,
+               addDist = FALSE)
+  })
+  
+  output$msBr <- renderPrint({
+    dat = msDat()
+    brushedPoints(dat, input$msBrush)
+  })
 }
 
 
