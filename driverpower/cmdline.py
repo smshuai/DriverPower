@@ -173,7 +173,7 @@ def get_args():
                 logger.error('--func_cutoff must be an int between 1 and 99. You enter {}'.format(args.func_cutoff))
                 sys.exit(1)
         # check output file
-        check_out(args.out)
+        args.out = check_out(args.out)
         # check fold
         if args.fold < 0:
             logger.error('Fold value must be greater than 0. You enter {}'.format(args.fold))
