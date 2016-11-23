@@ -659,6 +659,77 @@ function(input, output, session) {
     dat = nbrDat()
     brushedPoints(dat, input$nbrBrush)
   })
+  
+  # regDriver (rd)
+  rdDat <- reactive({
+    type = switch(
+      input$rdType,
+      'enhancers'  = 'enhancers',
+      'promDomain' = 'gc19_pc.promDomain',
+      'promCore'   = 'gc19_pc.promCore'
+    )
+    dat = read.table(paste0(input$rdType, '/regDriver/', input$rdTumor, '.',
+                            type, '.regDriver.observed.txt'),
+                     header=FALSE, sep='\t', check.names = FALSE)
+    if (input$rdType %in% c('promDomain', 'promCore')) {
+      # CDS name gc19_pc.cds::gencode::TNFRSF14::ENSG00000157873.13
+      dat[, 'V4'] = tstrsplit(dat$V4, '::', fixed = T)[[3]]
+    }
+    dat[,'Qval'] = p.adjust(dat$V5, method = 'BH')
+    dat = dat[, c('V4', 'V5', 'Qval')]
+    colnames(dat) = c('binID', 'Pval', 'Qval')
+    # order by pvalue
+    dat = dat[order(dat$Pval, decreasing = F),]
+    rownames(dat) = 1:nrow(dat)
+    dat[, 'o'] = -log10(dat$Pval)
+    # inf
+    isinf = is.infinite(dat$o)
+    dat$o[isinf] = max(dat$o[!isinf], na.rm = T) + 3 
+    dat[, 'e'] = -log10(1:length(dat$o)/length(dat$o))
+    dat
+  })
+  
+  output$rdTab <- DT::renderDataTable({
+    rdDat()
+  }, options = list(rownames = TRUE,
+                    order = list(3, 'asc')))  
+  output$rdPlot <- renderPlot({
+    dat = rdDat()
+    genes = dat[dat$Qval<=0.1, ]
+    genes = na.omit(genes)
+    p = ggplot(data = dat, aes(x=e, y=o)) + geom_point() + geom_abline(intercept=0, slope=1, col="red")
+    p = p + xlab(expression(Expected~~-log[10](italic(p)))) +
+      ylab(expression(Observed~~-log[10](italic(p)))) +
+      theme(axis.text=element_text(size=12),
+            axis.title=element_text(size=14,face="bold"))
+    p = p + geom_text(data = genes, aes(x=e, y=o, label = binID), check_overlap = TRUE, hjust = 0, nudge_x = 0.1)
+    p
+  })
+  output$rdSummary <- renderText({
+    dat = rdDat()
+    genes = dat[dat$Qval<=0.1, ]
+    genes = na.omit(genes)
+    paste0(
+      "Number of samples: ",
+      as.character(project[input$rdTumor, 'Num_Donors']),
+      "\nNumber of significant (q<0.1) bins: ",
+      as.character(nrow(genes)),
+      "\nOverall mutation rate (/Mbp): ",
+      as.character(project[input$rdTumor, 'WG_Mu'])
+    )
+  })
+  
+  output$rdPt <- renderPrint({
+    dat = rdDat()
+    
+    nearPoints(dat, input$rdClick, threshold = 10, maxpoints = 1,
+               addDist = FALSE)
+  })
+  
+  output$nbrBr <- renderPrint({
+    dat = rdDat()
+    brushedPoints(dat, input$rdBrush)
+  })
 }
 
 

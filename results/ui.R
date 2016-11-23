@@ -490,8 +490,8 @@ navbarPage("Query",
                       selectInput(
                         "rdType",
                         "Choose a category:",
-                        choices = c("CDS"),
-                        selected = 'CDS'
+                        choices = c('enhancers', "promCore", 'promDomain'),
+                        selected = 'enhancers'
                       )),
                column(3,
                       selectInput(
