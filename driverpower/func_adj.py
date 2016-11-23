@@ -52,7 +52,7 @@ def get_eigen(mut, path='/u/sshuai/sshuai/func_score/eigen/v1.1', coding=True):
     else:
         logger.info('Retrieving Eigen Non-Coding Scores')
         # One file per chrom for non-coding. 22 in total.
-        file_dict = {str(i) : 'Eigen_hg19_noncoding_annot_chr{}.tab.bgz'.format(i) for i in range(1, 23)}
+        file_dict = {str(i) : os.path.join(path, 'Eigen_hg19_noncoding_annot_chr{}.tab.bgz'.format(i)) for i in range(1, 23)}
         # check files, must be 22 True
         file_names = np.array(list(file_dict.values()))
         check_file = np.array([os.path.isfile(f) for f in file_names])
