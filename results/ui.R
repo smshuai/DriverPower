@@ -2,7 +2,7 @@ library(shiny)
 library(DT)
 library(data.table)
 
-navbarPage("Query DriverPower",
+navbarPage("Query",
            tabPanel("Feature Selection",
                     fluidRow(
                       column(
@@ -35,8 +35,8 @@ navbarPage("Query DriverPower",
                         selectInput(
                           "type",
                           "Choose a category:",
-                          choices = c("exon", 'enhancers', 'promDomain'),
-                          selected = 'exon'
+                          choices = c("CDS", 'enhancers', 'promDomain'),
+                          selected = 'CDS'
                         )),
                       column(3,
                         selectInput(
@@ -93,8 +93,8 @@ navbarPage("Query DriverPower",
                       selectInput(
                         "odfType",
                         "Choose a category:",
-                        choices = c("exon"),
-                        selected = 'exon'
+                        choices = c("CDS", "enhancers", "promDomain", "promCore"),
+                        selected = 'CDS'
                       )),
                column(3,
                       selectInput(
@@ -146,8 +146,8 @@ navbarPage("Query DriverPower",
                       selectInput(
                         "ad2Type",
                         "Choose a category:",
-                        choices = c("exon"),
-                        selected = 'exon'
+                        choices = c("CDS", "enhancers", 'promCore'),
+                        selected = 'CDS'
                       )),
                column(3,
                       selectInput(
@@ -194,8 +194,8 @@ navbarPage("Query DriverPower",
                       selectInput(
                         "cdType",
                         "Choose a category:",
-                        choices = c("exon"),
-                        selected = 'exon'
+                        choices = c("CDS", 'promCore'),
+                        selected = 'CDS'
                       )),
                column(3,
                       selectInput(
@@ -242,8 +242,8 @@ navbarPage("Query DriverPower",
                       selectInput(
                         "eiaType",
                         "Choose a category:",
-                        choices = c("exon"),
-                        selected = 'exon'
+                        choices = c("CDS"),
+                        selected = 'CDS'
                       )),
                column(3,
                       selectInput(
@@ -290,8 +290,8 @@ navbarPage("Query DriverPower",
                       selectInput(
                         "ncddType",
                         "Choose a category:",
-                        choices = c("exon"),
-                        selected = 'exon'
+                        choices = c("CDS", 'enhancers', 'promDomain', 'promCore'),
+                        selected = 'CDS'
                       )),
                column(3,
                       selectInput(
@@ -338,8 +338,8 @@ navbarPage("Query DriverPower",
                       selectInput(
                         "ncdType",
                         "Choose a category:",
-                        choices = c("exon"),
-                        selected = 'exon'
+                        choices = c("CDS", 'enhancers', 'promDomain', 'promCore'),
+                        selected = 'CDS'
                       )),
                column(3,
                       selectInput(
@@ -386,8 +386,8 @@ navbarPage("Query DriverPower",
                       selectInput(
                         "msType",
                         "Choose a category:",
-                        choices = c("exon"),
-                        selected = 'exon'
+                        choices = c("CDS", 'enhancers', 'promCore'),
+                        selected = 'CDS'
                       )),
                column(3,
                       selectInput(
@@ -422,6 +422,110 @@ navbarPage("Query DriverPower",
                      verbatimTextOutput("msSummary"),
                      verbatimTextOutput("msPt"),
                      verbatimTextOutput("msBr")
+                   )
+                 )
+               )
+             )
+           ),
+           tabPanel(
+             'dNdScv_NBR',
+             fluidRow(
+               column(3,
+                      selectInput(
+                        "nbrType",
+                        "Choose a category:",
+                        choices = c("CDS", "enhancers", "promDomain", "promCore"),
+                        selected = 'CDS'
+                      )),
+               column(3,
+                      selectInput(
+                        "nbrTumor",
+                        "Choose a tumor:",
+                        choices = c(
+                          "ColoRect-AdenoCA",
+                          "Skin-Melanoma",
+                          "Liver-HCC",
+                          "Eso-AdenoCa",
+                          "Lung-SCC",
+                          "Stomach-AdenoCA",
+                          "Panc-AdenoCA",
+                          'Lung-AdenoCA'
+                        ), selected = "ColoRect-AdenoCA"
+                      )),
+               column(3,
+                      radioButtons(
+                        'nbrMethod',
+                        "Choose a method:",
+                        choices = c('NBR', 'dNdScv'),
+                        selected = 'NBR'
+                      )
+                      )
+             ),
+             tabsetPanel(
+               tabPanel(
+                 'Table',
+                 DT::dataTableOutput('nbrTab')
+               ),
+               tabPanel(
+                 'Plot',
+                 fluidRow(
+                   column(
+                     6,
+                     plotOutput('nbrPlot', width = '600px', height = '600px', click = "nbrClick", brush = "nbrBrush")
+                   ),
+                   column(
+                     6,
+                     verbatimTextOutput("nbrSummary"),
+                     verbatimTextOutput("nbrPt"),
+                     verbatimTextOutput("nbrBr")
+                   )
+                 )
+               )
+             )
+           ),
+           tabPanel(
+             'regDriver',
+             fluidRow(
+               column(3,
+                      selectInput(
+                        "rdType",
+                        "Choose a category:",
+                        choices = c("CDS"),
+                        selected = 'CDS'
+                      )),
+               column(3,
+                      selectInput(
+                        "rdTumor",
+                        "Choose a tumor:",
+                        choices = c(
+                          "ColoRect-AdenoCA",
+                          "Skin-Melanoma",
+                          "Liver-HCC",
+                          "Eso-AdenoCa",
+                          "Lung-SCC",
+                          "Stomach-AdenoCA",
+                          "Panc-AdenoCA",
+                          'Lung-AdenoCA'
+                        ), selected = "ColoRect-AdenoCA"
+                      ))
+             ),
+             tabsetPanel(
+               tabPanel(
+                 'Table',
+                 DT::dataTableOutput('rdTab')
+               ),
+               tabPanel(
+                 'Plot',
+                 fluidRow(
+                   column(
+                     6,
+                     plotOutput('rdPlot', width = '600px', height = '600px', click = "rdClick", brush = "rdBrush")
+                   ),
+                   column(
+                     6,
+                     verbatimTextOutput("rdSummary"),
+                     verbatimTextOutput("rdPt"),
+                     verbatimTextOutput("rdBr")
                    )
                  )
                )
