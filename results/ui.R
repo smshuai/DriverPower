@@ -35,7 +35,7 @@ navbarPage("Query",
                         selectInput(
                           "type",
                           "Choose a category:",
-                          choices = c("CDS", 'enhancers', 'promDomain'),
+                          choices = c("CDS", 'enhancers', 'promDomain', 'promCore'),
                           selected = 'CDS'
                         )),
                       column(3,

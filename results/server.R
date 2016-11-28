@@ -53,7 +53,9 @@ function(input, output, session) {
       sep = '\t',
       header = TRUE
     )
-    dat[, 'binID'] = tstrsplit(dat$binID, '::', fixed = T)[[3]]
+    if (input$type != 'enhancers'){
+      dat[, 'binID'] = tstrsplit(dat$binID, '::', fixed = T)[[3]]
+    }
     dat$MuAdj = signif(dat$MuAdj, 4)
     dat$fscore = signif(dat$fscore, 4)
     dat$Pval = signif(dat$Pval, 4)
