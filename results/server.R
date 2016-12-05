@@ -599,7 +599,7 @@ function(input, output, session) {
       'promDomain' = 'Promoter_domain',
       'promCore'   = 'Promoter_core'
       )
-    dat = read.table(paste0(input$nbrType,'/dNdScv_NBR/', input$nbrTumor, '.',
+    dat = read.table(paste0(input$nbrType,'/dNdScv_NBR/', input$nbrMethod, "/", input$nbrTumor, '.',
                             type, ".", input$nbrMethod, '.observed.txt'),
                      header=TRUE, sep='\t', check.names = FALSE)
     if (input$nbrType %in% c('CDS', 'promDomain', 'promCore')) {
