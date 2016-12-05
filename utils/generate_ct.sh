@@ -91,7 +91,7 @@ pivot_ct.py $tmp_dir/mut.in.bin.bed $tmp_dir/ct.tsv
 
 
 # add header to mut
-head -1 ~/current/data/PDAC/exon/PDAC.exon.mut.tsv > $OUTMUT
+head -1 ~/current/data/Myeloid-AML/exon/Myeloid-AML.exon.mut.tsv > $OUTMUT
 cat $tmp_dir/mut.in.bin.bed >> $OUTMUT
 mv $tmp_dir/ct.tsv $OUTCT
 
