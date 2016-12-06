@@ -1,8 +1,9 @@
 library(ggplot2)
+setwd('~/DriverPower/results/CDS/')
 # combined
-combined = read.table('~/Desktop/DriverPower/results/CDS/combined.cds.no.driverpower.tsv', header=T, stringsAsFactors = F)
+combined = read.table('combined.cds.no.driverpower.tsv', header=T, stringsAsFactors = F)
 # driverpower
-dp = read.table('~/Desktop/DriverPower/results/CDS/driverpower.cds.lasso.gmean.eigen.90.tsv', header=T, stringsAsFactors = F)
+dp = read.table('driverpower.cds.lasso.gmean.eigen.90.tsv', header=T, stringsAsFactors = F)
 dp$method = 'DriverPower'
 # tumor
 # tumor = c("ColoRect-AdenoCA", "Eso-AdenoCa", "Liver-HCC", "Lung-AdenoCA", "Lung-SCC", "Panc-AdenoCA", "Stomach-AdenoCA")
