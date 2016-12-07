@@ -1,23 +1,23 @@
 # available CDS results
-setwd('~/Desktop/DriverPower/results/CDS')
+setwd('~/DriverPower/results/CDS/sig.only/')
 # Activedriver2 (ad2)
-ad2 = read.table('ActiveDriver2.cds.tsv', header=T)
+ad2 = read.table('ActiveDriver2.cds.tsv', header=T, stringsAsFactors = F)
 # compositeDriver (cd)
-cd.res = read.table('compositeDriver.cds.tsv', header=T)
+cd.res = read.table('compositeDriver.cds.tsv', header=T, stringsAsFactors = F)
 # dNdScv_NBR
-nbr = read.table('dNdScv_NBR.cds.NBR.tsv', header=T)
-dnds = read.table('dNdScv_NBR.cds.dNdScv.tsv', header=T)
+nbr = read.table('dNdScv_NBR.cds.NBR.tsv', header=T, stringsAsFactors = F)
+dnds = read.table('dNdScv_NBR.cds.dNdScv.tsv', header=T, stringsAsFactors = F)
 # ExInAtor
-ea.res = read.table('ExInAtor.cds.tsv', header=T)
+ea.res = read.table('ExInAtor.cds.tsv', header=T, stringsAsFactors = F)
 # mutsig
-mutsig = read.table('MutSig.cds.tsv', header=T)
+mutsig = read.table('MutSig.cds.tsv', header=T, stringsAsFactors = F)
 # ncdDetect
-ncdd = read.table('ncdDetect.cds.tsv', header=T)
+ncdd = read.table('ncdDetect.cds.tsv', header=T, stringsAsFactors = F)
 # ncDriver
-ncd = read.table('ncDriver.cds.tsv', header=T)
+ncd = read.table('ncDriver.cds.tsv', header=T, stringsAsFactors = F)
 # oncodriveFML
-odf.cadd = read.table('oncodriveFML.cds.cadd.tsv', header=T)
-odf.vest3 = read.table('oncodriveFML.cds.vest3.tsv', header=T)
+odf.cadd = read.table('oncodriveFML.cds.cadd.tsv', header=T, stringsAsFactors = F)
+odf.vest3 = read.table('oncodriveFML.cds.vest3.tsv', header=T, stringsAsFactors = F)
 
 # check tumor types
 

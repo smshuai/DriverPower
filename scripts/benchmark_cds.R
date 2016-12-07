@@ -1,4 +1,5 @@
 library(ggplot2)
+source('../../figures/ggplot_theme.R')
 setwd('~/DriverPower/results/CDS/')
 # combined
 combined = read.table('combined.cds.no.driverpower.tsv', header=T, stringsAsFactors = F)
@@ -26,11 +27,11 @@ colnames(nsup) = c('id', 'tumor', 'num_sup')
 sub.res = merge(sub.res, nsup)
 sub.res$num_sup = ordered(sub.res$num_sup)
 # number of sig. regions per method
-ggplot(sub.res, aes(x=method, fill=num_sup)) + geom_bar()
-ggplot(sub.res, aes(x=method, fill=num_sup)) + geom_bar(position = 'fill')
+ggplot(sub.res, aes(x=method, fill=num_sup)) + geom_bar() + theme_Publication() + scale_fill_Publication1()
+ggplot(sub.res, aes(x=method, fill=num_sup)) + geom_bar(position = 'fill') + theme_Publication() + scale_fill_Publication()
 # cross-validation
 all_method = unique(sub.res$method)
-cutoff = 2
+cutoff = 3
 res = data.frame(method = character(),
                  positive = numeric(),
                  true_positive = numeric(), 
@@ -54,7 +55,7 @@ for (i in 1:length(all_method)) {
   res[i, 'method'] = m
   res[i, 2:ncol(res)] = c(p, tp, nrow(in.res)-tp, ppv, tpr, f1)
 }
-p = ggplot(res, aes(precision, recall, label=method)) + geom_point() + geom_text(hjust = 1, nudge_x = -0.01)
-p + geom_text(data = res, aes(precision, recall, label=round(F1, 3)), hjust=0, nudge_x = 0.01) +
-  xlim(0.55, 1.05)
+p = ggplot(res, aes(precision, recall, label=method, color=method)) + geom_point() + geom_text(hjust = 1, nudge_x = -0.005)
+p + geom_text(data = res, aes(precision, recall, label=round(F1, 3)), hjust=0, nudge_x = 0.005) +
+  xlim(0.55, 1.05) + theme_Publication() + scale_color_Publication2()
 
