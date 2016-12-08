@@ -14,9 +14,15 @@ generate_dp = function(file_paths, cutoff){
     tumor = strsplit(basename(f), split = '.', fixed = TRUE)[[1]][1]
     cat(f, '\n')
     model.res = read.table(f, sep='\t', header=T, stringsAsFactors = F)
-    one = cbind(tune_func_cutoff(cutoff, model.res), method, tumor)
-    ans = rbind(ans, one)
-    tot_sig = tot_sig + nrow(one)
+    tmp.res = tune_func_cutoff(cutoff, model.res)
+    if (nrow(tmp.res) > 0){
+      one = cbind(tune_func_cutoff(cutoff, model.res), method, tumor)
+      ans = rbind(ans, one)
+      tot_sig = tot_sig + nrow(one)
+    } else {
+      cat('WARNING: No sig. bin\n')
+    }
+    
   }
   cat('cutoff = ', cutoff, 'total sig. = ', tot_sig, '\n')
   return(ans)

@@ -23,7 +23,8 @@ odf.vest3 = read.table('oncodriveFML.cds.vest3.tsv', header=T, stringsAsFactors 
 
 
 # choose dnds and vest3 for more hits
-combined = rbind(ad2, cd.res, dnds, ea.res, mutsig, ncdd, ncd, odf.vest3)
+combined = rbind(ad2, cd.res, dnds, ea.res, mutsig, ncdd, ncd, odf.cadd)
+
 # fix Ca vs. CA
 combined$tumor[combined$tumor == 'Breast-AdenoCa'] = 'Breast-AdenoCA'
 combined$tumor[combined$tumor == 'Breast-LobularCa'] = 'Breast-LobularCA'
@@ -63,4 +64,4 @@ combined$tumor[combined$tumor %in% c('All_cancers-no-skin-melanoma-lymph',
 
 
 
-write.table(combined, './combined.cds.no.driverpower.tsv', sep='\t', row.names = F, quote=F)
+write.table(combined, './combined.cds.tsv', sep='\t', row.names = F, quote=F)

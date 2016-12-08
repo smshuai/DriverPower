@@ -8,7 +8,7 @@ library(ggrepel)
 ##
 ## Internal Benchmark (CDS)
 ##
-combined = read.table('./CDS/sig.only/combined.cds.no.driverpower.tsv', header=T, stringsAsFactors = F)
+combined = read.table('./CDS/sig.only/combined.cds.tsv', header=T, stringsAsFactors = F)
 metaOrigin = c('Adenocarcinoma_tumors', 'Glioma_tumors', 'Hematopoietic_tumors',
                'Sarcoma_tumors', 'Squamous_tumors') # by origin
 metaOrgan = c('CNS_tumors', 'Digestive_tract_tumors', 'Female_reproductive_system_tumors',
