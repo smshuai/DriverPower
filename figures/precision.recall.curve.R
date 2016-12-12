@@ -1,6 +1,6 @@
 library(ggplot2)
 library(ggrepel)
-setwd('~/DriverPower/results/')
+setwd('~/Desktop/DriverPower/results/')
 source('../scripts/tune_func_cutoff.R')
 source('../figures/ggplot_theme.R')
 ##
@@ -57,7 +57,7 @@ metaOrgan = c('CNS_tumors', 'Digestive_tract_tumors', 'Female_reproductive_syste
               'Glioma_tumors', 'Kidney_tumors', 'Lung_tumors', 'Lymph_tumors') # by organ
 # rndlasso + eigen + gmean
 file_names = grep('promCore.rndlasso.eigen.gmean', list.files('./promCore/driverpower/meta/', full.names=TRUE), value=TRUE)
-resOrgan = pr_table(metaOrgan, combined, file_names, cutoffs, 3)
+resOrgan = pr_table(metaOrgan, combined, file_names, cutoffs, 2)
 p.Organ = ggplot(resOrgan, aes(x=recall, y=precision, label=cutoff)) + geom_point() + geom_path(color="#386cb0") +
   geom_text_repel(nudge_x = 0.005, nudge_y = 0.005) + theme_Publication()
 ggsave("../figures//plot/precision-recall.by.cutoff.metaOrgan.cds.rndlasso.eigen.gmean.png", p.Organ)
