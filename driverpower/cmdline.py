@@ -244,11 +244,16 @@ def run_select(args):
     X = pd.read_hdf(args.path_data, 'X')
     y = pd.read_hdf(args.path_data, 'y')
     recur = pd.read_hdf(args.path_data, 'recur')
+    sid = pd.read_hdf(args.path_data, 'sid')
+    N = sid.unique().shape[0]
+    logger.info('Successfully find data for {} samples'.format(N))
     # check index (binID)
     assert np.array_equal(X.index, y.index), 'X and y have different row indexes'
     assert np.array_equal(y.index, recur.index), 'recur and y have different row indexes'
     logger.info('Successfully load X with shape: {}'.format(X.shape))
     logger.info('Successfully load y with shape: {}'.format(y.shape))
+    # Modify y by num of samples
+    y.len_ct = (y.len_ct + y.ct) * N - y.ct
     # Sampling data
     X, y, recur = sampling(X, y, recur, args.sampling)
     # silent delete logCG if exist
@@ -288,16 +293,25 @@ def run_model(args):
     Xtrain = pd.read_hdf(args.path_train, 'X')
     ytrain = pd.read_hdf(args.path_train, 'y')
     brecur = pd.read_hdf(args.path_train, 'recur')
+    bsid = pd.read_hdf(args.path_train, 'sid')
+    Ntrain = bsid.unique().shape[0]
+    ytrain.len_ct = (ytrain.len_ct + ytrain.ct) * Ntrain - ytrain.ct
     assert np.array_equal(Xtrain.index, ytrain.index), 'Training X and y have different row indexes'
     assert np.array_equal(brecur.index, ytrain.index), 'Training recur and y have different row indexes'
+    logger.info('Successfully find training data for {} samples'.format(Ntrain))
     logger.info('Successfully load X train with shape: {}'.format(Xtrain.shape))
     logger.info('Successfully load y train with shape: {}'.format(ytrain.shape))
     # load test data
     Xtest = pd.read_hdf(args.path_test, 'X')
     ytest = pd.read_hdf(args.path_test, 'y')
     grecur = pd.read_hdf(args.path_test, 'recur')
+    glength = ytest.len_ct + ytest.ct
+    gsid = pd.read_hdf(args.path_test, 'sid')
+    Ntest = gsid.unique().shape[0]
+    ytest.len_ct = (ytest.len_ct + ytest.ct) * Ntest - ytest.ct
     assert np.array_equal(Xtest.index, ytest.index), 'Test X and y have different row indexes'
     assert np.array_equal(grecur.index, ytest.index), 'Test recur and y have different row indexes'
+    logger.info('Successfully find test data for {} samples'.format(Ntest))
     logger.info('Successfully load X test with shape: {}'.format(Xtest.shape))
     logger.info('Successfully load y test with shape: {}'.format(ytest.shape))
     # make sure fnames match
@@ -311,7 +325,7 @@ def run_model(args):
         if args.criteria in select_tb.columns.values:
             logger.info('Use {} as criteria in feature selection'.format(args.criteria))
             fset, fidx = feature_score(select_tb[args.criteria].abs(), select_tb.index.values, args.cutoff)
-            logger.info('At cutoff={}, {} selected features are: {}'.format(args.cutoff, len(fset), ", ".join(fset)))
+            logger.info('At cutoff={}, {} features are selected'.format(args.cutoff, len(fset)))
         else:
             logger.error('Feature selection criteria {} is not in selection table'.format(args.criteria))
             sys.exit(1)
@@ -341,6 +355,7 @@ def run_model(args):
         res = func_adj(res, mut, method=args.func,
             dir_func=os.path.expanduser(args.dir_func),
             is_coding=args.is_coding, cutoff=args.funcadj)
+    res['Length'] = glength
     res.to_csv(args.out, sep='\t')
     logger.info('Model done!')
 

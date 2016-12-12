@@ -107,8 +107,9 @@ def raw_test(mu_pred, ybinom_test, gnames, grecur=None):
     return res
 
 
-def model(X_train, ybinom_train, X_test, ybinom_test, gnames,
-    grecur=None, brecur=None, use_gmean=False, method='glm', fold=1):
+def model(X_train, ybinom_train,
+    X_test, ybinom_test,
+    gnames, grecur=None, brecur=None, use_gmean=False, method='glm', fold=1):
     support_method = ['glm']
     assert method in support_method, 'Invalid model type. Must be chosen from {}'.format(support_method)
     if use_gmean:
