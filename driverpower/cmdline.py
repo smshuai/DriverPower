@@ -132,6 +132,7 @@ def get_args():
         parser.exit(1)
     if args.version:
         print("DriverPower", __version__)
+        sys.exit(0)
     # check for preprocess
     if args.subcommand == 'preprocess':
         # check input files
