@@ -105,11 +105,11 @@ ggplot(dat.organ, aes(x=Var2, y=Var1, fill=Freq, label=Freq)) + geom_tile() + ge
         axis.title.y = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1)) +
   guides(fill=F)
-ggsave('../../../figures/plot/num.sig.metaOrgan.cds.heatmap.png')
+ggsave('../../../figures/plot/num.sig.metaOrgan.promCore.heatmap.png')
 combined.organ = combined.organ[combined.organ$tumor != 'Lymph_tumors', ]
 dat.organ = as.data.frame(table(as.data.frame(table(combined.organ$id, combined.organ$tumor))$Freq)[2:8])
 ggplot(dat.organ, aes(x=Var1, y=Freq)) + geom_bar(stat = 'identity') + theme_Publication() + xlab('Number of Support')
-ggsave('../../../figures/plot/nsup.cds.metaOrgan.barplot.png')
+ggsave('../../../figures/plot/nsup.promCore.metaOrgan.barplot.png')
 
 # single Type
 singleType = c(	'Liver-HCC', 'Panc-AdenoCA', 'Prost-AdenoCA', 'Breast-AdenoCA',

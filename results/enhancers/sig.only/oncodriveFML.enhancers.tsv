@@ -1,0 +1,14 @@
+id	p	q	method	tumor
+enhancers::chr7:107821400-107823000::NA::NA	4e-06	0.06143250000000001	oncodriveFML	Adenocarcinoma
+enhancers::chr2:203049400-203052000::NA::NA	5e-06	0.06143250000000001	oncodriveFML	Adenocarcinoma
+enhancers::chr7:107821400-107823000::NA::NA	1e-06	0.025518	oncodriveFML	Carcinoma
+enhancers::chr6:142705600-142706400::NA::NA	6e-06	0.05954200000000001	oncodriveFML	Carcinoma
+enhancers::chr2:203049400-203052000::NA::NA	7.000000000000002e-06	0.05954200000000001	oncodriveFML	Carcinoma
+enhancers::chr7:107821400-107823000::NA::NA	1e-06	0.021866	oncodriveFML	Digestive_tract
+enhancers::chr7:107821400-107823000::NA::NA	1e-06	0.02729	oncodriveFML	pan
+enhancers::chr2:203049400-203052000::NA::NA	4e-06	0.05458	oncodriveFML	pan
+enhancers::chr7:107821400-107823000::NA::NA	1e-06	0.027121	oncodriveFML	pan_noLymphatic_system
+enhancers::chr2:203049400-203052000::NA::NA	4e-06	0.045201666666666675	oncodriveFML	pan_noLymphatic_system
+enhancers::chr6:142705600-142706400::NA::NA	5e-06	0.045201666666666675	oncodriveFML	pan_noLymphatic_system
+enhancers::chr7:107821400-107823000::NA::NA	1e-06	0.026062	oncodriveFML	pan_noSkin-Melanoma
+enhancers::chr2:203049400-203052000::NA::NA	4e-06	0.052124	oncodriveFML	pan_noSkin-Melanoma
