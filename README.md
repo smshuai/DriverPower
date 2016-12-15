@@ -1,5 +1,5 @@
 # DriverPower
-version: 0.3.4
+version: 0.4.0
 
 ## Installation
 
@@ -80,21 +80,18 @@ Example:
 
 ### Count table
 
-Mutation count table should be a tab-delimited text file (.tsv) **with** header. Mutation count table can be derived from somatic variants files (such as VCF or MAF). The following 4 columns are required:
+Mutation count table should be a tab-delimited text file (.tsv) **with** header. Mutation count table can be derived from somatic variants files (such as VCF or MAF). The following 3 columns are required:
 
 1. `binID`: The identifier of bins, such as gene or promoter names.
 2. `sid`: The identifier of samples.
-3. `categ`: The category of mutation count. For SNPs, `categ` should be one of the 96 categories defined in [COSMIC mutational signatures](http://cancer.sanger.ac.uk/cosmic/signatures). For MNPs and indels, `categ` should be 'other'
-4. `ct`: The number of mutations in the dataset for this bin, sample and category.
+3. `ct`: The number of mutations in the dataset for this bin, sample and category.
 
 Example:
 
-| binID | sid     | categ | ct |
-|-------|---------|-------|----|
-| KRAS  | DO49481 | ACC>A | 1  |
-| KRAS  | DO51525 | other | 1  |
-
-Note that 'ACC>A' in the first line means ACC to AAC point mutation.
+| binID | sid     | ct |
+|-------|---------|----|
+| KRAS  | DO49481 | 1  |
+| KRAS  | DO51525 | 1  |
 
 ### Feature table
 

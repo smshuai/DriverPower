@@ -24,8 +24,6 @@ function(input, output, session) {
       paste0(
         "./feature_selection/",
         input$tumor,
-        ".",
-        input$response,
         ".fs.tsv"
       ),
       header = TRUE
