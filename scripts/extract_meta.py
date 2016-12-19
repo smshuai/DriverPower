@@ -4,6 +4,7 @@ import sys
 maf  = sys.argv[1]
 meta = sys.argv[2]
 out  = sys.argv[3]
+col_barcode = int(sys.argv[4])
 
 outf = open(out, 'w')
 
@@ -18,7 +19,7 @@ sys.stderr.write('Read {} sample IDs\n'.format(len(sid)))
 N = 0
 with open(maf, 'r') as f:
     for line in f:
-        name = line.strip().split("\t")[12] # tumor barcode
+        name = line.strip().split("\t")[col_barcode] # tumor barcode
         if name in sid:
             outf.write(line)
             N += 1
