@@ -1,5 +1,5 @@
 # available CDS results
-setwd('~/Desktop/DriverPower/results/promCore/sig.only/')
+setwd('~/DriverPower/results/promCore/sig.only/')
 # Activedriver2 (ad2)
 ad2 = read.table('ActiveDriver2.promCore.tsv', header=T, stringsAsFactors = F)
 # compositeDriver (cd)
@@ -112,26 +112,29 @@ ggplot(dat.organ, aes(x=Var1, y=Freq)) + geom_bar(stat = 'identity') + theme_Pub
 ggsave('../../../figures/plot/nsup.promCore.metaOrgan.barplot.png')
 
 # single Type
-singleType = c(	'Liver-HCC', 'Panc-AdenoCA', 'Prost-AdenoCA', 'Breast-AdenoCA',
+singleType = c('Liver-HCC', 'Panc-AdenoCA', 'Prost-AdenoCA', 'Breast-AdenoCA',
                 'Kidney-RCC', 'CNS-Medullo', 'Ovary-AdenoCA', 'Skin-Melanoma', 'Lymph-BNHL', 'Eso-AdenoCA',
                 'Lymph-CLL', 'CNS-PiloAstro', 'Panc-Endocrine', 'Stomach-AdenoCA', "Head-SCC",
                 "ColoRect-AdenoCA", "Thy-AdenoCA", "Lung-SCC", "Uterus-AdenoCA",
                 "Kidney-ChRCC", "Bone-Osteosarc", "CNS-GBM", 'Lung-AdenoCA', "Biliary-AdenoCA",
                 'Bone-Leiomyo', 'Bladder-TCC', 'Myeloid-MPN', 'CNS-Oligo', 'Cervix-SCC')
 combined.single = combined[combined$tumor %in% singleType, ]
+dp.single = read.table('./driverpower.promCore.rndlasso.cadd80.gmean.singleTumor.tsv', header=T, stringsAsFactors = F)
+combined.single = rbind(combined.single, dp.single)
 dat.single = as.data.frame(table(combined.single$tumor, combined.single$method))
-ggplot(dat.single, aes(x=Var2, y=Var1, fill=Freq, label=Freq)) + geom_tile() + geom_text(color='white') + theme_Publication() +
+dat.single[dat.single==0] = NA
+heatmap.single = ggplot(dat.single, aes(x=Var2, y=Var1, fill=Freq, label=Freq)) + geom_tile() + geom_text(color='white') + theme_Publication() +
   theme(legend.title = element_blank(), 
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1)) +
   guides(fill=F)
-ggsave('../../../figures/plot/num.sig.singleType.promCore.heatmap.png')
+ggsave('../../../figures/plot/num.sig.singleType.promCore.heatmap.png', heatmap.single, height = 10, width = 8)
 combined.single = combined.single[combined.single$method != 'LARVA', ]
 combined.single = combined.single[combined.single$method != 'ncDriver', ]
 combined.single = combined.single[combined.single$tumor != 'Skin-Melanoma', ]
 combined.single = combined.single[combined.single$tumor != 'Lymph-BNHL', ]
 
-dat.single = as.data.frame(table(as.data.frame(table(combined.single$id, combined.single$tumor))$Freq)[2:8])
-ggplot(dat.single, aes(x=Var1, y=Freq)) + geom_bar(stat = 'identity') + theme_Publication() + xlab('Number of Support')
-ggsave('../../../figures/plot/nsup.cds.singleType.barplot.png')
+dat.single = as.data.frame(table(as.data.frame(table(combined.single$id, combined.single$tumor))$Freq))[-1,]
+bar.single = ggplot(dat.single, aes(x=Var1, y=Freq)) + geom_bar(stat = 'identity') + theme_Publication() + xlab('Number of Support')
+ggsave('../../../figures/plot/nsup.singleType.promCore.barplot.png', bar.single, height = 6, width = 6)

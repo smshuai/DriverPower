@@ -1,8 +1,19 @@
 library(ggplot2)
 
 
-generate_dp = function(file_paths, cutoff){
+generate_dp = function(file_paths, cutoff, ntest){
   method = 'DriverPower'
+  needFix = c('Liver-HCC', 'Panc-AdenoCA', 'Prost-AdenoCA', 'Breast-AdenoCA',
+              'Kidney-RCC', 'CNS-Medullo', 'Ovary-AdenoCA', 'Skin-Melanoma', 'Lymph-BNHL', 'Eso-AdenoCA',
+              'Lymph-CLL', 'CNS-PiloAstro', 'Panc-Endocrine', 'Stomach-AdenoCA', "Head-SCC",
+              "ColoRect-AdenoCA", "Thy-AdenoCA", "Lung-SCC", "Uterus-AdenoCA",
+              "Kidney-ChRCC", "Bone-Osteosarc", "CNS-GBM", 'Lung-AdenoCA', "Biliary-AdenoCA",
+              'Bone-Leiomyo', 'Bladder-TCC', 'Myeloid-MPN', 'CNS-Oligo', 'Cervix-SCC',
+              'CNS_tumors', 'Digestive_tract_tumors', 'Female_reproductive_system_tumors',
+              'Glioma_tumors', 'Kidney_tumors', 'Lung_tumors', 'Lymph_tumors', "Myeloid_tumors",
+              'Adenocarcinoma_tumors', 'Glioma_tumors', 'Hematopoietic_tumors',
+              'Sarcoma_tumors', 'Squamous_tumors', 'Carcinoma_tumors')
+  project = read.table('./project_overview.tsv', sep='\t', header=TRUE, stringsAsFactors = F)
   ans = data.frame(id = character(),
                    p = numeric(),
                    q = numeric(),
@@ -14,10 +25,16 @@ generate_dp = function(file_paths, cutoff){
     tumor = strsplit(basename(f), split = '.', fixed = TRUE)[[1]][1]
     cat(f, '\n')
     model.res = read.table(f, sep='\t', header=T, stringsAsFactors = F)
-    tmp.res = tune_func_cutoff(cutoff, model.res)
+    if(tolower(tumor) %in% tolower(needFix)) {
+      # need fix effective length
+      num_donors = project[project$Project_Code==tumor, 'Num_Donors']
+      model.res$Length = model.res$Length * num_donors
+    }
+    tmp.res = tune_func_cutoff(cutoff, model.res, ntest)
     if (nrow(tmp.res) > 0){
-      one = cbind(tune_func_cutoff(cutoff, model.res), method, tumor)
+      one = cbind(tmp.res, method, tumor)
       ans = rbind(ans, one)
+      print(nrow(one))
       tot_sig = tot_sig + nrow(one)
     } else {
       cat('WARNING: No sig. bin\n')
@@ -28,14 +45,15 @@ generate_dp = function(file_paths, cutoff){
   return(ans)
 }
 
-tune_func_cutoff = function(cutoff, model.res){
+tune_func_cutoff = function(cutoff, model.res, ntest=20164){
   threshold = quantile(model.res$fscore, cutoff/100)
   
   MuAdj = model.res$Mu * threshold / model.res$fscore
   MuAdj[MuAdj > 1] = 1
   Pval = sapply(1:nrow(model.res),
                 function(i) binom.test(model.res$nMutSample[i], model.res$Length[i], MuAdj[i], alternative = 'greater')$p.value)
-  Qval = p.adjust(Pval, 'BH')
+  # fdr correct with all bins manually
+  Qval = p.adjust(c(Pval, rep(1, ntest-length(Pval))), 'BH')[1:length(Pval)]
   # cat("cutoff =", cutoff, "Num_sig =", sum(Qval <= 0.1), "\n")
   ans = data.frame(id = model.res$binID[Qval <= 0.1],
                    p = Pval[Qval <= 0.1],
@@ -44,13 +62,13 @@ tune_func_cutoff = function(cutoff, model.res){
   return(ans)
 }
 
-pr_table <- function(tumors, combined, file_names, func_cutoffs, positive_cutoff){
+pr_table <- function(tumors, combined, file_names, func_cutoffs, positive_cutoff, ntest){
   ## generate precision recall table for different func_cutoff
   
   # extract data by tumor
   sub.res = combined[combined$tumor %in% tumors, ]
   # assume file name is tumor.XXXXX
-  keep = sapply(file_names, function(f) strsplit(basename(f), split = '.', fixed = TRUE)[[1]][1]) %in% tumors
+  keep = tolower(sapply(file_names, function(f) strsplit(basename(f), split = '.', fixed = TRUE)[[1]][1])) %in% tolower(tumors)
   file_paths = file_names[keep]
   # number of support
   nsup = as.data.frame(table(sub.res$id, sub.res$tumor))
@@ -68,7 +86,7 @@ pr_table <- function(tumors, combined, file_names, func_cutoffs, positive_cutoff
   # main loop through cutoffs
   for (i in 1:length(func_cutoffs)) {
     cutoff = func_cutoffs[i]
-    dp = generate_dp(file_paths, cutoff)
+    dp = generate_dp(file_paths, cutoff, ntest)
     dp = merge(dp, nsup, all.x = TRUE)
     dp$num_sup[is.na(dp$num_sup)] = 0
     tp = sum(dp$num_sup >= positive_cutoff)
@@ -80,9 +98,7 @@ pr_table <- function(tumors, combined, file_names, func_cutoffs, positive_cutoff
   return(res)
 }
 
-internal_benchmark <- function(dp, combined, tumor, func_cutoff, cutoff.sup, cutoff.cv, fig.path){
-  sub.res = combined[combined$tumor %in% tumor, ]
-  sub.res = rbind(sub.res, dp[dp$tumor %in% tumor, ])
+internal_benchmark <- function(sub.res, cutoff.sup, cutoff.cv, fig.path){
   # number of support
   nsup = as.data.frame(table(sub.res$id, sub.res$tumor))
   colnames(nsup) = c('id', 'tumor', 'num_sup')
@@ -158,10 +174,10 @@ internal_benchmark <- function(dp, combined, tumor, func_cutoff, cutoff.sup, cut
     ylim(0.0, 1.0) + xlim(0.0, 1) +
     theme_Publication() + scale_color_Publication2() + guides(color=FALSE)
   # combine plots
-  png(fig.path, width = 960, height = 960)
+  # png(fig.path, width = 600, height = 600, pointsize = 48)
   plot_list = list(barplot1, pr_plot.sup, barplot2, pr_plot.cv)
   multiplot(plotlist = plot_list, cols = 2)
-  dev.off()
+  # dev.off()
   return(res)
 }
 

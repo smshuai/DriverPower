@@ -37,3 +37,17 @@ Myeloid-MDS	1624	64	3	1691	0.29	2
 Lymph-NOS	26281	1231	110	27622	4.74	2
 Cervix-AdenoCA	8154	753	25	8932	1.53	2
 PanCan	43778859	2418247	410123	46607229	6.20	2583
+Adenocarcinoma_tumors						1631
+Breast_tumors						208
+Carcinoma_tumors						1856
+CNS_tumors						287
+Digestive_tract_tumors						797
+Female_reproductive_system_tumors						382
+Glioma_tumors						146
+Hematopoietic_tumors						235
+Kidney_tumors						186
+Lung_tumors						84
+Lymph_tumors						197
+Myeloid_tumors						38
+Sarcoma_tumors						95
+Squamous_tumors						121

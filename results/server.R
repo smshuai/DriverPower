@@ -15,7 +15,7 @@ function(input, output, session) {
   )
   meta = meta[, c('feature_name' , 'description')]
   # read project overview
-  project = read.table('./project_overview.tsv', header=TRUE, row.names = 'Project_Code')
+  project = read.table('./project_overview.tsv', header=TRUE, sep ='\t', row.names = 'Project_Code')
   
   # show data table
   ## feature selection
@@ -36,17 +36,20 @@ function(input, output, session) {
   })
   ## results table
   resDat <- reactive({
+    if (input$type == 'CDS') {
+      dp.type = '.cds.'
+    } else {
+      dp.type = paste0('.', input$type, '.')
+    }
     dat = read.table(
       paste0(
         './',
         input$type,
         '/driverpower/',
         input$tumor2,
-        '.',
+        dp.type,
         input$func,
-        '.',
-        input$response2,
-        '.res.tsv'
+        '.tsv'
       ),
       sep = '\t',
       header = TRUE
@@ -189,6 +192,10 @@ function(input, output, session) {
                        header=TRUE, sep='\t')
     } else if (input$ad2Type == 'promCore') {
       dat = read.table(paste0(input$ad2Type,'/ActiveDriver2/',input$ad2Tumor,'.gc19_pc.promCore.ActiveDriver2-burden.observed.txt'),
+                       header=TRUE, sep='\t')
+      dat[, 'id'] = tstrsplit(dat$id, '::', fixed = T)[[3]]
+    } else if (input$ad2Type == 'lncrna.ncrna') {
+      dat = read.table(paste0(input$ad2Type,'/ActiveDriver2/',input$ad2Tumor,'.lncrna.ncrna.ActiveDriver2-burden.observed.txt'),
                        header=TRUE, sep='\t')
       dat[, 'id'] = tstrsplit(dat$id, '::', fixed = T)[[3]]
     }

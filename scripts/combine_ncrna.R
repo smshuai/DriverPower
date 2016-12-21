@@ -1,5 +1,5 @@
 # available lncrna.ncrna results
-setwd('~/Desktop/DriverPower/results/ncrna/sig.only/')
+setwd('~/DriverPower/results/lncrna.ncrna/sig.only/')
 # Activedriver2 (ad2)
 ad2 = read.table('ActiveDriver2.lncrna.ncrna.tsv', header=T, stringsAsFactors = F)
 # compositeDriver (cd)
