@@ -65,7 +65,7 @@ navbarPage("Query",
                         selectInput(
                           "type",
                           "Choose a category:",
-                          choices = c("CDS", 'enhancers', 'promDomain', 'promCore'),
+                          choices = c("CDS", 'enhancers', 'lncrna.ncrna', 'promCore'),
                           selected = 'CDS'
                         )),
                       column(3,
@@ -73,21 +73,51 @@ navbarPage("Query",
                           "tumor2",
                           "Choose a tumor:",
                           choices = c(
+                            "Adenocarcinoma_tumors",
+                            "Biliary-AdenoCA",
+                            "Bladder-TCC",
+                            "Bone-Leiomyo",
+                            "Bone-Osteosarc",
+                            "Breast_tumors",
+                            "Breast-AdenoCa",
+                            "Carcinoma_tumors",
+                            "Cervix-SCC",
+                            "CNS_tumors",
+                            "CNS-GBM",
+                            "CNS-Medullo",
+                            "CNS-Oligo",
+                            "CNS-PiloAstro",
                             "ColoRect-AdenoCA",
-                            "Skin-Melanoma",
-                            "Liver-HCC",
+                            "Digestive_tract_tumors",
                             "Eso-AdenoCa",
+                            "Female_reproductive_system_tumors",
+                            "Glioma_tumors",
+                            "Head-SCC",
+                            "Hematopoietic_tumors",
+                            "Kidney_tumors",
+                            "Kidney-ChRCC",
+                            "Kidney-RCC",
+                            "Liver-HCC",
+                            "Lung_tumors",
+                            "Lung-AdenoCA",
                             "Lung-SCC",
-                            "Stomach-AdenoCA",
+                            "Lymph_tumors",
+                            "Lymph-BNHL",
+                            "Lymph-CLL",
+                            "Myeloid_tumors",
+                            "Myeloid-MPN",
+                            "Ovary-AdenoCA",
                             "Panc-AdenoCA",
-                            'Lung-AdenoCA'
+                            "Panc-Endocrine",
+                            "Prost-AdenoCA",
+                            "Sarcoma_tumors",
+                            "Skin-Melanoma",
+                            "Squamous_tumors",
+                            "Stomach-AdenoCA",
+                            "Thy-AdenoCA",
+                            "Uterus-AdenoCA"
                           ), selected = "ColoRect-AdenoCA"
                         )),
-                      column(
-                        3,
-                        radioButtons('response2', "Choose a response:",
-                                     choices = c("gmean", "count"), selected = 'gmean')
-                        ),
                       column(
                         3,
                         radioButtons('func', "Choose a functional score:",
@@ -123,7 +153,7 @@ navbarPage("Query",
                       selectInput(
                         "odfType",
                         "Choose a category:",
-                        choices = c("CDS", "enhancers", "promDomain", "promCore"),
+                        choices = c("CDS", "enhancers", "lncrna.ncrna", "promCore"),
                         selected = 'CDS'
                       )),
                column(3,
@@ -138,7 +168,8 @@ navbarPage("Query",
                           "Lung-SCC",
                           "Stomach-AdenoCA",
                           "Panc-AdenoCA",
-                          'Lung-AdenoCA'
+                          'Lung-AdenoCA',
+                          'Bone-Leiomyo'
                         ), selected = "ColoRect-AdenoCA"
                       )),
                column(
@@ -176,7 +207,7 @@ navbarPage("Query",
                       selectInput(
                         "ad2Type",
                         "Choose a category:",
-                        choices = c("CDS", "enhancers", 'promCore'),
+                        choices = c("CDS", "enhancers", 'promCore', 'lncrna.ncrna'),
                         selected = 'CDS'
                       )),
                column(3,
@@ -191,7 +222,8 @@ navbarPage("Query",
                           "Lung-SCC",
                           "Stomach-AdenoCA",
                           "Panc-AdenoCA",
-                          'Lung-AdenoCA'
+                          'Lung-AdenoCA',
+                          'Bone-Leiomyo'
                         ), selected = "ColoRect-AdenoCA"
                       ))
              ),
@@ -224,7 +256,7 @@ navbarPage("Query",
                       selectInput(
                         "cdType",
                         "Choose a category:",
-                        choices = c("CDS", 'promCore'),
+                        choices = c("CDS", 'promCore', 'lncrna.ncrna'),
                         selected = 'CDS'
                       )),
                column(3,
@@ -239,7 +271,8 @@ navbarPage("Query",
                           "Lung-SCC",
                           "Stomach-AdenoCA",
                           "Panc-AdenoCA",
-                          'Lung-AdenoCA'
+                          'Lung-AdenoCA',
+                          'Bone-Leiomyo'
                         ), selected = "ColoRect-AdenoCA"
                       ))
              ),
@@ -287,7 +320,8 @@ navbarPage("Query",
                           "Lung-SCC",
                           "Stomach-AdenoCA",
                           "Panc-AdenoCA",
-                          'Lung-AdenoCA'
+                          'Lung-AdenoCA',
+                          'Bone-Leiomyo'
                         ), selected = "ColoRect-AdenoCA"
                       ))
              ),
@@ -320,7 +354,7 @@ navbarPage("Query",
                       selectInput(
                         "ncddType",
                         "Choose a category:",
-                        choices = c("CDS", 'enhancers', 'promDomain', 'promCore'),
+                        choices = c("CDS", 'enhancers', 'promDomain', 'promCore', 'lncrna.ncrna'),
                         selected = 'CDS'
                       )),
                column(3,
@@ -335,7 +369,8 @@ navbarPage("Query",
                           "Lung-SCC",
                           "Stomach-AdenoCA",
                           "Panc-AdenoCA",
-                          'Lung-AdenoCA'
+                          'Lung-AdenoCA',
+                          'Bone-Leiomyo'
                         ), selected = "ColoRect-AdenoCA"
                       ))
              ),
@@ -368,7 +403,7 @@ navbarPage("Query",
                       selectInput(
                         "ncdType",
                         "Choose a category:",
-                        choices = c("CDS", 'enhancers', 'promDomain', 'promCore'),
+                        choices = c("CDS", 'enhancers', 'promDomain', 'promCore', 'lncrna.ncrna'),
                         selected = 'CDS'
                       )),
                column(3,
@@ -383,7 +418,8 @@ navbarPage("Query",
                           "Lung-SCC",
                           "Stomach-AdenoCA",
                           "Panc-AdenoCA",
-                          'Lung-AdenoCA'
+                          'Lung-AdenoCA',
+                          'Bone-Leiomyo'
                         ), selected = "ColoRect-AdenoCA"
                       ))
              ),
@@ -431,7 +467,8 @@ navbarPage("Query",
                           "Lung-SCC",
                           "Stomach-AdenoCA",
                           "Panc-AdenoCA",
-                          'Lung-AdenoCA'
+                          'Lung-AdenoCA',
+                          'Bone-Leiomyo'
                         ), selected = "ColoRect-AdenoCA"
                       ))
              ),
@@ -479,7 +516,8 @@ navbarPage("Query",
                           "Lung-SCC",
                           "Stomach-AdenoCA",
                           "Panc-AdenoCA",
-                          'Lung-AdenoCA'
+                          'Lung-AdenoCA',
+                          'Bone-Leiomyo'
                         ), selected = "ColoRect-AdenoCA"
                       )),
                column(3,
@@ -535,7 +573,8 @@ navbarPage("Query",
                           "Lung-SCC",
                           "Stomach-AdenoCA",
                           "Panc-AdenoCA",
-                          'Lung-AdenoCA'
+                          'Lung-AdenoCA',
+                          'Bone-Leiomyo'
                         ), selected = "ColoRect-AdenoCA"
                       ))
              ),

@@ -1,5 +1,5 @@
 # available CDS results
-setwd('~/Desktop/DriverPower/results/CDS/sig.only/')
+setwd('~/DriverPower/results/CDS/sig.only/')
 # Activedriver2 (ad2)
 ad2 = read.table('ActiveDriver2.cds.tsv', header=T, stringsAsFactors = F)
 # compositeDriver (cd)
@@ -15,6 +15,7 @@ mutsig = read.table('MutSig.cds.tsv', header=T, stringsAsFactors = F)
 ncdd = read.table('ncdDetect.cds.tsv', header=T, stringsAsFactors = F)
 # ncDriver
 ncd = read.table('ncDriver.cds.tsv', header=T, stringsAsFactors = F)
+ncd = ncd[rownames(unique(ncd[,c(1,5)])), ]
 # oncodriveFML
 odf.cadd = read.table('oncodriveFML.cds.cadd.tsv', header=T, stringsAsFactors = F)
 odf.vest3 = read.table('oncodriveFML.cds.vest3.tsv', header=T, stringsAsFactors = F)
@@ -79,39 +80,47 @@ ggplot(dat, aes(x=Var2, y=Var1, fill=Freq, label=Freq)) + geom_tile() + geom_tex
         axis.text.x = element_text(angle = 45, hjust = 1)) +
   guides(fill=F)
 
+# meta origin
 metaOrigin = c('Adenocarcinoma_tumors', 'Glioma_tumors', 'Hematopoietic_tumors',
                'Sarcoma_tumors', 'Squamous_tumors', 'Carcinoma_tumors') # by origin
 combined.origin = combined[combined$tumor %in% metaOrigin, ]
+dp.origin = read.table('./driverpower.rndlasso.eigen95.gmean.metaOrigin.tsv', header=T, stringsAsFactors = F)
+combined.origin = rbind(combined.origin, dp.origin)
 dat.origin = as.data.frame(table(combined.origin$tumor, combined.origin$method))
-ggplot(dat.origin, aes(x=Var2, y=Var1, fill=Freq, label=Freq)) + geom_tile() + geom_text(color='white') + theme_Publication() +
+dat.origin[dat.origin == 0] = NA
+heatmap.origin = ggplot(dat.origin, aes(x=Var2, y=Var1, fill=Freq, label=Freq)) + geom_tile() + geom_text(color='white') + theme_Publication() +
   theme(legend.title = element_blank(), 
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1)) +
   guides(fill=F)
-ggsave('../../../figures/plot/num.sig.metaOrigin.cds.heatmap.png')
+ggsave('../../../figures/plot/num.sig.metaOrigin.cds.heatmap.png', heatmap.origin, height = 10, width = 8)
 combined.origin = combined.origin[combined.origin$tumor != 'Hematopoietic_tumors', ]
 combined.origin = combined.origin[combined.origin$tumor != 'Carcinoma_tumors', ]
-dat.origin = as.data.frame(table(as.data.frame(table(combined.origin$id, combined.origin$tumor))$Freq)[2:8])
-ggplot(dat.origin, aes(x=Var1, y=Freq)) + geom_bar(stat = 'identity') + theme_Publication() + xlab('Number of Support')
-ggsave('../../../figures/plot/nsup.cds.metaOrigin.barplot.png')
+dat.origin = as.data.frame(table(as.data.frame(table(combined.origin$id, combined.origin$tumor))$Freq))[-1,]
+bar.origin = ggplot(dat.origin, aes(x=Var1, y=Freq)) + geom_bar(stat = 'identity') + theme_Publication() + xlab('Number of Support')
+ggsave('../../../figures/plot/nsup.metaOrigin.cds.barplot.png', bar.origin,  height = 6, width = 6)
 
 # meta by organ
 metaOrgan = c('CNS_tumors', 'Digestive_tract_tumors', 'Female_reproductive_system_tumors',
               'Glioma_tumors', 'Kidney_tumors', 'Lung_tumors', 'Lymph_tumors', "Myeloid_tumors") # by organ
 combined.organ = combined[combined$tumor %in% metaOrgan, ]
+dp = read.table('./driverpower.rndlasso.eigen95.gmean.metaOrgan.tsv', header=T, stringsAsFactors = F)
+combined.organ = rbind(combined.organ, dp)
 dat.organ = as.data.frame(table(combined.organ$tumor, combined.organ$method))
-ggplot(dat.organ, aes(x=Var2, y=Var1, fill=Freq, label=Freq)) + geom_tile() + geom_text(color='white') + theme_Publication() +
+dat.organ$Freq[dat.organ$Freq == 0] = NA
+heatmap.organ = ggplot(dat.organ, aes(x=Var2, y=Var1, fill=Freq, label=Freq)) + geom_tile() + geom_text(color='white') + theme_Publication() +
   theme(legend.title = element_blank(), 
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1)) +
   guides(fill=F)
-ggsave('../../../figures/plot/num.sig.metaOrgan.cds.heatmap.png')
+ggsave('../../../figures/plot/num.sig.metaOrgan.cds.heatmap.png', heatmap.organ, height = 10, width = 8)
+
 combined.organ = combined.organ[combined.organ$tumor != 'Lymph_tumors', ]
-dat.organ = as.data.frame(table(as.data.frame(table(combined.organ$id, combined.organ$tumor))$Freq)[2:8])
-ggplot(dat.organ, aes(x=Var1, y=Freq)) + geom_bar(stat = 'identity') + theme_Publication() + xlab('Number of Support')
-ggsave('../../../figures/plot/nsup.cds.metaOrgan.barplot.png')
+dat.organ = as.data.frame(table(as.data.frame(table(combined.organ$id, combined.organ$tumor))$Freq))[-1, ]
+bar.organ = ggplot(dat.organ, aes(x=Var1, y=Freq)) + geom_bar(stat = 'identity') + theme_Publication() + xlab('Number of Support')
+ggsave('../../../figures/plot/nsup.metaOrgan.cds.barplot.png', bar.organ, height = 6, width = 6)
 
 # single Type
 singleType = c(	'Liver-HCC', 'Panc-AdenoCA', 'Prost-AdenoCA', 'Breast-AdenoCA',
@@ -121,19 +130,23 @@ singleType = c(	'Liver-HCC', 'Panc-AdenoCA', 'Prost-AdenoCA', 'Breast-AdenoCA',
   "Kidney-ChRCC", "Bone-Osteosarc", "CNS-GBM", 'Lung-AdenoCA', "Biliary-AdenoCA",
   'Bone-Leiomyo', 'Bladder-TCC', 'Myeloid-MPN', 'CNS-Oligo', 'Cervix-SCC')
 combined.single = combined[combined$tumor %in% singleType, ]
+dp = read.table('./driverpower.', sep='\t', header = T, stringsAsFactors = F)
+combined.single = rbind(combined.single, dp)
 dat.single = as.data.frame(table(combined.single$tumor, combined.single$method))
-ggplot(dat.single, aes(x=Var2, y=Var1, fill=Freq, label=Freq)) + geom_tile() + geom_text(color='white') + theme_Publication() +
+dat.single$Freq[dat.single$Freq == 0] = NA
+heatmap.single = ggplot(dat.single, aes(x=Var2, y=Var1, fill=Freq, label=Freq)) + geom_tile() + geom_text(color='white') + theme_Publication() +
   theme(legend.title = element_blank(), 
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1)) +
   guides(fill=F)
-ggsave('../../../figures/plot/num.sig.singleType.cds.heatmap.png')
+ggsave('../../../figures/plot/num.sig.singleType.cds.heatmap.png', heatmap.single, height = 10, width = 8)
 combined.single = combined.single[combined.single$method != 'LARVA', ]
 combined.single = combined.single[combined.single$method != 'ncDriver', ]
 combined.single = combined.single[combined.single$tumor != 'Skin-Melanoma', ]
 combined.single = combined.single[combined.single$tumor != 'Lymph-BNHL', ]
 
-dat.single = as.data.frame(table(as.data.frame(table(combined.single$id, combined.single$tumor))$Freq)[2:8])
-ggplot(dat.single, aes(x=Var1, y=Freq)) + geom_bar(stat = 'identity') + theme_Publication() + xlab('Number of Support')
-ggsave('../../../figures/plot/nsup.cds.singleType.barplot.png')
+dat.single = as.data.frame(table(as.data.frame(table(combined.single$id, combined.single$tumor))$Freq))
+dat.single = dat.single[-1,]
+bar.single = ggplot(dat.single, aes(x=Var1, y=Freq)) + geom_bar(stat = 'identity') + theme_Publication() + xlab('Number of Support')
+ggsave('../../../figures/plot/nsup.singleType.cds.barplot.png', bar.single, height = 6, width = 6)
