@@ -57,14 +57,14 @@ def load_covar(path_covar):
 
 def load_count(path_count):
     ''' Load mutation count data.
-    Input 4 cols TSV file ['binID', 'sid', 'categ', 'ct']
+    Input 3 cols TSV file ['binID', 'sid', 'ct'], other columns will be ignored
     Output pd.DF without index
     '''
     # logging.info('Loading count table')
     ct = pd.read_csv(path_count, sep='\t', header=0)
     # check column names
-    cname_check=np.array_equal(np.sort(ct.columns), ['binID', 'categ', 'ct', 'sid'])
-    assert cname_check, 'Header of count table is {}. Need binID, categ, ct, sid'.format(", ".join(str(i) for i in ct.columns))
+    need_cols = pd.Series(['binID', 'sid', 'ct'])
+    assert np.sum(~need_cols.isin(ct.columns))==0, 'Count table needs the following columns: {}'.format(", ".join(need_cols))
     ct.sort_values('binID', inplace=True)
     nmut = ct.ct.sum()
     nsample = len(ct.sid.unique())

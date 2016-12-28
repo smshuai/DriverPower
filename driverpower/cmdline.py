@@ -22,7 +22,6 @@ logger = logging.getLogger('DP')
 
 
 def get_args():
-    
     parser = argparse.ArgumentParser(prog='driverpower')
     # global argument
     parser.add_argument('-v', '--version', dest='version', action="store_true",
