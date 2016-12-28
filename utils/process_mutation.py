@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import tempfile
 from subprocess import Popen, PIPE
-
+import pybedtools
 
 def main():
     # mutation could be in MAF or MAF-like format **without** header
@@ -65,7 +65,7 @@ def main():
     # convert mutation to bed
     mut = mut.loc[:, ('chrom', 'start', 'end', 'type', 'ref', 'alt', 'sid')]
     # save mut
-    tmp_mut = tempfile.NamedTemporaryFile('w')
+    tmp_mut = tempfile.NamedTemporaryFile('w', dir='./')
     mut.to_csv(tmp_mut, sep='\t', header=False, index=False) # could be slow for large file
     # intersect with bed
     bed = pd.read_table(bed_path, sep='\t', header=None)
@@ -75,8 +75,16 @@ def main():
     if 'chr' in bed.chrom[1]:
         bed.chrom = bed.chrom.apply(lambda x: x[3:])
     # save bed to tmp file
-    tmp_bed = tempfile.NamedTemporaryFile('w')
+    tmp_bed = tempfile.NamedTemporaryFile('w', dir='./')
     bed.to_csv(tmp_bed, sep='\t', header=False, index=False)
+    # use pybedtools
+    # bed = pybedtools.BedTool(tmp_bed.name)
+    # mut = pybedtools.BedTool(tmp_mut.name)
+    # callable_bed = pybedtools.BedTool(callable_path)
+    # res1 = mut.intersect(callable_bed, wa=True)
+    # res2 = res1.intersect(bed, wa=True, wb=True)
+    # print(res1.count())
+    # print(res2.count())
     # run bedtools with subprocess
     intersect1 = Popen(['bedtools', 'intersect', '-a', tmp_mut.name, '-b', tmp_bed.name,
                         '-wa', '-wb'], stdout=PIPE)
@@ -85,6 +93,7 @@ def main():
     tmp_mut.close()
     tmp_bed.close()
     # pivot table
+    # mut = pd.read_table(out_mut, sep='\t', header=None)
     mut = pd.read_table(intersect2.stdout, sep='\t', header=None)
     # Add a header
     print("Output {} mutations that intersect bins and are callable".format(mut.shape[0]))
