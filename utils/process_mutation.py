@@ -90,8 +90,6 @@ def main():
                         '-wa', '-wb'], stdout=PIPE)
     intersect2 = Popen(['bedtools', 'intersect', '-a', 'stdin', '-b', callable_path],
                        stdin=intersect1.stdout, stdout=PIPE)
-    tmp_mut.close()
-    tmp_bed.close()
     # pivot table
     # mut = pd.read_table(out_mut, sep='\t', header=None)
     mut = pd.read_table(intersect2.stdout, sep='\t', header=None)
@@ -104,6 +102,8 @@ def main():
     # save outputs
     mut.to_csv(out_mut, sep='\t', index=False)
     ct.to_csv(out_ct, sep='\t')
+    tmp_mut.close()
+    tmp_bed.close()
     print('Done!')
 
 if __name__ == '__main__':

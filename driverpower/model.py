@@ -58,8 +58,9 @@ def split_by_cg(cg_train, cg_test=None, fold=4):
 def run_glm(X_train, ybinom_train, X_test):
     ''' Run binomial glm in statsmodels
     '''
-    X_train = sm.add_constant(X_train, prepend=False)
-    X_test  = sm.add_constant(X_test, prepend=False)
+    # Add const mannully. sm.add_constant cannot add 1 for shape (1, n)
+    X_train = np.c_[X_train, np.ones(X_train.shape[0])]
+    X_test  = np.c_[X_test, np.ones(X_test.shape[0])]
     glm = sm.GLM(ybinom_train, X_train, family=sm.families.Binomial())
     glm_res = glm.fit()
     mu_pred = glm_res.predict(X_test)

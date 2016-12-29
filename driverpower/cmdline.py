@@ -220,6 +220,8 @@ def run_preprocess(args):
     ct, cg, cv, recur = load_memsave(args.path_ct,
         args.path_cg, args.path_cv,
         args.len_threshold, args.recur_threshold)
+    if cv.shape[0] == 0:
+        logger.warning('No bin left')
     # sample IDs
     sid = pd.Series(ct.sid.unique())
     sid.name = 'sid'
@@ -241,8 +243,11 @@ def run_preprocess(args):
 def run_select(args):
     logger.info('Sub-command Select'.format(__version__))
     # load data from HDF5
-    X = pd.read_hdf(args.path_data, 'X')
     y = pd.read_hdf(args.path_data, 'y')
+    if y.shape[0] == 0:
+        logger.error('No bin in data.')
+        sys.exit(1)
+    X = pd.read_hdf(args.path_data, 'X')
     recur = pd.read_hdf(args.path_data, 'recur')
     sid = pd.read_hdf(args.path_data, 'sid')
     N = sid.unique().shape[0]
@@ -290,8 +295,11 @@ def run_select(args):
 def run_model(args):
     logger.info('Sub-command - Model'.format(__version__))
     # load training data
-    Xtrain = pd.read_hdf(args.path_train, 'X')
     ytrain = pd.read_hdf(args.path_train, 'y')
+    if ytrain.shape[0] == 1:
+        logger.error('No training data in hdf5 file')
+        sys.exit(1)
+    Xtrain = pd.read_hdf(args.path_train, 'X')
     brecur = pd.read_hdf(args.path_train, 'recur')
     bsid = pd.read_hdf(args.path_train, 'sid')
     Ntrain = bsid.unique().shape[0]
@@ -302,8 +310,11 @@ def run_model(args):
     logger.info('Successfully load X train with shape: {}'.format(Xtrain.shape))
     logger.info('Successfully load y train with shape: {}'.format(ytrain.shape))
     # load test data
-    Xtest = pd.read_hdf(args.path_test, 'X')
     ytest = pd.read_hdf(args.path_test, 'y')
+    if ytest.shape[0] == 1:
+        logger.error('No test data in hdf5 file')
+        sys.exit(1)
+    Xtest = pd.read_hdf(args.path_test, 'X')
     grecur = pd.read_hdf(args.path_test, 'recur')
     glength = ytest.len_ct + ytest.ct
     gsid = pd.read_hdf(args.path_test, 'sid')
@@ -333,7 +344,7 @@ def run_model(args):
         is_select = False
         logger.info('Use all features')
     # get gnames
-    gnames  = ytest.index.values 
+    gnames  = ytest.index.values
     if is_select: # feature selection ON
         # select features based on names
         Xtrain = Xtrain.loc[:, fset]

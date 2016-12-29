@@ -5,6 +5,7 @@ Load data from DriverPower.
 import pandas as pd
 import numpy as np
 import logging
+import sys
 from driverpower.preprocess import get_filter
 
 logger = logging.getLogger('LOAD')
@@ -79,11 +80,16 @@ def load_mut(path_mut):
     '''
     if path_mut is None:
         return None # read nothing
-    mut = pd.read_table(path_mut, sep='\t', header=0, index_col=None)
+    need_cols = ['chrom', 'start', 'end', 'type', 'ref', 'alt', 'sid', 'binID']
+    try:
+        mut = pd.read_table(path_mut, sep='\t', header=0, index_col=None,
+                            usecols=need_cols,
+                            dtype={'chrom': str})
+    except ValueError:
+        logger.error('Mutation table needs the following columns **with** header: {}'.format(", ".join(need_cols)))
+        sys.exit(1)
     # check column names
-    need_cols = pd.Series(['chrom', 'start', 'end', 'type', 'ref', 'alt', 'sid', 'binID'])
-    assert np.sum(~need_cols.isin(mut.columns))==0, 'Mutation table needs the following columns: {}'.format(", ".join(need_cols))
-    mut = mut.loc[:,need_cols] # only keep need cols
+    mut = mut.loc[:,need_cols] # reorder columns
     logger.info('Successfully load {} mutations'.format(mut.shape[0]))
     return mut
 
