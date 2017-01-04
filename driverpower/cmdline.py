@@ -296,7 +296,7 @@ def run_model(args):
     logger.info('Sub-command - Model'.format(__version__))
     # load training data
     ytrain = pd.read_hdf(args.path_train, 'y')
-    if ytrain.shape[0] == 1:
+    if ytrain.shape[0] == 0:
         logger.error('No training data in hdf5 file')
         sys.exit(1)
     Xtrain = pd.read_hdf(args.path_train, 'X')
@@ -311,7 +311,7 @@ def run_model(args):
     logger.info('Successfully load y train with shape: {}'.format(ytrain.shape))
     # load test data
     ytest = pd.read_hdf(args.path_test, 'y')
-    if ytest.shape[0] == 1:
+    if ytest.shape[0] == 0:
         logger.error('No test data in hdf5 file')
         sys.exit(1)
     Xtest = pd.read_hdf(args.path_test, 'X')
