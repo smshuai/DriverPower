@@ -11,7 +11,7 @@ singleType = c(	'Liver-HCC', 'Panc-AdenoCA', 'Prost-AdenoCA', 'Breast-AdenoCa',
                 "ColoRect-AdenoCA", "Thy-AdenoCA", "Lung-SCC", "Uterus-AdenoCA",
                 "Kidney-ChRCC", "Bone-Osteosarc", "CNS-GBM", 'Lung-AdenoCA', "Biliary-AdenoCA",
                 'Bone-Leiomyo', 'Bladder-TCC', 'Myeloid-MPN', 'CNS-Oligo', 'Cervix-SCC')
-setwd('~/DriverPower/results/CDS.DriverPower/')
+setwd('~/Desktop/DriverPower/results/CDS.DriverPower/')
 combine = read.table('./Liver-HCC.cds.DriverPower.observed.txt', header=T, stringsAsFactors = F)
 combine = combine[, 4:6]
 colnames(combine) = c('element_ID', 'p.Liver-HCC', 'q.Liver-HCC')
@@ -24,7 +24,7 @@ combine[, 'p.min'] = apply(combine[,seq(2, 52, 2)], 1, min)
 combine[, 'q.min'] = apply(combine[,seq(3, 53, 2)], 1, min)
 
 # read length, nMut and nSample
-cds.meta = read.table('../../figures/PanCan_No_Melanoma_Lymph.cds.cadd.tsv', header=T, stringsAsFactors = F)
+cds.meta = read.table('../../figures/data/PanCan_No_Melanoma_Lymph.cds.cadd.tsv', header=T, stringsAsFactors = F)
 cds.meta = cds.meta[,c('binID', 'Length', 'nMut', 'nSample')]
 colnames(cds.meta)[1] = 'element_ID'
 combine = merge(combine, cds.meta, by='element_ID', all.x=T)
