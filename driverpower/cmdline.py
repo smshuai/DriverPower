@@ -118,8 +118,22 @@ def get_args():
         help='Integer between 1 and 99 (default: 85). Strength of functional adjustment.')
     op_func_model.add_argument('--mut', dest='path_mut', type=str,
         help='Path to the mutation table')
-
+    #
+    # Test
+    #
+    parser_test = subparsers.add_parser('test', help='Find driver bins with preprocessed training data and raw test data')
+    # required parameters
+    re_test = parser_test.add_argument_group(title="required arguments")
+    re_test.add_argument('--train', dest='path_train', required=True, type=str,
+        help='Path to the preprocessed training set (HDF5)')
+    re_test.add_argument('--feature', dest='path_feature', required=True, type=str,
+        help='Path to the features table for test data')
+    re_test.add_argument('--count', dest='path_count', required=True, type=str,
+        help='Path to the mutation count')
+    re_test.add_argument('--length', dest='path_length', required=True, type=str,
+        help='Path to the preprocessed test set (HDF5)')
     # optional parameters
+
     args = parser.parse_args()
 
     #
@@ -371,6 +385,26 @@ def run_model(args):
     logger.info('Model done!')
 
 
+def run_test(args):
+    logger.info('Sub-command - Test')
+    # load training data
+    ytrain = pd.read_hdf(args.path_train, 'y')
+    if ytrain.shape[0] == 0:
+        logger.error('No training data in hdf5 file')
+        sys.exit(1)
+    Xtrain = pd.read_hdf(args.path_train, 'X')
+    brecur = pd.read_hdf(args.path_train, 'recur')
+    bsid = pd.read_hdf(args.path_train, 'sid')
+    Ntrain = bsid.unique().shape[0]
+    ytrain.len_ct = (ytrain.len_ct + ytrain.ct) * Ntrain - ytrain.ct
+    assert np.array_equal(Xtrain.index, ytrain.index), 'Training X and y have different row indexes'
+    assert np.array_equal(brecur.index, ytrain.index), 'Training recur and y have different row indexes'
+    logger.info('Successfully find training data for {} samples'.format(Ntrain))
+    logger.info('Successfully load X train with shape: {}'.format(Xtrain.shape))
+    logger.info('Successfully load y train with shape: {}'.format(ytrain.shape))
+    # load test data
+    
+    
 def main():
     args = get_args()
     logger.info('DriverPower {}'.format(__version__))
@@ -380,6 +414,8 @@ def main():
         run_select(args)
     elif args.subcommand == 'model':
         run_model(args)
+    elif args.subcommand == 'test':
+        run_test(args)
 
 
 if __name__ == '__main__':
