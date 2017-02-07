@@ -146,3 +146,14 @@ test.df = function(x ,y){
   grp = c(rep(0, length(x)), rep(1, length(y)))
   anova(glm(rna~grp, family = quasipoisson()), test = 'LRT')
 }
+
+# ALB mut maf
+maf = read.table('./Liver-HCC.ALB.mut.maf', sep='\t', stringsAsFactors = F, header = F, quote='')
+# 675 mutations
+# remove mutations in repeat, left 451 mutations
+maf = maf[is.na(maf$V11),]
+table(maf$V6)
+nonsym.donors = unique(maf[maf$V6 %in% c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del",
+                           "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation"), 'V13'])
+ss.donors = unique(maf[maf$V6 == 'Splice_Site', 'V13'])
+prom.donors = unique(maf[maf$V6 %in% c("5'Flank", "5'UTR"), 'V13'])
