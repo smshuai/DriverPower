@@ -15,7 +15,7 @@ process_one <- function(meta, pancan, tumors, name){
   combine = read.table(paste0(tumors[1], '.', name, '.observed.txt'), header=T, stringsAsFactors = F)
   combine = combine[, c('element_ID', 'p.value', 'q.value')]
   colnames(combine) = c('element_ID', paste0('p.', tumors[1]), paste0('q.', tumors[1]))
-  combine[is.na(tb)] = 1
+  combine[is.na(combine)] = 1
   for (tumor in tumors[2:length(tumors)]) {
     tb = read.table(paste0(tumor, '.', name, '.observed.txt'), header=T, stringsAsFactors = F)[, c('element_ID', 'p.value', 'q.value')]
     colnames(tb) = c('element_ID', paste0('p.', tumor), paste0('q.', tumor))
@@ -62,8 +62,10 @@ p.cds = ggplot(data=dat.cds, aes(x=nSample, y=x)) + geom_point(color='grey', siz
   coord_trans(x='sqrt', y='sqrt') +
   scale_x_continuous('Number of mutated samples (N=2279)', breaks = seq(0, 901, 100)) + 
   scale_y_continuous('-log10 q value (most significant tumour type)', breaks=seq(1,20,2)) +
+  # annotate('text', x=800, y=1.3, label='Sig. hits = 89', size=5) +
   theme_Publication() + scale_color_continuous_tableau() + guides(size=FALSE)
-ggsave('../../figures/all.cds.qvsn.20170130.png', p.cds, height = 8, width = 8, dpi = 600)
+  
+ggsave('../../figures/all.cds.qvsn.20170130.tiff', p.cds, height = 10, width = 10, dpi = 300)
 
 
 xline = data.frame(x=rep(1,22), y=seq(0,21))
@@ -83,33 +85,33 @@ p.cds2 = ggplot(data=dat.cds, aes(x=y, y=x)) + geom_point(color='grey') +
 ggsave('../../figures/all.cds.scatter.png', p.cds2, width = 8, height = 8, dpi=600)
 
 # promCore
-setwd('~/Desktop/DriverPower/results/promCore.DriverPower/')
+setwd('~/Desktop/DriverPower/results/promCore.DriverPower.observed.20170130//')
 dat.prom = process_one('../../figures/data/PanCan_No_Melanoma_Lymph.promCore.cadd.tsv',
-                       './PanCan_No_Melanoma_Lymph.promCore.DriverPower.observed.txt',
+                       './PanCan_No_Melanoma_Lymph.promCore.observed.txt',
                        singleType, 'promCore')
 
 # lncrna.ncrna
-setwd('~/Desktop/DriverPower/results/lncrna.ncrna.DriverPower/')
+setwd('~/Desktop/DriverPower/results/lncrna.ncrna.DriverPower.observed.20170130/')
 dat.ncrna = process_one('../../figures/data/PanCan_No_Melanoma_Lymph.lncrna.ncrna.cadd.tsv',
-                        './PanCan_No_Melanoma_Lymph.lncrna.ncrna.DriverPower.observed.txt',
+                        './PanCan_No_Melanoma_Lymph.lncrna.ncrna.observed.txt',
                         singleType, 'lncrna.ncrna')
 
 # enhancers
-setwd('~/Desktop/DriverPower/results/enhancers.DriverPower/')
+setwd('~/Desktop/DriverPower/results/enhancers.DriverPower.observed.20170130/')
 dat.enhancers = process_one('../../figures/data/PanCan_No_Melanoma_Lymph.enhancers.cadd.tsv',
-                            './PanCan_No_Melanoma_Lymph.enhancers.DriverPower.observed.txt',
+                            './PanCan_No_Melanoma_Lymph.enhancers.observed.txt',
                             singleType, 'enhancers')
 
 # 3utr
-setwd('~/Desktop/DriverPower/results/3utr.DriverPower/')
+setwd('~/Desktop/DriverPower/results/3utr.DriverPower.observed.20170130/')
 dat.3utr = process_one('../../figures/data/PanCan_No_Melanoma_Lymph.3utr.cadd.tsv',
-                       './PanCan_No_Melanoma_Lymph.3utr.DriverPower.observed.txt',
+                       './PanCan_No_Melanoma_Lymph.3utr.observed.txt',
                        singleType, '3utr')
 
 # 5utr
-setwd('~/Desktop/DriverPower/results/5utr.DriverPower/')
+setwd('~/Desktop/DriverPower/results/5utr.DriverPower.observed.20170130/')
 dat.5utr = process_one('../../figures/data/PanCan_No_Melanoma_Lymph.5utr.cadd.tsv',
-                       './PanCan_No_Melanoma_Lymph.5utr.DriverPower.observed.txt',
+                       './PanCan_No_Melanoma_Lymph.5utr.observed.txt',
                        singleType, '5utr')
 
 # noncoding plots
