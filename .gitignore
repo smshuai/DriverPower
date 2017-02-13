@@ -9,3 +9,9 @@
 *.Rhistory
 *.log
 /results/*/*.tar.gz
+
+*.html
+
+metabolism/top_expression_genes_liver.nb.html
+
+metabolism/top_expression_genes_liver.html

@@ -53,7 +53,7 @@ write.table(liver.exp, './liver.expression.tsv', sep='\t', row.names = F, quote 
 
 ```{r}
 library(ggplot2)
-source('~/DriverPower/figures/ggplot_theme.R')
+source('../figures/ggplot_theme.R')
 liver.exp = read.table('./liver.expression.tsv', sep = '\t', header = TRUE, stringsAsFactors = FALSE)
 ggplot(liver.exp, aes(x=log10(pcawg+1), y=log10(gtex+1))) + geom_point() + theme_Publication()
 # 1/1000 gene
@@ -96,6 +96,8 @@ for (g in nuc_genes){
     annotate('text', x=10, y=max(dat$MedianRPKM)*0.8, label=g, size=10)
   print(p)
 }
+
+g = 'APOB'
 # dev.off()
 ```
 
