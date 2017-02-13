@@ -12,6 +12,7 @@ output:
 
 ```{r, eval=FALSE}
 library(data.table)
+source('../figures/ggplot_theme.R')
 gtex = read.table('~/Downloads/GTEx_Analysis_v6p_RNA-seq_RNA-SeQCv1.1.8_gene_median_rpkm.gct.gz',
                   header=TRUE, stringsAsFactors = FALSE, skip = 2, sep='\t')
 rnameta = read.table('~/DriverPower/figures/ALB/rnaseq_metadata.lite.tsv', header=T, sep='\t', stringsAsFactors = F)
@@ -26,6 +27,25 @@ pcawg['median'] = apply(pcawg[,-1], 1, median)
 liver.exp = merge(pcawg[,c('feature', 'median')], gtex[,c('Name', 'Description', 'Liver')], by.x='feature', by.y='Name', all.x = TRUE)
 liver.exp = liver.exp[,c('feature', 'Description', 'median', 'Liver')]
 colnames(liver.exp) = c('gene_id', 'gene_symbol', 'pcawg', 'gtex')
+# add pval and qval for DE
+rnameta = read.table('../figures/ALB/rnaseq_metadata.lite.tsv', header=T, sep='\t', stringsAsFactors = F)
+donor_id = read.table('../figures/ALB/Liver-HCC.tumor_barcode.txt', header=F, sep=' ', stringsAsFactors = F)
+rnameta = rnameta[rnameta$icgc_donor_id %in% donor_id$V2,]
+pcawg = fread('~/Downloads/tophat_star_fpkm_uq.v2_aliquot_gl.tsv', select = c('feature', rnameta$aliquot_id))
+pcawg = as.data.frame(pcawg)
+pcawg.tumor = pcawg[, c('feature', rnameta$aliquot_id[rnameta$is_tumour=='yes'])]
+pcawg.tumor['pcawg.tumor'] = apply(pcawg.tumor[,-1], 1, median)
+liver.exp = merge(liver.exp, pcawg.tumor[,c('feature', 'pcawg.tumor')], by.x='gene_id', by.y='feature')
+liver.exp['log2FC'] = log2(liver.exp$pcawg.tumor) - log2(liver.exp$pcawg)
+liver.exp['p'] = as.numeric(NA)
+tumors = rnameta$aliquot_id[rnameta$is_tumour=='yes']
+normals = rnameta$aliquot_id[rnameta$is_tumour=='no']
+for (idx in 1:nrow(pcawg)){
+  g = pcawg$feature[idx]
+  pval = wilcox.test(as.numeric(pcawg[idx, tumors]), as.numeric(pcawg[idx, normals]))$p.value
+  liver.exp[liver.exp$gene_id==g, 'p'] = pval
+}
+liver.exp['q'] = p.adjust(liver.exp$p, 'BH')
 write.table(liver.exp, './liver.expression.tsv', sep='\t', row.names = F, quote = F)
 ```
 
@@ -82,10 +102,12 @@ for (g in nuc_genes){
 ## Expression of `nuc_genes` between tumor and normal
 ```{r}
 library(data.table)
-rnameta = read.table('~/DriverPower/figures/ALB/rnaseq_metadata.lite.tsv', header=T, sep='\t', stringsAsFactors = F)
-rnameta = rnameta[rnameta$project_code %in% c('LIHC-US', 'LIRI-JP'),]
-pcawg = fread('~/analysis/ALB/tophat_star_fpkm_uq.v2_aliquot_gl.tsv', select = c('feature', rnameta$aliquot_id))
+rnameta = read.table('../figures/ALB/rnaseq_metadata.lite.tsv', header=T, sep='\t', stringsAsFactors = F)
+donor_id = read.table('../figures/ALB/Liver-HCC.tumor_barcode.txt', header=F, sep=' ', stringsAsFactors = F)
+rnameta = rnameta[rnameta$icgc_donor_id %in% donor_id$V2,]
+pcawg = fread('~/Downloads/tophat_star_fpkm_uq.v2_aliquot_gl.tsv', select = c('feature', rnameta$aliquot_id))
 pcawg = as.data.frame(pcawg)
+
 # pdf('./PCAWG.Liver-HCC.expression.normal.vs.tumor.pdf')
 for (g in nuc_genes) {
   g.id = pcawg_genes$gene_id[pcawg_genes$gene_symbol==g]
