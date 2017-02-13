@@ -137,18 +137,23 @@ dat['text'] = apply(dat, 1, function(x)
   }
 )
 sig.only = dat[dat$q.min<=0.1, ]
-sig.only[sig.only$type=='enhancers', 'text'] = 'ADGRG6.enhancer'
+sig.only[sig.only$element_ID=='enhancers::chr6:142705600-142706400::NA::NA', 'text'] = 'GPR126.enhancer'
+sig.only[sig.only$element_ID=='enhancers::chr10:54205800-54213400::NA::NA', 'text'] = 'DKK1/LINC01468.enhancer'
+sig.only[sig.only$element_ID=='enhancers::chr7:86865600-86866400::NA::NA', 'text'] = 'TP53TG1.enhancer'
+linked.genes = 'ENSG00000107984;ENSG00000231131;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000231131;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000231131;ENSG00000231131;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000231131;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000107984;ENSG00000231131;ENSG00000231131;ENSG00000231131;ENSG00000231131;ENSG00000231131;ENSG00000107984;ENSG00000231131'
+linked.genes = unique(strsplit(linked.genes, ';', fixed = T)[[1]])
+
 dat$nSample[is.na(dat$nSample)] = 0
 yline = data.frame(y=rep(1,400), x=seq(0,399))
 p.nc = ggplot(data=dat, aes(x=nSample, y=x)) + geom_point(color='grey') +
   geom_line(data=yline, aes(x, y), color='yellow', size=1.5) +
-  geom_point(dat=sig.only, aes(x=nSample, y=x, color=type)) +
-  geom_text_repel(dat=sig.only, aes(x=nSample, y=x, label=text, color=type), fontface="italic") +
+  geom_point(dat=sig.only, aes(x=nSample, y=x, color=type, size=N)) +
+  geom_text_repel(dat=sig.only, aes(x=nSample, y=x, label=text), segment.color='black', size=4, color='black',fontface="italic") +
   coord_trans(x='sqrt', y='sqrt') +
   scale_x_continuous('Number of mutated samples (N=2279)') + 
   scale_y_continuous('-log10 q value (most significant tumour type)', breaks=seq(1,20,2)) +
-  theme_Publication() + scale_color_Publication1() + guides(color=FALSE)
-ggsave('../../figures/all.non-coding.qvsn.png', p.nc, height = 8, width = 8, dpi = 600)
+  theme_Publication() + scale_color_Publication1() + guides(color=FALSE, size=FALSE)
+ggsave('../../figures/all.non-coding.qvsn.20170130.png', p.nc, height = 10, width = 10, dpi = 300)
 
 xline = data.frame(x=rep(1,22), y=seq(0,21))
 sig.only = dat[dat$q.min<=0.1 | dat$q.PanCan <= 0.1, ]
