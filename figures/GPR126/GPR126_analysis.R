@@ -6,10 +6,12 @@ rnameta = read.table('./ALB/rnaseq_metadata.lite.tsv', header=T, sep='\t', strin
 rnameta = rnameta[rnameta$project_code %in% c('BLCA-US'),]
 table(rnameta$is_tumour)
 library(data.table)
-rnaseq = fread('~/Downloads/joint_fpkm_uq.tsv', select = c('feature', rnameta$aliquot_id))
+rnaseq = fread('~/Downloads/tophat_star_fpkm_uq.v2_aliquot_gl.tsv', select = c('feature', rnameta$aliquot_id))
 rnaseq = as.data.frame(rnaseq)
 g = 'ENSG00000009844.11' # VTA1
 g = 'ENSG00000112414.10' # GPR126
+g = 'ENSG00000236366.1' # RP11-440G9.1
+g = 'ENSG00000266843.1'
 gpr126.expression = rnaseq[rnaseq$feature==g,]
 gpr126.expression = t(gpr126.expression[,-1])
 gpr126.expression = as.data.frame(gpr126.expression)
@@ -40,9 +42,10 @@ gpr126.expression$is_mut = factor(gpr126.expression$is_mut, levels = c('Normal',
 xlabs <- paste0(levels(gpr126.expression$is_mut),"\n(N=",table(gpr126.expression$is_mut),")")
 ggplot(gpr126.expression, aes(x=is_mut, y=FPKM.UQ, fill=is_tumour)) + geom_boxplot() + ylab(ylabel) +
   scale_fill_Publication1() + guides(fill=FALSE) +
+  scale_x_discrete(labels=xlabs) + theme(axis.title.x = element_blank())
   annotate('segment', x=2, xend = 3, y=30, yend=30) +
   annotate('text', x=2.5, y=35, label='p=0.04559') +
-  theme_Publication() + scale_x_discrete(labels=xlabs) + theme(axis.title.x = element_blank())
+  theme_Publication()
 
 # Breast Cancer
 donor_id = read.table('./GPR126/Breast-AdenoCa.donor_id.txt', stringsAsFactors = F) # 195

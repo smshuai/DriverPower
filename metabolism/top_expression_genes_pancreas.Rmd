@@ -7,7 +7,7 @@ output:
 
 
 
-```{r, fig.height=6, fig.width=8}
+```{r, fig.height=6, fig.width=8, eval=FALSE, echo=FALSE}
 library(data.table)
 library(ggplot2)
 source('../figures/ggplot_theme.R')
@@ -45,13 +45,13 @@ genes.gtex = pan.exp$gtex_description[pan.exp$gtex_rpkm >= cutoff.gtex] # 20
 genes.both = intersect(genes.gtex, genes.pcsi) # 4 genes
 ```
 
-```{r, fig.height=6, fig.width=6}
+```{r, fig.height=6, fig.width=6, eval=FALSE, echo=FALSE}
 library(VennDiagram)
 venn.plot = draw.pairwise.venn(52, 52, 4, category = c('PCSI', 'GTEx'))
 grid.draw(venn.plot)
 ```
 
-```{r, fig.height=6, fig.width=8}
+```{r, fig.height=6, fig.width=8, eval=FALSE, echo=FALSE}
 for (g in nuc_genes){
   dat = as.data.frame(t(gtex[gtex$Description==g, 3:ncol(gtex)]))
   dat[,'tissue'] = row.names(dat)
@@ -67,4 +67,55 @@ for (g in nuc_genes){
 }
 ```
 
+```{r, fig.height=8}
+library(data.table)
+library(ggplot2)
+source('../figures/ggplot_theme.R')
+pcsi = read.table('./PCSI_FPKM_hg38.tsv', header = T, stringsAsFactors = FALSE, sep='\t', check.names = F)
+# protein coding gene id
+gene_id = read.table('./gencode.v24.protein_coding.gene_id.txt', header=F, stringsAsFactors = F)
+gene_id = tstrsplit(gene_id$V1, '.', fix=T)[[1]]
+pcsi = subset(pcsi, tracking_id %in% gene_id)
+# library factor
+uqs = apply(pcsi[,4:ncol(pcsi)], 2, quantile, .75, na.rm = T)
+lib_factors = mean(uqs)/uqs
+for (sample in names(lib_factors)) {
+  pcsi[, sample] = pcsi[, sample] * lib_factors[sample]
+}
+
+# Normal Pa_R
+is_pa_r = substr(colnames(pcsi), 11, 14) == 'Pa_R'
+pcsi.normal = cbind(pcsi[,1:3], pcsi[, is_pa_r])
+pcsi.normal['median'] = apply(pcsi.normal[,4:8], 1, median)
+pcsi.normal = pcsi.normal[order(pcsi.normal$median, decreasing = T),]
+# Primary tumor Pa_P
+is_pa_p = substr(colnames(pcsi), 11, 14) == 'Pa_P'
+pcsi.tumor = cbind(pcsi[,1:3], pcsi[, is_pa_p])
+pcsi.tumor['median'] = apply(pcsi.tumor[,4:147], 1, median)
+pcsi.tumor = pcsi.tumor[order(pcsi.tumor$median, decreasing = T),]
+
+gtex = read.table('~/Downloads/GTEx_Analysis_v6p_RNA-seq_RNA-SeQCv1.1.8_gene_median_rpkm.gct.gz',
+                  header=TRUE, stringsAsFactors = FALSE, skip = 2, sep='\t', check.names = F)
+for (i in 1:50){
+  g = pcsi.normal[i, 'gene_short_name']
+  g.exp = data.frame(expression = as.numeric(cbind(pcsi.normal[pcsi.normal$gene_short_name==g,4:8], pcsi.tumor[pcsi.tumor$gene_short_name==g, 4:147])), type=c(rep('Normal', 5), rep('Tumor', 144)))
+  pval = wilcox.test(expression ~ type, data = g.exp)$p.value
+  p1 = ggplot(g.exp, aes(x=type, y=expression)) + geom_boxplot() +
+    ggtitle(paste(g, '\np.value = ', signif(pval,5), sep='')) +
+    theme_Publication()
+  print(p1)
+  # Gtex expression
+  dat = as.data.frame(t(gtex[gtex$Description==g, 3:ncol(gtex)]))
+  dat[,'tissue'] = row.names(dat)
+  colnames(dat)[1] = 'MedianRPKM'
+  dat[,'is_pancreas'] = ifelse(dat$tissue=='Pancreas', 'Pancreas', 'Others')
+  dat$is_pancreas = factor(dat$is_pancreas, levels = c('Pancreas', 'Others'))
+  p = ggplot(dat, aes_string(x='tissue', y='MedianRPKM', fill='is_pancreas')) + geom_bar(stat = 'identity') +
+    theme_Publication() + scale_fill_Publication1() + ylab('Median RPKM') +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),
+          axis.title.x = element_blank(), legend.title = element_blank()) +
+    annotate('text', x=10, y=max(dat$MedianRPKM)*0.8, label=g, size=10) + coord_flip()
+  print(p)
+}
+```
 
