@@ -128,10 +128,14 @@ Example:
 ## LICENSE
 DriverPower is distributed under the terms of the [GNU General Public License 3.0](https://www.gnu.org/licenses/gpl-3.0.txt).
 
-
+## Change Log
+- 2017/03/02: Release version 0.4.0, which is used in the PCAWG driver analysis.
 
 ## TODO
-
-
-- MNP and INDEL support for eigen
-- 
+For v0.5.0:
+- New 'detect' module that uses test BEDs and mutations directly, and use multiple scores
+- Use configure file to locate functional scores
+- DANN scores (and FunSeq2 scores maybe)
+- New way of calculating functional impact of elements (average of best of each sample)
+Future plans:
+- New prediction algorithms (GBM)
