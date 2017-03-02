@@ -137,5 +137,6 @@ For v0.5.0:
 - Use configure file to locate functional scores
 - DANN scores (and FunSeq2 scores maybe)
 - New way of calculating functional impact of elements (average of best of each sample)
+
 Future plans:
 - New prediction algorithms (GBM)
