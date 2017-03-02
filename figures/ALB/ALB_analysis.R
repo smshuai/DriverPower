@@ -63,7 +63,7 @@ alb = alb[order(alb$cds, alb$ss, alb$`3utr`, alb$promoter, alb$cnv_loss, alb$cnv
 
 
 
-dat = t(as.matrix(alb[,-1]))
+dat = t(as.matrix(alb.event[,-1]))
 row.names(dat) = c('CDS', 'SS', "3'UTR", 'Promoter', 'CN Loss', 'CN Gain', 'SV')
 dat.list = list(dat=dat)
 color = c(dat="#fdb462")
@@ -82,10 +82,9 @@ write.table(dat, './ALB.oncoprint.txt', sep='\t')
 
 # RNA-seq (187 in total, 69 normals and 118 tumors)
 rnameta = read.table('./rnaseq_metadata.lite.tsv', header=T, sep='\t', stringsAsFactors = F)
-rnameta = rnameta[rnameta$project_code %in% c('LIHC-US', 'LIRI-JP'),]
+rnameta = rnameta[rnameta$icgc_donor_id %in% alb.event$donor_ID,]
 table(rnameta$is_tumour)
-rnaseq = read.table('~/Downloads/tophat_star_fpkm_uq.v2_aliquot_gl.tsv.gz', header=T, sep='\t', check.names = F)
-rnaseq = rnaseq[, c('feature', rnameta$aliquot_id)]
+rnaseq = fread('~/Downloads/tophat_star_fpkm_uq.v2_aliquot_gl.tsv', select = c('feature', rnameta$aliquot_id))
 alb.expression = rnaseq[rnaseq$feature=='ENSG00000163631.12',]
 alb.expression = t(alb.expression[,-1])
 alb.expression = as.data.frame(alb.expression)
@@ -106,10 +105,10 @@ ggplot(alb.expression, aes(x=is_tumour, y=FPKM.UQ, fill=is_tumour)) + geom_boxpl
   annotate('text', x=1.5, y=210000, label='p<2.2e-16') +
   theme_Publication() + scale_x_discrete(labels=xlabs) + theme(axis.title.x = element_blank())
 ggsave('./ALB.expression.normal.vs.tumor.tiff')
-wilcox.test(FPKM.UQ ~ is_tumour, alb.expression, alternative='greater')
+wilcox.test(FPKM.UQ ~ is_alb, alb.expression[alb.expression$is_tumour=='yes',], alternative='greater')
 
 # add expression to mutation
-alb = merge(alb, alb.expression[alb.expression$is_tumour=='Tumor',c('donor_ID', 'FPKM.UQ')])
+alb = merge(alb.event, alb.expression[alb.expression$is_tumour=='Tumor',c('donor_ID', 'FPKM.UQ')])
 
 cds = cbind(data.frame(rna=alb[alb$cds==1, 9]), name='CDS', stringsAsFactors=F)
 ss = cbind(data.frame(rna=alb[alb$ss==1, 9]), name='SS', stringsAsFactors=F)
@@ -147,13 +146,55 @@ test.df = function(x ,y){
   anova(glm(rna~grp, family = quasipoisson()), test = 'LRT')
 }
 
+# ALB event
+barcode = read.table('./Liver-HCC.tumor_barcode.txt', sep=' ', stringsAsFactors = F)
+alb.event = data.frame(donor_ID=barcode$V2)
+
 # ALB mut maf
 maf = read.table('./Liver-HCC.ALB.mut.maf', sep='\t', stringsAsFactors = F, header = F, quote='')
 # 675 mutations
 # remove mutations in repeat, left 451 mutations
 maf = maf[is.na(maf$V11),]
 table(maf$V6)
-nonsym.donors = unique(maf[maf$V6 %in% c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del",
-                           "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation"), 'V13'])
-ss.donors = unique(maf[maf$V6 == 'Splice_Site', 'V13'])
-prom.donors = unique(maf[maf$V6 %in% c("5'Flank", "5'UTR"), 'V13'])
+nonsyn.donors = unique(maf[maf$V6 %in% c("Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del",
+                           "In_Frame_Ins", "Missense_Mutation", "Nonsense_Mutation"), 'V13']) # 34 donors
+alb.event['nonsyn'] = alb.event$donor_ID %in% nonsyn.donors
+
+utr3.donors = unique(maf[maf$V6 == "3'UTR", 'V13']) # 14 donors
+alb.event["utr3"] = alb.event$donor_ID %in% utr3.donors
+
+# enhancers 
+mut.enhancer = read.table('./ALB.enhancer.mut.tsv', sep='\t', stringsAsFactors = F, header = F, quote='')
+enhancer.donors = unique(mut.enhancer$V8) # 9 donors
+alb.event["enhancer"] = alb.event$donor_ID %in% enhancer.donors
+
+# cnv
+cnv = fread('~/Downloads/all_samples.consensus_level_calls.by_gene.170214.txt',
+            select = c('Gene Symbol', barcode$V1))
+cnv.alb = t(cnv[cnv$`Gene Symbol`=='ALB', -1])
+cnloss.donors = barcode$V2[barcode$V1 %in% row.names(cnv.alb)[cnv.alb[,1]<0]]
+table(cnv.alb)
+cnv.aldob = t(cnv[cnv$`Gene Symbol`=='ALDOB',-1])
+table(cnv.aldob)
+cnv.tert = t(cnv[cnv$`Gene Symbol`=='TERT',-1])
+table(cnv.tert)
+alb.event['cnloss'] = alb.event$donor_ID %in% cnloss.donors
+
+ss.donors = unique(maf[maf$V6 == 'Splice_Site', 'V13']) # 10 donors
+alb.event['ss'] = alb.event$donor_ID %in% ss.donors
+prom.donors = alb$donor_ID[alb$promoter==1] # 10 donors
+alb.event['prom'] = alb.event$donor_ID %in% prom.donors
+
+# alb.event donors
+alb.donors = as.character(alb.event$donor_ID)[rowSums(alb.event[,-1])>0]
+wt.donors = as.character(alb.event$donor_ID)[rowSums(alb.event[,-1])==0]
+alb.expression['is_alb'] = ifelse(alb.expression$donor_ID %in% alb.donors, 'ALB', 'WT')
+alb.expression[alb.expression$is_tumour=='no','is_alb'] = 'Normal'
+ylabel = expression(paste("FPKM-UQ expression of ", italic("ALB")))
+alb.expression$is_alb = factor(alb.expression$is_alb, levels = c('Normal', 'WT', 'ALB'))
+xlabs <- paste0(levels(alb.expression$is_alb),"\n(N=",table(alb.expression$is_alb),")")
+ggplot(alb.expression, aes(x=is_alb, y=FPKM.UQ, fill=is_alb)) + geom_boxplot() + ylab(ylabel) +
+  scale_fill_Publication1() + guides(fill=FALSE) +
+  annotate('segment', x=2, xend = 3, y=150000, yend=150000) +
+  annotate('text', x=2.5, y=160000, label='p=0.02084') +
+  theme_Publication() + scale_x_discrete(labels=xlabs) + theme(axis.title.x = element_blank())
