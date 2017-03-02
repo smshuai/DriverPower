@@ -113,21 +113,24 @@ fi
 
 (>&2 echo "STEP | Calculating adjusted percent coverage")
 # check binID
-res=`diff <(cut -f1 $tmp_dir/bed_cg.tsv) <(cut -f1 $tot_cg)`
+res=`diff <(cut -f1 $tmp_dir/bed_cg.tsv | sort) <(cut -f1 $tot_cg | sort)`
 if [ "$res" != "" ]
 then
     (>&2 echo "ERROR | binID in TOT_CG is not the same as BED")
     exit 1
 fi
 
-paste <(cut -f2 $tot_cg) $tmp_dir/bed_cg.tsv | # add tot_cg to res.tsv.
+(head -n 1 $tmp_dir/bed_cg.tsv && tail -n +2 $tmp_dir/bed_cg.tsv | sort -k1,1) > $tmp_dir/bed_cg.sorted.tsv
+(head -n 1 $tot_cg && tail -n +2 $tot_cg | sort -k1,1) > $tmp_dir/tot_cg.sorted.tsv
+
+join -t $'\t' $tmp_dir/tot_cg.sorted.tsv $tmp_dir/bed_cg.sorted.tsv | # add tot_cg to res.tsv.
 awk 'BEGIN{OFS="\t"}
-{   # cols 1-2 are tot_cg, binID
+{   # cols 1-2 are binID, tot_cg
     # cols 3:NF are pct cg
     if (NR != 1)
     { # not header
         for (i = 3; i <= NF; i++)
-            $i = $1 > 0 ? $i/$1 : 0; # condition ? true-case : false-case
+            $i = $2 > 0 ? $i/$2 : 0; # condition ? true-case : false-case
         print
     }
     else
@@ -135,7 +138,7 @@ awk 'BEGIN{OFS="\t"}
 }' > $tmp_dir/bed_cg_adj.tsv
 
 # remove totcg
-cut -f2- $tmp_dir/bed_cg_adj.tsv > $tmp_dir/res.tsv
+cut -f1,3- $tmp_dir/bed_cg_adj.tsv > $tmp_dir/res.tsv
 
 mv $tmp_dir/res.tsv $out_path
 rm -r $tmp_dir

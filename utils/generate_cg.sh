@@ -63,14 +63,9 @@ bedtools getfasta -fi $FASTA -bed $tmp_dir/bed.callable.bed -fo $tmp_dir/tmp.fa
 
 # run fa2cg.R
 (>&2 echo "STEP | Making coverage table from extracted sequences")
-fa2cg.R $tmp_dir/bed.callable.bed $tmp_dir/tmp.fa $tmp_dir/cg.tsv
+fa2cg.R $tmp_dir/bed.callable.bed $BED $tmp_dir/tmp.fa $OUT_CG $OUT_TOTCG
 
-# collapse cg by binID
-(>&2 echo "STEP | Collapse coverage table by binID")
-pivot_cg.py $tmp_dir/cg.tsv $BED $tmp_dir/res.tsv $tmp_dir/res.totcg.tsv
 
-mv $tmp_dir/res.tsv $OUT_CG
-mv $tmp_dir/res.totcg.tsv $OUT_TOTCG
 rm -r $tmp_dir
 
 (>&2 echo "STEP | Finished")

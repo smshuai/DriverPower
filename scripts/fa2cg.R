@@ -1,17 +1,28 @@
 #!/usr/bin/env Rscript
 
 suppressPackageStartupMessages(require(Biostrings))
-
+suppressPackageStartupMessages(require(data.table))
 args <- commandArgs(trailingOnly = TRUE)
 
-if(length(args) != 3 ) {
-    stop("The number of args is incorrect. Usage: fa2cg.R BED FASTA OUTPATH")
+if(length(args) != 5 ) {
+    stop("The number of args is incorrect. Usage: fa2cg.R BED BEDraw FASTA CGPATH TOTCGPATH")
     q("no", 1, FALSE)
 }
 
 bed     = read.table(args[1])
-fa      = readDNAStringSet(args[2], 'fasta')
-outpath = args[3]
+bedraw  = read.table(args[2])
+fa      = readDNAStringSet(args[3], 'fasta')
+cgpath    = args[4]
+totcgpath = args[5]
+
+bed = bed[, 1:4]
+colnames(bed) = c('chrom', 'start', 'end', 'binID')
+if (identical(names(fa), paste0(bed$chrom, ':', bed$start, '-', bed$end))) {
+    cat('INFO | Sequence names checked\n')
+} else {
+    stop("Sequence names in FASTA do not match BED. Aborting")
+    q("no", 1, FALSE)
+}
 
 # 64 sequence contexts
 tri_df = trinucleotideFrequency(fa)
@@ -28,7 +39,21 @@ for (i in 1:ncol(coverage)) {
 	coverage[,i] = tri_df[, tri_nu] + tri_df[, re_tri_nu] # sum
 }
 
-bed = bed[, 1:4]
-colnames(bed) = c('chrom', 'start', 'end', 'binID')
-output = cbind(bed[, 1:4], coverage)
-write.table(output, outpath, sep="\t", row.names=F, quote=F)
+coverage = as.data.table(coverage)
+coverage[, binID:=bed$binID]
+coverage = coverage[, lapply(.SD, sum), by=binID]
+setkey(coverage, binID)
+# missing regions
+uniq.bins = unique(as.character(bedraw$V4))
+nmiss = length(uniq.bins) - nrow(coverage)
+if (nmiss > 0) {
+    cat('INFO | Fill', nmiss, 'NA bins with 0\n')
+    coverage = coverage[uniq.bins]
+    for (i in seq_along(coverage)) set(coverage, i=which(is.na(coverage[[i]])), j=i, value=0)
+}
+setorder(coverage, binID)
+totcg = data.frame(binID=coverage$binID, totcg=rowSums(coverage[,2:33, with=F]))
+
+
+write.table(coverage, cgpath, sep="\t", row.names=F, quote=F)
+write.table(totcg, totcgpath, sep='\t', row.names=F, quote=F)
