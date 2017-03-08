@@ -61,13 +61,13 @@ optional parameters:
 
 ## A quick example
 
-```
+```bash
 driverpower detect \
-  -variant ./example.mut.gz \
-  -element ./cds.bed \
-  -feature ./cds.feature.gz \
-  -callable ./calllable.bed \
-  -trainH5 ./trainingData.h5
+  -variant ./example.Liver-HCC.mut.gz \ # observed mutations
+  -element ./cds.bed.gz \ # test element set
+  -feature ./example.Liver-HCC.cds.features.gz \ # features associated with the element set
+  -callable ./calllable.bed.gz \ # whitelist genome regions
+  -trainH5 ./trainingData.h5 # training data in HDF5 format
 
 ```
 ## Input data requirements
@@ -104,9 +104,11 @@ Example:
 
 (First three coding blocks of *TP53*)
 
-| 17 | 7565256 | 7565332 | TP53
-| 17 | 7569523 | 7569562 | TP53
-| 17 | 7572926 | 7573008 | TP53
+|    |         |         |      |
+|----|---------|---------|------|
+| 17 | 7565256 | 7565332 | TP53 |
+| 17 | 7569523 | 7569562 | TP53 |
+| 17 | 7572926 | 7573008 | TP53 |
 
 ### Feature table
 
