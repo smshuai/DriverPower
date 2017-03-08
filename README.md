@@ -1,5 +1,9 @@
 # DriverPower
-version: 0.4.0
+version: 0.5.0dev
+
+## Introduction
+
+Cancer driver mutations are genomic variants that confer selective growth advantages to tumours, which are rare comparing to the huge amount of passenger mutations. Detecting genomic elements harbouring driver mutations is an important yet challenging task, especially for non-coding cancer drivers. DriverPower is a combined burden and functional impact test for coding and non-coding cancer driver elements.
 
 ## Installation
 
@@ -54,44 +58,55 @@ optional parameters:
   -o OUT, --output OUT  Path to the output file (default:
                         ./feature_select.tsv)
 ```
+
+## A quick example
+
+```
+driverpower detect \
+  -variant ./example.mut.gz \
+  -element ./cds.bed \
+  -feature ./cds.feature.gz \
+  -callable ./calllable.bed \
+  -trainH5 ./trainingData.h5
+
+```
 ## Input data requirements
 
-DriverPower requires four input files: mutation table, count table, feature (covariates) table and effective length (coverage) table. All tables should be in TSV format **with** header. Compressed TSV files (*.gzip, *.bz2, *.zip, *.xz) are also acceptable.
+### Variant table
 
-### Mutation table
-
-Mutation table should be a tab-delimited text file **with** header. Mutation table records mutations (SNPs, MNPs and indels) in test bins and each row in the table corresponds to one mutation. This table can be derived from MAF or VCF files. Only eight columns are required for DriverPower and extra columns in the table will be ignored:
+Variant table (-variant) should be a tab-delimited text file **with** header. Variant table records mutations (SNPs, MNPs and indels)  and each row in the table corresponds to one mutation. This table can be derived from MAF or VCF files. A minimum of six columns are required:
 
 1. `chrom`: Chromosome of the mutation in [1-22, X, Y]. Corresponds to `Chromosome` in [MAF Specification](https://wiki.nci.nih.gov/display/TCGA/Mutation+Annotation+Format+(MAF)+Specification).
 2. `start`: 0-indexed start coordinate of the mutation. Corresponds to `Start_Position - 1` in MAF.
 3. `end`: 1-indexed end coordinate of the mutation. Corresponds to `End_Position` in MAF.
-4. `type`: Type of the mutation, in [SNP, DNP, TNP, ONP, INS, DEL]. Corresponds to `Variant_Type` in MAF.
-5. `ref`: Reference allele of the mutation. Corresponds to `Reference_Allele` in MAF.
-6. `alt`: Mutated allele of the mutation. Corresponds to `Tumor_Seq_Allele2` in MAF.
-7. `sid`: Sample identifier.
-8. `binID`: Bin identifier. 
+4. `ref`: Reference allele of the mutation. Corresponds to `Reference_Allele` in MAF.
+5. `alt`: Mutated allele of the mutation. Corresponds to `Tumor_Seq_Allele2` in MAF.
+6. `sid`: Sample identifier.
+7. `type`: [OPTIONAL] Type of the mutation, in [SNP, DNP, TNP, ONP, INS, DEL]. Corresponds to `Variant_Type` in MAF. If `type` is not provided, DriverPower will deduce `type` from `ref`and `alt`.
+8. 
 
 Example:
 
-| chrom | start   | end     | type | ref | alt   | sid     | binID |
-|-------|---------|---------|------|-----|-------|---------|-------|
-| 17    | 7577604 | 7577606 | INS  | -   | AACCT | DO36801 | TP53  |
-| 17    | 7578405 | 7578406 | SNP  | C   | T     | DO7990  | TP53  |
+| chrom | start   | end     | type | ref | alt   | sid     | CADD |
+|-------|---------|---------|------|-----|-------|---------|------|
+| 17    | 7577604 | 7577606 | INS  | -   | AACCT | DO36801 | TP53 |
+| 17    | 7578405 | 7578406 | SNP  | C   | T     | DO7990  | TP53 |
 
-### Count table
+### Element table
 
-Mutation count table should be a tab-delimited text file (.tsv) **with** header. Mutation count table can be derived from somatic variants files (such as VCF or MAF). The following 3 columns are required:
+Element table (-element) should be a 4-column BED file (no header). Four columns are in order of chromosome, start, end and binID. Chromsome names should not contain 'chr' and in [1-22, X, Y]. If you have a [BED12](https://genome.ucsc.edu/FAQ/FAQformat#format1) file, an one-liner conversion with [BedTools](http://bedtools.readthedocs.io/en/latest/) could be
 
-1. `binID`: The identifier of bins, such as gene or promoter names.
-2. `sid`: The identifier of samples.
-3. `ct`: The number of mutations in the dataset for this bin, sample and category.
+```
+bedtools bed12tobed6 -i in.bed12 | cut -f1,2,3,4 > out.bed4
+```
 
 Example:
 
-| binID | sid     | ct |
-|-------|---------|----|
-| KRAS  | DO49481 | 1  |
-| KRAS  | DO51525 | 1  |
+(First three coding blocks of *TP53*)
+
+| 17 | 7565256 | 7565332 | TP53
+| 17 | 7569523 | 7569562 | TP53
+| 17 | 7572926 | 7573008 | TP53
 
 ### Feature table
 
@@ -101,19 +116,8 @@ Example:
 
 | binID | GERP    | E128-H3K27ac | ... |
 |-------|---------|--------------|-----|
-| KRAS  | 4.80287 | 1.19475      | ... |
+| TP53  | 4.80287 | 1.19475      | ... |
 | KRAS  | 3.56563 | 2.53435      | ... |
-
-### Effective length table
-
-Effective length table is also a tab-delimited text file **with** header. The first column in the table should be `binID`. `binID` in column 1 must be unique. Column 2 to column 33 should be 32 possible triple nucleotide contexts: ACA, ACC, ACG, ACT, ATA, ATC, ATG, ATT, CCA, CCC, CCG, CCT, CTA, CTC, CTG, CTT, GCA, GCC, GCG, GCT, GTA, GTC, GTG, GTT, TCA, TCC, TCG, TCT, TTA, TTC, TTG, TTT.
-
-Example:
-
-| binID | ACA | ACC | ... |
-|-------|-----|-----|-----|
-| KRAS  | 37  | 12  | ... |
-| TP53  | 47  | 42  | ... |
 
 ## Parameters
 
