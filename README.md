@@ -3,7 +3,7 @@ version: 0.5.0dev
 
 ## Introduction
 
-Cancer driver mutations are genomic variants that confer selective growth advantages to tumours, which are rare comparing to the huge amount of passenger mutations. Detecting genomic elements harbouring driver mutations is an important yet challenging task, especially for non-coding cancer drivers. DriverPower is a combined burden and functional impact test for coding and non-coding cancer driver elements.
+Cancer driver mutations are genomic variants that confer selective growth advantages to tumors, which are rare comparing to the huge amount of passenger mutations. Detecting genomic elements harboring driver mutations is an important yet challenging task, especially for non-coding cancer drivers. DriverPower is a combined burden and functional impact test for coding and non-coding cancer driver elements.
 
 ## Installation
 
@@ -61,13 +61,20 @@ optional parameters:
 
 ## A quick example
 
+Suppose we would like to identify potential drivers from protein coding genes and promoter of genes for Liver-HCC.
+First, specify test data information in `test_files.tsv`.
+```
+name element feature  func_names
+CDS "./cds.bed.gz"  "./example.Liver-HCC.cds.features.gz" "cadd,dann,eigen_coding"
+promoter  "./promCore.bed.gz" "./example.Liver-HCC.promCore.features.gz"  "cadd,dann,eigen_non_coding"
+```
+
 ```bash
 driverpower detect \
   -variant ./example.Liver-HCC.mut.gz \ # observed mutations
-  -element ./cds.bed.gz \ # test element set
-  -feature ./example.Liver-HCC.cds.features.gz \ # features associated with the element set
-  -callable ./calllable.bed.gz \ # whitelist genome regions
-  -trainH5 ./trainingData.h5 # training data in HDF5 format
+  -trainH5 ./trainingData.h5 \ # training data in HDF5 format
+  -testFile ./test_files.tsv \ # Name and location of test element sets and features
+  -callable ./calllable.bed.gz # whitelist genome regions
 
 ```
 ## Input data requirements
@@ -83,18 +90,21 @@ Variant table (-variant) should be a tab-delimited text file **with** header. Va
 5. `alt`: Mutated allele of the mutation. Corresponds to `Tumor_Seq_Allele2` in MAF.
 6. `sid`: Sample identifier.
 7. `type`: [OPTIONAL] Type of the mutation, in [SNP, DNP, TNP, ONP, INS, DEL]. Corresponds to `Variant_Type` in MAF. If `type` is not provided, DriverPower will deduce `type` from `ref`and `alt`.
-8. 
+8. One or multiple columns of functional impact scores: [OPTIONAL]. One functional impact measurement per column. If no functional impact score is provided, DriverPower can retrieve scores based on a configuration file.
 
 Example:
 
-| chrom | start   | end     | type | ref | alt   | sid     | CADD |
-|-------|---------|---------|------|-----|-------|---------|------|
-| 17    | 7577604 | 7577606 | INS  | -   | AACCT | DO36801 | TP53 |
-| 17    | 7578405 | 7578406 | SNP  | C   | T     | DO7990  | TP53 |
+| chrom | start   | end     | type | ref | alt   | sid     | CADD  | DANN  | ... |
+|-------|---------|---------|------|-----|-------|---------|-------|-------|-----|
+| 17    | 7577604 | 7577606 | INS  | -   | AACCT | DO36801 | 6.834 | NA    | ... |
+| 17    | 7578405 | 7578406 | SNP  | C   | T     | DO7990  | 4.992 | 0.999 | ... |
+
+### Test files table
+Test files table (-testFile) is a CSV file
 
 ### Element table
 
-Element table (-element) should be a 4-column BED file (no header). Four columns are in order of chromosome, start, end and binID. Chromsome names should not contain 'chr' and in [1-22, X, Y]. If you have a [BED12](https://genome.ucsc.edu/FAQ/FAQformat#format1) file, an one-liner conversion with [BedTools](http://bedtools.readthedocs.io/en/latest/) could be
+Element table (-element) should be a 4-column BED file (no header). Four columns are in order of chromosome, start, end and binID. Chromosome names should not contain 'chr' and in [1-22, X, Y]. If you have a [BED12](https://genome.ucsc.edu/FAQ/FAQformat#format1) file, an one-liner conversion with [BedTools](http://bedtools.readthedocs.io/en/latest/) could be
 
 ```
 bedtools bed12tobed6 -i in.bed12 | cut -f1,2,3,4 > out.bed4
@@ -123,13 +133,6 @@ Example:
 
 ## Parameters
 
-- len_threshold=500
-- recur_threshold=2
-- scaler=['robust', 'standard']
-- feature_seletion=['lassocv', 'rndlasso', 'spearman']
-- model=['glm', 'xboost', 'dnn']
-- func_score=['eigen', 'cadd']
-- func_cutoff=80
 
 ## LICENSE
 DriverPower is distributed under the terms of the [GNU General Public License 3.0](https://www.gnu.org/licenses/gpl-3.0.txt).
