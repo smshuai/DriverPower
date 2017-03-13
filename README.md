@@ -1,5 +1,9 @@
 # DriverPower
-version: 0.4.0
+version: 0.5.0dev
+
+## Introduction
+
+Cancer driver mutations are genomic variants that confer selective growth advantages to tumors, which are rare comparing to the huge amount of passenger mutations. Detecting genomic elements harboring driver mutations is an important yet challenging task, especially for non-coding cancer drivers. DriverPower is a combined burden and functional impact test for coding and non-coding cancer driver elements.
 
 ## Installation
 
@@ -54,44 +58,67 @@ optional parameters:
   -o OUT, --output OUT  Path to the output file (default:
                         ./feature_select.tsv)
 ```
+
+## A quick example
+
+Suppose we would like to identify potential drivers from protein coding genes and promoter of genes for Liver-HCC.
+First, specify test data information in `test_files.tsv`.
+```
+name element feature  func_names
+CDS "./cds.bed.gz"  "./example.Liver-HCC.cds.features.gz" "cadd,dann,eigen_coding"
+promoter  "./promCore.bed.gz" "./example.Liver-HCC.promCore.features.gz"  "cadd,dann,eigen_non_coding"
+```
+
+```bash
+driverpower detect \
+  -variant ./example.Liver-HCC.mut.gz \ # observed mutations
+  -trainH5 ./trainingData.h5 \ # training data in HDF5 format
+  -testFile ./test_files.tsv \ # Name and location of test element sets and features
+  -callable ./calllable.bed.gz # whitelist genome regions
+
+```
 ## Input data requirements
 
-DriverPower requires four input files: mutation table, count table, feature (covariates) table and effective length (coverage) table. All tables should be in TSV format **with** header. Compressed TSV files (*.gzip, *.bz2, *.zip, *.xz) are also acceptable.
+### Variant table
 
-### Mutation table
-
-Mutation table should be a tab-delimited text file **with** header. Mutation table records mutations (SNPs, MNPs and indels) in test bins and each row in the table corresponds to one mutation. This table can be derived from MAF or VCF files. Only eight columns are required for DriverPower and extra columns in the table will be ignored:
+Variant table (-variant) should be a tab-delimited text file **with** header. Variant table records mutations (SNPs, MNPs and indels)  and each row in the table corresponds to one mutation. This table can be derived from MAF or VCF files. A minimum of six columns are required:
 
 1. `chrom`: Chromosome of the mutation in [1-22, X, Y]. Corresponds to `Chromosome` in [MAF Specification](https://wiki.nci.nih.gov/display/TCGA/Mutation+Annotation+Format+(MAF)+Specification).
 2. `start`: 0-indexed start coordinate of the mutation. Corresponds to `Start_Position - 1` in MAF.
 3. `end`: 1-indexed end coordinate of the mutation. Corresponds to `End_Position` in MAF.
-4. `type`: Type of the mutation, in [SNP, DNP, TNP, ONP, INS, DEL]. Corresponds to `Variant_Type` in MAF.
-5. `ref`: Reference allele of the mutation. Corresponds to `Reference_Allele` in MAF.
-6. `alt`: Mutated allele of the mutation. Corresponds to `Tumor_Seq_Allele2` in MAF.
-7. `sid`: Sample identifier.
-8. `binID`: Bin identifier. 
+4. `ref`: Reference allele of the mutation. Corresponds to `Reference_Allele` in MAF.
+5. `alt`: Mutated allele of the mutation. Corresponds to `Tumor_Seq_Allele2` in MAF.
+6. `sid`: Sample identifier.
+7. `type`: [OPTIONAL] Type of the mutation, in [SNP, DNP, TNP, ONP, INS, DEL]. Corresponds to `Variant_Type` in MAF. If `type` is not provided, DriverPower will deduce `type` from `ref`and `alt`.
+8. One or multiple columns of functional impact scores: [OPTIONAL]. One functional impact measurement per column. If no functional impact score is provided, DriverPower can retrieve scores based on a configuration file.
 
 Example:
 
-| chrom | start   | end     | type | ref | alt   | sid     | binID |
-|-------|---------|---------|------|-----|-------|---------|-------|
-| 17    | 7577604 | 7577606 | INS  | -   | AACCT | DO36801 | TP53  |
-| 17    | 7578405 | 7578406 | SNP  | C   | T     | DO7990  | TP53  |
+| chrom | start   | end     | type | ref | alt   | sid     | CADD  | DANN  | ... |
+|-------|---------|---------|------|-----|-------|---------|-------|-------|-----|
+| 17    | 7577604 | 7577606 | INS  | -   | AACCT | DO36801 | 6.834 | NA    | ... |
+| 17    | 7578405 | 7578406 | SNP  | C   | T     | DO7990  | 4.992 | 0.999 | ... |
 
-### Count table
+### Test files table
+Test files table (-testFile) is a CSV file
 
-Mutation count table should be a tab-delimited text file (.tsv) **with** header. Mutation count table can be derived from somatic variants files (such as VCF or MAF). The following 3 columns are required:
+### Element table
 
-1. `binID`: The identifier of bins, such as gene or promoter names.
-2. `sid`: The identifier of samples.
-3. `ct`: The number of mutations in the dataset for this bin, sample and category.
+Element table (-element) should be a 4-column BED file (no header). Four columns are in order of chromosome, start, end and binID. Chromosome names should not contain 'chr' and in [1-22, X, Y]. If you have a [BED12](https://genome.ucsc.edu/FAQ/FAQformat#format1) file, an one-liner conversion with [BedTools](http://bedtools.readthedocs.io/en/latest/) could be
+
+```
+bedtools bed12tobed6 -i in.bed12 | cut -f1,2,3,4 > out.bed4
+```
 
 Example:
 
-| binID | sid     | ct |
-|-------|---------|----|
-| KRAS  | DO49481 | 1  |
-| KRAS  | DO51525 | 1  |
+(First three coding blocks of *TP53*)
+
+|    |         |         |      |
+|----|---------|---------|------|
+| 17 | 7565256 | 7565332 | TP53 |
+| 17 | 7569523 | 7569562 | TP53 |
+| 17 | 7572926 | 7573008 | TP53 |
 
 ### Feature table
 
@@ -101,37 +128,24 @@ Example:
 
 | binID | GERP    | E128-H3K27ac | ... |
 |-------|---------|--------------|-----|
-| KRAS  | 4.80287 | 1.19475      | ... |
+| TP53  | 4.80287 | 1.19475      | ... |
 | KRAS  | 3.56563 | 2.53435      | ... |
-
-### Effective length table
-
-Effective length table is also a tab-delimited text file **with** header. The first column in the table should be `binID`. `binID` in column 1 must be unique. Column 2 to column 33 should be 32 possible triple nucleotide contexts: ACA, ACC, ACG, ACT, ATA, ATC, ATG, ATT, CCA, CCC, CCG, CCT, CTA, CTC, CTG, CTT, GCA, GCC, GCG, GCT, GTA, GTC, GTG, GTT, TCA, TCC, TCG, TCT, TTA, TTC, TTG, TTT.
-
-Example:
-
-| binID | ACA | ACC | ... |
-|-------|-----|-----|-----|
-| KRAS  | 37  | 12  | ... |
-| TP53  | 47  | 42  | ... |
 
 ## Parameters
 
-- len_threshold=500
-- recur_threshold=2
-- scaler=['robust', 'standard']
-- feature_seletion=['lassocv', 'rndlasso', 'spearman']
-- model=['glm', 'xboost', 'dnn']
-- func_score=['eigen', 'cadd']
-- func_cutoff=80
 
 ## LICENSE
 DriverPower is distributed under the terms of the [GNU General Public License 3.0](https://www.gnu.org/licenses/gpl-3.0.txt).
 
-
+## Change Log
+- 2017/03/02: Release version 0.4.0, which is used in the PCAWG driver analysis.
 
 ## TODO
+For v0.5.0:
+- New 'detect' module that uses test BEDs and mutations directly, and use multiple scores
+- Use configure file to locate functional scores
+- DANN scores (and FunSeq2 scores maybe)
+- New way of calculating functional impact of elements (average of best of each sample)
 
-
-- MNP and INDEL support for eigen
-- 
+Future plans:
+- New prediction algorithms (GBM)
