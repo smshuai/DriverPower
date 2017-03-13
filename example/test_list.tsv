@@ -1,0 +1,3 @@
+name	element	feature	func_names
+CDS	./annot/cds.bed.gz	./data/example.cds.features.gz	cadd,eigen_coding
+promoter	./annot/promCore.bed.gz	./data/example.promCore.features.gz	cadd,eigen_noncoding

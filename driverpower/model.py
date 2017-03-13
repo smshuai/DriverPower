@@ -12,16 +12,6 @@ import logging
 
 # create logger
 logger = logging.getLogger('MODEL')
-# logger.setLevel(logging.INFO)
-# # create console handler
-# ch = logging.StreamHandler()
-# ch.setLevel(logging.INFO)
-# # create formatter and add it to the handlers
-# formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s: %(message)s',
-#     datefmt='%m/%d/%Y %H:%M:%S')
-# ch.setFormatter(formatter)
-# # add the handlers to the logger
-# logger.addHandler(ch)
 
 
 def split_by_cg(cg_train, cg_test=None, fold=4):
@@ -72,7 +62,7 @@ def run_glm_fold(X_train, ybinom_train, X_test, cg_train=None, cg_test=None, fol
         mu_pred = run_glm(X_train, ybinom_train, X_test)
     else:
         # output vector
-        mu_pred = np.zeros(X_test.shape[0]) 
+        mu_pred = np.zeros(X_test.shape[0])
         train_spliter, test_spliter = split_by_cg(cg_train, cg_test, fold)
         for i in np.arange(fold): # pred for each fold
             idx_train = np.where(train_spliter[i, :])[0]
@@ -125,3 +115,68 @@ def model(X_train, ybinom_train,
         mu_pred = run_glm_fold(X_train, y_train, X_test, cg_train, cg_test, fold)
     res = raw_test(mu_pred, ybinom_test, gnames, grecur)
     return res
+
+###
+# For v0.5.0 DETECT
+###
+def estimate_bgmr(X_train, y_train, N_train,
+                  X_test, y_test,
+                  use_gmean=True, method='glm'):
+    ''' Estimate the background mutation rate
+    Args:
+        X_train - np.array, scaled
+        y_train - pd.DF, indexed by binID, three columns ['length', 'nMut', 'nSample']
+        N_train - int, number of donors in training set
+        X_test - np.array, scaled
+        y_test - pd.DF, same as y_train
+        use_gmean - bool, use gmean of nMut and nSample as response if True
+        method - str, method to use in prediction
+    Return:
+        mu_pred - np.array, predicted background mutation rate
+    '''
+    support_method = ['glm']
+    assert method in support_method, 'Invalid model type. Must be chosen from {}'.format(support_method)
+    # make two columns response (# success, # failure)
+    y_train2d = make2dy(y_train, N_train, use_gmean)
+    if method == 'glm':
+        mu_pred = run_glm(X_train, y_train2d, X_test)
+    return mu_pred
+
+def do_binom_test(y, N, mu, use_gmean, nsample_thresh=1, nmut_thresh=1, len_thresh=100):
+    ''' Perform binomial test and BH correction
+    Args:
+        y  - pd.DF, indexed by binID, three columns ['length', 'nMut', 'nSample']
+        N  - int, number of donors
+        mu - pd.Series, vector of mutation rate
+        use_gmean - bool, use gmean of nMut and nSample as response if True
+        nsample_thresh - int, keep pvals for nsample >= nsample_thresh. Default: 1
+        nmut_thresh - int, keep pvals for nmut >= nmut_thresh. Default: 1
+        len_thresh - int, keep pvals for length >= len_thresh. Default: 1
+    Return:
+        pvals - np.array, a list of p-values, one for each element, with NA masked
+        qvals - np.array, BH q-values, with NA masked
+    '''
+    y2d = make2dy(y, N, use_gmean)
+    pvals = np.array([binom_test(x, n, p, 'greater') if p<1 else 1 for x, n, p in zip(y2d[:,0], y2d.sum(1), mu)])
+    # filter
+    keep = np.logical_and(y['length']>=len_thresh, y['nSample']>=nsample_thresh)
+    keep = np.array(np.logical_and(keep, y['nMut']>=nmut_thresh))
+    remove = np.logical_not(keep)
+    pvals[remove] = np.nan
+    qvals = pvals.copy()
+    qvals[keep] = multipletests(pvals[keep], method='fdr_bh')[1]
+    return pvals, qvals
+
+def make2dy(y, N, use_gmean=True):
+    ''' Make two columns response (# success, # failure)
+    Args:
+        y - pd.DF, indexed by binID, three columns ['length', 'nMut', 'nSample']
+        N - int, number of donors
+        use_geman - bool, use gmean of nMut and nSample as response if True
+    Return:
+        y2d - np.array, two columns
+    '''
+    y2d = np.zeros((y.shape[0], 2), dtype=np.int_)
+    y2d[:,0] = np.sqrt(y.nMut * y.nSample) if use_gmean else y.nMut
+    y2d[:,1] = y['length'] * N - y2d[:,0]
+    return y2d

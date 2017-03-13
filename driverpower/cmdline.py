@@ -11,7 +11,7 @@ from driverpower.feature_select import feature_score
 from driverpower import __version__
 from driverpower.model import model, get_gmean
 from driverpower.func_adj import func_adj
-
+from driverpower.detect import detect
 
 # logging config
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
@@ -22,7 +22,10 @@ logger = logging.getLogger('DP')
 
 
 def get_args():
-    parser = argparse.ArgumentParser(prog='driverpower')
+    class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
+                          argparse.MetavarTypeHelpFormatter):
+        pass
+    parser = argparse.ArgumentParser(prog='driverpower', description='DriverPower v{}: Combined burden and functional impact test for coding and noncoding cancer elements'.format(__version__))
     # global argument
     parser.add_argument('-v', '--version', dest='version', action="store_true",
         help='Print the version of DriverPower')
@@ -77,7 +80,7 @@ def get_args():
     #
     # Model
     #
-    parser_model = subparsers.add_parser('model', help='Find driver bins with preprocessed training and test data')
+    parser_model = subparsers.add_parser('model', help='Find driver bins with preprocessed training and test data (deprecated)')
     # required parameters
     re_model = parser_model.add_argument_group(title="required arguments")
     re_model.add_argument('--train', dest='path_train', required=True, type=str,
@@ -119,23 +122,45 @@ def get_args():
     op_func_model.add_argument('--mut', dest='path_mut', type=str,
         help='Path to the mutation table')
     #
-    # Test
+    # Detect
     #
-    parser_test = subparsers.add_parser('test', help='Find driver bins with preprocessed training data and raw test data')
+    parser_detect = subparsers.add_parser(
+        'detect', help='Detect cancer driver elements',
+        description='Detect cancer driver elements', formatter_class=CustomFormatter)
     # required parameters
-    re_test = parser_test.add_argument_group(title="required arguments")
-    re_test.add_argument('--train', dest='path_train', required=True, type=str,
-        help='Path to the preprocessed training set (HDF5)')
-    re_test.add_argument('--feature', dest='path_feature', required=True, type=str,
-        help='Path to the features table for test data')
-    re_test.add_argument('--count', dest='path_count', required=True, type=str,
-        help='Path to the mutation count')
-    re_test.add_argument('--length', dest='path_length', required=True, type=str,
-        help='Path to the preprocessed test set (HDF5)')
+    re_detect = parser_detect.add_argument_group(title="required parameters")
+    re_detect.add_argument('--variant', dest='path_mut', required=True, type=str,
+        help='Path to the variant table', default=argparse.SUPPRESS)
+    re_detect.add_argument('--testFile', dest='path_test', required=True, type=str,
+        help='Path to the test file list', default=argparse.SUPPRESS)
+    re_detect.add_argument('--trainH5', dest='path_train', required=True, type=str,
+        help='Path to the training HDF5', default=argparse.SUPPRESS)
     # optional parameters
-
+    op_detect = parser_detect.add_argument_group(title="optional parameters")
+    op_detect.add_argument('--callable', dest='path_call', required=False, type=str,
+        help='Path to the whitelist regions', default=None)
+    op_detect.add_argument('--funcPool', dest='func_pool', required=False, type=str,
+        choices=['mean', 'meanpool', 'maxpool'], default='mean',
+        help='Pooling method used to calculate functional impact score per element')
+    op_detect.add_argument('--funcConf', dest='path_conf', required=False, type=str,
+        help='Path to the functional score configuration file', default=None)
+    op_detect.add_argument('--selectPath', dest='select_path', required=False, type=str,
+        help='Path to the feature selection result', default=None)
+    op_detect.add_argument('--selectName', dest='select_name', required=False, type=str,
+        help='Feature selection method name', default=None)
+    op_detect.add_argument('--selectCut', dest='select_cut', required=False, type=float,
+        help='Feature importance cutoff', default=0)
+    op_detect.add_argument('--scaler', choices=['robust', 'standard', None],
+        type=str, dest='scaler', default='robust',
+        help='Scaler used to scale the features')
+    op_detect.add_argument('--noGmean', dest='no_gmean', required=False, action="store_true",
+        help='Do not geometric mean of nMut and nSample as response')
+    op_detect.add_argument('--cohortName', dest='tumor_name', required=False,
+        help='Cohort name to use in output files', default=None, type=str)
+    op_detect.add_argument('--outDir', dest='out_dir', required=False,
+        type=str, default='./',
+        help='Directory of output files')
     args = parser.parse_args()
-
     #
     # Parameters check
     #
@@ -385,26 +410,14 @@ def run_model(args):
     logger.info('Model done!')
 
 
-def run_test(args):
-    logger.info('Sub-command - Test')
-    # load training data
-    ytrain = pd.read_hdf(args.path_train, 'y')
-    if ytrain.shape[0] == 0:
-        logger.error('No training data in hdf5 file')
-        sys.exit(1)
-    Xtrain = pd.read_hdf(args.path_train, 'X')
-    brecur = pd.read_hdf(args.path_train, 'recur')
-    bsid = pd.read_hdf(args.path_train, 'sid')
-    Ntrain = bsid.unique().shape[0]
-    ytrain.len_ct = (ytrain.len_ct + ytrain.ct) * Ntrain - ytrain.ct
-    assert np.array_equal(Xtrain.index, ytrain.index), 'Training X and y have different row indexes'
-    assert np.array_equal(brecur.index, ytrain.index), 'Training recur and y have different row indexes'
-    logger.info('Successfully find training data for {} samples'.format(Ntrain))
-    logger.info('Successfully load X train with shape: {}'.format(Xtrain.shape))
-    logger.info('Successfully load y train with shape: {}'.format(ytrain.shape))
-    # load test data
-    
-    
+def run_detect(args):
+    logger.info('Sub-command - Detect')
+    use_gmean = False if args.no_gmean else True
+    detect(args.path_mut, args.path_call, args.path_test,
+          args.path_train, args.select_path, args.select_name,
+          args.select_cut, args.path_conf, args.func_pool,
+          use_gmean, args.scaler, args.tumor_name, args.out_dir)
+
 def main():
     args = get_args()
     logger.info('DriverPower {}'.format(__version__))
@@ -414,8 +427,8 @@ def main():
         run_select(args)
     elif args.subcommand == 'model':
         run_model(args)
-    elif args.subcommand == 'test':
-        run_test(args)
+    elif args.subcommand == 'detect':
+        run_detect(args)
 
 
 if __name__ == '__main__':

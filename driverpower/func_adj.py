@@ -2,24 +2,15 @@
 '''
 
 import os
+import sys
 import tabix
 import logging
 import numpy as np
 from statsmodels.sandbox.stats.multicomp import multipletests
 from scipy.stats import binom_test
-
+from driverpower.model import do_binom_test
 # create  logger
 logger = logging.getLogger('FUNC ADJ')
-# logger.setLevel(logging.INFO)
-# # create console handler
-# ch = logging.StreamHandler()
-# ch.setLevel(logging.INFO)
-# # create formatter and add it to the handlers
-# formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s: %(message)s',
-#     datefmt='%m/%d/%Y %H:%M:%S')
-# ch.setFormatter(formatter)
-# # add the handlers to the logger
-# logger.addHandler(ch)
 
 
 def get_eigen(mut, path='/u/sshuai/sshuai/func_score/eigen/v1.1', coding=True):
@@ -162,6 +153,18 @@ def query_cadd_indel(tb, chrom, start, end, ref, alt, phred=True):
     # No score found
     return np.nan
 
+def load_func_scores(func_conf_path, methods):
+    ''' Load the configure file for functional scores
+    Args:
+        func_conf_path - str, path to the conf file
+        methods - list, name of methods will be used
+    '''
+    conf = pd.read_csv(func_conf_path, header=0)
+    support_methods = set([i.upper() for i in conf.name.unique()]) # all in upper case
+    methods = set([i.upper() for i in methods])
+    assert support_methods.issuperset(methods), \
+            'Cannot find configuration for the following method(s): {}'.format(', '.join(methods-support_methods))
+
 
 def func_adj(res, mut, method, dir_func, is_coding, cutoff=85):
     ''' Main wrapper for functional adjustment
@@ -195,3 +198,24 @@ def func_adj(res, mut, method, dir_func, is_coding, cutoff=85):
     res['Qval'] = multipletests(res.Pval, method='fdr_bh')[1]
     res.sort_values('Pval', inplace=True)
     return res
+##
+# v0.5.0 Detect
+##
+def func_adj_new(result, ftuple, N, use_gmean):
+    ''' Perform functional adjustment.
+    Args:
+        result - pd.DF, having BGMR, func_scores, nSample, nMut, length
+        ftuple - tuple, (func_name, func_thresh, func_cut)
+        N - int, number of donors
+    Return:
+        padj - np.array, adjusted pvals
+        qadj - np.array, adjusted qvals
+    '''
+    # check func_name
+    if ftuple[0] not in result.columns:
+        logger.error('Bin-level functional score name {} not found in result'.format(ftuple[0]))
+        sys.exit(1)
+    func_cut = ftuple[2] if ftuple[1] is None else result[ftuple[0]][result.nMut>0].fillna(0).quantile(ftuple[1]/100)
+    muadj = result['BGMR'] * func_cut / result[ftuple[0]]
+    padj, qadj = do_binom_test(result, N, muadj, use_gmean)
+    return padj, qadj
