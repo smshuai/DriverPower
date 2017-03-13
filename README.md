@@ -67,25 +67,26 @@ optional parameters:
 
 Data, script and expected output for this example can be found under the [example](https://github.com/smshuai/DriverPower/tree/master/example) folder. Input data requirements can be found after this example.
 
-**Task**: Identify potential protein-coding driver genes and non-coding driver pomoters from cancer somatic mutations.
+> **Task**: Identify potential protein-coding driver genes and non-coding driver pomoters from cancer somatic mutations.
 
 In the [./example/data/](https://github.com/smshuai/DriverPower/tree/master/example/data) folder we have:
 
-1. example.mut.gz: somatic mutations. Here we use CNS-Medullo data as an example.
-2. example.cds.features.gz / example.promCore.features.gz: reference features for CDS and promCore elements. Only 38 important features are kept for file size issue.
-3. example.train.h5: pre-processed training data generated with `driverpower preprocess`. Only 38 important features are kept.
+1. **example.mut.gz**: somatic mutations. Here we use CNS-Medullo data as an example.
+2. **example.cds.features.gz** / **example.promCore.features.gz**: reference features for CDS and promCore elements. Only 38 important features are kept for file size issue.
+3. **example.train.h5**: pre-processed training data generated with `driverpower preprocess`. Only 38 important features are kept.
 
 In the [./example/annot/](https://github.com/smshuai/DriverPower/tree/master/example/annot) folder we have:
 
-1. callable.bed.gz: genome whitelist regions or so called "callable" regions.
-2. cds.bed.gz / promCore.bed.gz: genome coordinates of CDS and promCore elements.
+1. **callable.bed.gz**: genome whitelist regions or so called "callable" regions.
+2. **cds.bed.gz** / **promCore.bed.gz**: genome coordinates of CDS and promCore elements.
 
 In order to detect drivers for multiple element set simultaneously, list of data and annotation files should be written into a single file like the [./example/test_list.tsv](https://github.com/smshuai/DriverPower/blob/master/example/test_list.tsv):
-```
-name	element	feature	func_names
-CDS	./annot/cds.bed.gz	./data/example.cds.features.gz	cadd,eigen_coding
-promoter	./annot/promCore.bed.gz	./data/example.promCore.features.gz	cadd,eigen_noncoding
-```
+
+| name     | element                 | feature                             | func_names           |
+|----------|-------------------------|-------------------------------------|----------------------|
+| CDS      | ./annot/cds.bed.gz      | ./data/example.cds.features.gz      | cadd,eigen_coding    |
+| promoter | ./annot/promCore.bed.gz | ./data/example.promCore.features.gz | cadd,eigen_noncoding |
+
 `func_names` here specifies types of functional impact scores to use.
 
 Finally, we can run DriverPower with the bash script [./example/run_example.sh](https://github.com/smshuai/DriverPower/blob/master/example/run_example.sh):
@@ -99,29 +100,30 @@ driverpower detect \
     --cohortName "example.CNS-Medullo" \
     --outDir     "./output/"
 ```
-Running logs are like:
+Running logs look like:
 ```
 $ cd ./example/ && ./run_example.sh
-03/13/2017 13:14:00 | DP | INFO: DriverPower 0.5.0dev
-03/13/2017 13:14:00 | DP | INFO: Sub-command - Detect
-03/13/2017 13:14:02 | LOAD | INFO: Load 223792 mutations from 141 donors successfully
-03/13/2017 13:14:10 | DETECT | INFO: 219822 (98.23%) mutations are in callable regions
-03/13/2017 13:14:11 | LOAD | INFO: Successfully load data for 141 samples
-03/13/2017 13:14:11 | LOAD | INFO: Successfully load X with shape: (90190, 38)
-03/13/2017 13:14:11 | LOAD | INFO: Successfully load y with shape: (90190, 2)
-03/13/2017 13:14:11 | DETECT | INFO: Use robust scaler
-03/13/2017 13:14:11 | DETECT | INFO: Start to detect drivers in element set: CDS (n=20185)
-03/13/2017 13:14:15 | DETECT | INFO: Number of mutations in set: 2818
-03/13/2017 13:14:15 | LOAD | INFO: Successfully load 38 features for 20185 bins
-03/13/2017 13:14:26 | DETECT | WARNING: 915 (32.47%) NA values found in EIGEN_CODING scores. All NAs are ignored
-03/13/2017 13:14:26 | DETECT | WARNING: 5 (0.18%) NA values found in CADD scores. All NAs are ignored
-03/13/2017 13:14:26 | DETECT | INFO: Find 13 elements with q-value <=  0.1
-03/13/2017 13:14:27 | DETECT | INFO: Start to detect drivers in element set: promoter (n=20164)
-03/13/2017 13:14:29 | DETECT | INFO: Number of mutations in set: 924
-03/13/2017 13:14:29 | LOAD | INFO: Successfully load 38 features for 20164 bins
-03/13/2017 13:14:38 | DETECT | WARNING: 148 (16.02%) NA values found in EIGEN_NONCODING scores. All NAs are ignored
-03/13/2017 13:14:38 | DETECT | WARNING: 4 (0.43%) NA values found in CADD scores. All NAs are ignored
-03/13/2017 13:14:39 | DETECT | INFO: Find 1 elements with q-value <=  0.1
+03/13/2017 14:28:32 | INFO: DriverPower 0.5.0dev
+03/13/2017 14:28:32 | INFO: Sub-command - Detect
+03/13/2017 14:28:34 | INFO: Successfully load 223792 mutations from 141 donors
+03/13/2017 14:28:43 | INFO: 219822 (98.23%) mutations are in callable regions
+03/13/2017 14:28:43 | INFO: Load training data...
+03/13/2017 14:28:43 | INFO: Successfully load data for 141 samples
+03/13/2017 14:28:43 | INFO: Successfully load X with shape: (90190, 38)
+03/13/2017 14:28:43 | INFO: Successfully load y with shape: (90190, 2)
+03/13/2017 14:28:43 | INFO: Use robust scaler
+===== Test Set [1/2]: CDS (n=20185) =====
+03/13/2017 14:28:48 | INFO: Number of mutations in set: 2818
+03/13/2017 14:28:48 | INFO: Successfully load 38 features for 20185 bins
+03/13/2017 14:29:01 | WARNING: 915 (32.47%) NA values found in EIGEN_CODING scores. All NAs are ignored
+03/13/2017 14:29:01 | WARNING: 5 (0.18%) NA values found in CADD scores. All NAs are ignored
+03/13/2017 14:29:01 | INFO: Find 13 elements with q-value <=  0.1
+===== Test Set [2/2]: promoter (n=20164) =====
+03/13/2017 14:29:04 | INFO: Number of mutations in set: 924
+03/13/2017 14:29:05 | INFO: Successfully load 38 features for 20164 bins
+03/13/2017 14:29:17 | WARNING: 4 (0.43%) NA values found in CADD scores. All NAs are ignored
+03/13/2017 14:29:17 | WARNING: 148 (16.02%) NA values found in EIGEN_NONCODING scores. All NAs are ignored
+03/13/2017 14:29:18 | INFO: Find 1 elements with q-value <=  0.1
 ```
 Two output files could be found in ./example/output/, which should match files under ./example/expected_output/.
 
