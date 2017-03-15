@@ -119,17 +119,33 @@ def model(X_train, ybinom_train,
 ###
 # For v0.5.0 DETECT
 ###
-def estimate_bgmr(X_train, y_train, N_train,
-                  X_test, y_test,
-                  use_gmean=True, method='glm'):
-    ''' Estimate the background mutation rate
+def get_model(X_train, y_train, N_train, use_gmean=True, method='glm'):
+    '''
     Args:
         X_train - np.array, scaled
         y_train - pd.DF, indexed by binID, three columns ['length', 'nMut', 'nSample']
         N_train - int, number of donors in training set
-        X_test - np.array, scaled
-        y_test - pd.DF, same as y_train
         use_gmean - bool, use gmean of nMut and nSample as response if True
+        method - str, method to use in prediction
+    Return:
+        model - fitted model that has predict method
+    '''
+    support_method = ['glm']
+    assert method in support_method, 'Invalid model type. Must be chosen from {}'.format(support_method)
+    # make two columns response (# success, # failure)
+    y_train2d = make2dy(y_train, N_train, use_gmean)
+    if method == 'glm':
+        # Add const mannully. sm.add_constant cannot add 1 for shape (1, n)
+        X_train = np.c_[X_train, np.ones(X_train.shape[0])]
+        glm = sm.GLM(y_train2d, X_train, family=sm.families.Binomial())
+        model = glm.fit()
+    return model
+
+def estimate_bgmr(model, X_test, method='glm'):
+    ''' Estimate the background mutation rate
+    Args:
+        model - fitted model that has predict() method
+        X_test - np.array, scaled
         method - str, method to use in prediction
     Return:
         mu_pred - np.array, predicted background mutation rate
@@ -137,9 +153,10 @@ def estimate_bgmr(X_train, y_train, N_train,
     support_method = ['glm']
     assert method in support_method, 'Invalid model type. Must be chosen from {}'.format(support_method)
     # make two columns response (# success, # failure)
-    y_train2d = make2dy(y_train, N_train, use_gmean)
     if method == 'glm':
-        mu_pred = run_glm(X_train, y_train2d, X_test)
+        # Add const
+        X_test  = np.c_[X_test, np.ones(X_test.shape[0])]
+        mu_pred = model.predict(X_test)
     return mu_pred
 
 def do_binom_test(y, N, mu, use_gmean, nsample_thresh=1, nmut_thresh=1, len_thresh=100):

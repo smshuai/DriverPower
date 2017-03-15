@@ -10,7 +10,7 @@ from pybedtools import BedTool
 from sklearn.preprocessing import StandardScaler, RobustScaler
 from statsmodels.sandbox.stats.multicomp import multipletests
 from driverpower.load import load_testFile, load_fselect, load_hdf5, load_covar, load_mut_bed, load_func_scores
-from driverpower.model import estimate_bgmr, do_binom_test
+from driverpower.model import get_model, estimate_bgmr, do_binom_test
 from driverpower.func_adj import func_adj_new
 
 logger = logging.getLogger('DETECT')
@@ -84,6 +84,8 @@ def format_res(res, func_cols):
     res.length = res.length.astype(int)
     res.nMut = res.nMut.astype(int)
     res.nSample = res.nSample.astype(int)
+    func_cols = list(func_cols)
+    func_cols.sort()
     # get p.min and q.min
     if func_cols:
         pval_cols = ['p.' + name for name in func_cols]
@@ -134,7 +136,8 @@ def detect(mut_path, callable_path, testFile_path, trainH5_path,
                     .format(ncall, ncall/mut_df.shape[0]*100))
     # Process feature selection result
     usefeatures = load_fselect(fselect_path, fselect_name, fselect_cutoff) if fselect_path else None
-    # load training data
+    # load training data and train the model
+    logger.info('Load training data and train the model...')
     Xtrain_df, ytrain_df, Ntrain = load_hdf5(trainH5_path, usefeatures)
     train_index = Xtrain_df.index.values
     train_columns = Xtrain_df.columns.values
@@ -152,16 +155,20 @@ def detect(mut_path, callable_path, testFile_path, trainH5_path,
         Xtrain_mat = scaler.transform(Xtrain_mat)
     else:
         scaler = None
-
+    # train the model
+    model = get_model(Xtrain_mat, ytrain_df, Ntrain, use_gmean, 'glm')
     # load test file list
     test_files = load_testFile(testFile_path, mut_df.columns.values, func_conf_path)
     bed_cnames = ['chrom_bin', 'start_bin', 'end_bin', 'binID']
+    nset = len(test_files)
+    curr_set = 1
     for test_set in test_files:
         (name, bin_path, feature_path, func_tuples) = test_set
         binIDs = pd.read_table(bin_path, sep='\t', header=None,\
                                names=bed_cnames, usecols=['binID'])
         binIDs = binIDs.binID.unique()
-        logger.info('Start to detect drivers in element set: {} (n={})'.format(name, binIDs.shape[0]))
+        print('===== Test Set [{}/{}]: {} (n={}) ====='.format(curr_set, nset, name, binIDs.shape[0]))
+        curr_set += 1
         # result table
         result = pd.DataFrame(index=binIDs, columns=['length', 'nMut', 'nSample'])
         result.index.names = ['binID']
@@ -193,8 +200,7 @@ def detect(mut_path, callable_path, testFile_path, trainH5_path,
             Xtest_mat = scaler.transform(Xtest_df.as_matrix())
         else:
             Xtest_mat = Xtest_df.as_matrix()
-        result['BGMR'] = estimate_bgmr(Xtrain_mat, ytrain_df, Ntrain,
-                                       Xtest_mat, result, use_gmean, 'glm')
+        result['BGMR'] = estimate_bgmr(model, Xtest_mat, 'glm')
         p_raw, q_raw = do_binom_test(result, ndonor, result['BGMR'], use_gmean)
         result['p.raw'] = p_raw
         result['q.raw'] = q_raw
@@ -216,11 +222,10 @@ def detect(mut_path, callable_path, testFile_path, trainH5_path,
                 result['q.'+fcol[0]] = qvals
         else:
             func_cols = None
-        # append to the result list
-        result_list.append((name, format_res(result, func_cols)))
-    for name, res in result_list:
+        # write result
         if tumor_name:
             out_path = os.path.join(out_dir, tumor_name + '.' + name + '.DriverPower.res.tsv')
         else:
             out_path = os.path.join(out_dir, name + '.DriverPower.res.tsv')
+        res = format_res(result, func_cols)
         res.to_csv(out_path, na_rep='NA', sep='\t')

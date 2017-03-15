@@ -209,7 +209,7 @@ def load_mut_bed(mut_path):
     ndonor = mut.sid.unique().shape[0]
     if 'type' not in mut.columns:
         mut = assign_variant_type(mut)
-    logger.info('Load {} mutations from {} donors successfully'.format(mut.shape[0], ndonor))
+    logger.info('Successfully load {} mutations from {} donors'.format(mut.shape[0], ndonor))
     return mut, ndonor
 
 def load_testFile(testFile_path, mut_cols, func_conf_path):

@@ -14,9 +14,12 @@ from driverpower.func_adj import func_adj
 from driverpower.detect import detect
 
 # logging config
+# logging.basicConfig(stream=sys.stdout, level=logging.INFO,
+#    format='%(asctime)s | %(name)s | %(levelname)s: %(message)s',
+#    datefmt='%m/%d/%Y %H:%M:%S')
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-    format='%(asctime)s | %(name)s | %(levelname)s: %(message)s',
-    datefmt='%m/%d/%Y %H:%M:%S')
+                    format='%(asctime)s | %(levelname)s: %(message)s',
+                    datefmt='%m/%d/%Y %H:%M:%S')
 # create logger
 logger = logging.getLogger('DP')
 
