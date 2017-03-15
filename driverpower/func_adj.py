@@ -216,6 +216,7 @@ def func_adj_new(result, ftuple, N, use_gmean):
         logger.error('Bin-level functional score name {} not found in result'.format(ftuple[0]))
         sys.exit(1)
     func_cut = ftuple[2] if ftuple[1] is None else result[ftuple[0]][result.nMut>0].fillna(0).quantile(ftuple[1]/100)
+    logger.info('Cutoff - {} - {}'.format(ftuple[0], func_cut))
     muadj = result['BGMR'] * func_cut / result[ftuple[0]]
     padj, qadj = do_binom_test(result, N, muadj, use_gmean)
     return padj, qadj
