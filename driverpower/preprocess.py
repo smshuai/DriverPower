@@ -1,30 +1,18 @@
 """
 Pre-process data for DriverPower.
-
-Pre-process steps are:
-1. Calculate response
-2. Filter
-3. Scale
 """
 import pandas as pd
 import numpy as np
 import sys
-from sklearn.preprocessing import StandardScaler, RobustScaler
 import logging
-
+from sklearn.preprocessing import StandardScaler, RobustScaler
+from pybedtools import BedTool
+from driverpower.load import load_mut_bed
+from driverpower.detect import getMutCtCg
 
 # create logger
 logger = logging.getLogger('PREPROCESS')
-# logger.setLevel(logging.INFO)
-# # create console handler
-# ch = logging.StreamHandler()
-# ch.setLevel(logging.INFO)
-# # create formatter and add it to the handlers
-# formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s: %(message)s',
-#     datefmt='%m/%d/%Y %H:%M:%S')
-# ch.setFormatter(formatter)
-# # add the handlers to the logger
-# logger.addHandler(ch)
+
 
 def sampling(X, y, recur, N):
     ''' Sample X and y, which are both pd.DF and have the same index.
@@ -64,6 +52,7 @@ def sampling(X, y, recur, N):
     assert np.array_equal(X.index, y.index), 'X and y have different row indexes after sampling'
     assert np.array_equal(y.index, recur.index), 'recur and y have different row indexes after sampling'
     return X, y, recur
+
 
 def get_response(ct, cg):
     ''' Obtain response from count and coverage table
@@ -203,3 +192,112 @@ def preprocess(cg_test, ct_test, X_test, cg_train,
     if scaler_type != 'none':
         X_train, X_test = scaling(X_train, X_test, scaler_type)
     return (X_train, ybinom_train, X_test, ybinom_test, gnames, grecur)
+
+##
+# v0.5.0
+##
+
+
+def preprocess_v0(args):
+    ''' Deprecated. Used in PCAWG Freeze.
+    In the hdf5:
+        X
+        y
+        recur
+        sid
+    '''
+    # initial output HDF5
+    store = pd.HDFStore(args.out, mode='w')
+    ct, cg, cv, recur = load_memsave(args.path_ct,
+        args.path_cg, args.path_cv,
+        args.len_threshold, args.recur_threshold)
+    if cv.shape[0] == 0:
+        logger.warning('No bin left')
+    # sample IDs
+    sid = pd.Series(ct.sid.unique())
+    sid.name = 'sid'
+    # get response
+    ybinom = get_response(ct, cg)
+    # y to pd.DF
+    ybinom = pd.DataFrame(ybinom, columns=['ct','len_ct'], index=cg.index)
+    # sampling
+    cv, ybinom, recur = sampling(cv, ybinom, recur, args.sampling)
+    # write to store
+    store.append('X', cv, chunksize=50000)
+    store['y'] = ybinom
+    store['recur'] = recur
+    store['sid'] = sid
+    store.close()
+
+
+def preprocess_v1(mut_path, callable_path, bin_path, feature_path, out_path):
+    ''' Preprocess version 1.1
+    Args:
+        mut_path - path to variants
+        callable_path - path to whitelist regions
+        bin_path - path to element set
+        feature_path - path to features
+        out_path - output h5 path
+    '''
+    mut_df, ndonor = load_mut_bed(mut_path)
+    mut_bed = BedTool.from_dataframe(mut_df, na_rep='NA')
+    bin_bed = BedTool(bin_path)
+    if callable_path:
+        callable_bed = BedTool(callable_path)
+        mut_bed = mut_bed.intersect(callable_bed, wa=True)
+        ncall = mut_bed.count()
+        bin_bed = bin_bed.intersect(callable_bed)
+        logger.info('{} ({:.2f}%) mutations are in callable regions'\
+                    .format(ncall, ncall/mut_df.shape[0]*100))
+    # get nMut, nSample and Length
+    mut_cnames = list(mut_df.columns.values)
+    bed_cnames = ['chrom_bin', 'start_bin', 'end_bin', 'binID']
+    mut_df, ct, cg, recur = getMutCtCg(mut_bed, bin_bed, mut_cnames, bed_cnames)
+    # y
+    binIDs = pd.read_table(bin_path, sep='\t', header=None,\
+                           names=bed_cnames, usecols=['binID'])
+    binIDs = binIDs.binID.unique()
+    y = pd.DataFrame(index=binIDs, columns=['length', 'nMut', 'nSample'])
+    y.index.names = ['binID']
+    # add to y
+    y['length'] = cg
+    y['nSample'] = recur
+    y['nMut'] = ct
+    # fill na with 0
+    y['length'] = y['length'].fillna(0).astype(int)
+    y['nSample'] = y['nSample'].fillna(0).astype(int)
+    y['nMut'] = y['nMut'].fillna(0).astype(int)
+    # default keep bins with nMut > 0 and Length > 100bp
+    keep = np.logical_and(y['nMut']>0, y['length']>100)
+    y = y[keep]
+    y.sort_index(inplace=True)
+    keep_bin = y.index.values
+    # load X by chunks
+    logger.info('Start to load and filter features')
+    cv_reader = pd.read_table(feature_path, index_col='binID', chunksize=50000)
+    cv = cv_reader.get_chunk()
+    cv = cv[cv.index.isin(keep_bin)] # cv container
+    Nchunk = int(binIDs.shape[0] / 50000)
+    for chunk in cv_reader:
+        logger.info('Load features chunk {}/{}'.format(chunk_idx, Nchunk))
+        chunk_idx += 1
+        chunk = chunk[chunk.index.isin(keep_bin)]
+        cv = cv.append(chunk)
+    # check unique binID
+    assert len(cv.index.values) == len(cv.index.unique()), "binID in feature table is not unique."
+    cv.sort_index(inplace=True) # sort row index
+    cv.sort_index(1, inplace=True) # sort column index
+    na_count = cv.isnull().sum()
+    if na_count.sum() > 0:
+        na_fnames = na_count.index.values[np.where(na_count>0)]
+        logger.warning('NA values found in features [{}]'.format(', '.join(na_fnames)))
+        logger.warning('Fill NA with 0')
+        cv.fillna(0, inplace=True)
+    logger.info('Successfully load features for {} bins'.format(cv.shape[0]))
+    assert np.array_equal(cv.index, y.index), 'binIDs in X and y tables are not matched'
+    # output
+    store = pd.HDFStore(out_path, mode='w')
+    store['meta'] = pd.Series({'version': 'v1', 'N':1024})
+    store['y'] = y
+    store.append('X', cv, chunksize=50000)
+    store.close()

@@ -15,6 +15,7 @@ from driverpower.func_adj import func_adj_new
 
 logger = logging.getLogger('DETECT')
 
+
 def getMutCtCg(mut, bed, mut_cnames, bed_cnames):
     ''' Get mutations in bed and mutation counts per element.
     Args:
@@ -26,13 +27,14 @@ def getMutCtCg(mut, bed, mut_cnames, bed_cnames):
     # mut table
     colnames = mut_cnames + bed_cnames
     mut_in = mut.intersect(bed, wa=True, wb=True)\
-            .to_dataframe(names=colnames, dtype={'chrom':str, 'chrom_bin':str})
+        .to_dataframe(names=colnames, dtype={'chrom': str, 'chrom_bin': str})
     ct = mut_in.pivot_table(index='binID', values='chrom', aggfunc=len)
-    bed_df = bed.to_dataframe(names=bed_cnames, dtype={'chrom_bin':str})
+    bed_df = bed.to_dataframe(names=bed_cnames, dtype={'chrom_bin': str})
     bed_df['length'] = bed_df.end_bin - bed_df.start_bin
     cg = bed_df.pivot_table(index='binID', values='length', aggfunc=sum)
-    recur = mut_in.loc[:,('binID', 'sid')]\
-            .drop_duplicates().pivot_table(index='binID', values='sid', aggfunc=len)
+    recur = mut_in.loc[:, ('binID', 'sid')]\
+        .drop_duplicates().\
+        pivot_table(index='binID', values='sid', aggfunc=len)
     return mut_in, ct, cg, recur
 
 
@@ -72,6 +74,7 @@ def calc_bin_fscore(mut, func_cols, agg_method):
             sys.exit(1)
     return fscores
 
+
 def format_res(res, func_cols):
     ''' Format output result
     Args:
@@ -104,6 +107,7 @@ def format_res(res, func_cols):
         logger.info('Find {} elements with q-value <=  0.1'.format(sum(res['q.raw']<=0.1)))
         res = res[['length', 'nMut', 'nSample', 'BGMR', 'p.raw', 'q.raw']]
     return res
+
 
 def detect(mut_path, callable_path, testFile_path, trainH5_path,
            fselect_path, fselect_name, fselect_cutoff,
