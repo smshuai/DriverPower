@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler, RobustScaler
 from sklearn.feature_selection import f_regression
 from scipy.special import logit
 from scipy.stats import spearmanr
+from driverpower.load import load_hdf5
 from driverpower.model import make2dy
 
 
