@@ -107,7 +107,7 @@ def fselect_v1(h5_path, scaler_type, use_gmean, out_path):
     ''' Run feature selection for preprocess HDF5 (v1)
     '''
     logger.info('Loading training data ...')
-    Xtrain_df, ytrain_df, Ntrain = load_hdf5(trainH5_path, usefeatures)
+    Xtrain_df, ytrain_df, Ntrain = load_hdf5(h5_path)
     train_columns = Xtrain_df.columns.values
     Xtrain_mat = Xtrain_df.as_matrix()
     # scaling if need
