@@ -295,7 +295,8 @@ def assign_variant_type(mut):
 
 
 def load_hdf5(h5_path, usefeatures=None):
-    ''' Load HDF5 data from preprocess. Keys are ['y', 'X', 'recur', 'sid']
+    ''' Load HDF5 data from preprocess. Keys are V0: ['/X', '/recur', '/sid', '/y'];
+        V1: ['/X', '/meta', '/y']
     Args:
         h5_path - str, path to the hdf5 path
         usefeatures - list, a list of feature names to use. Default: None
@@ -304,24 +305,43 @@ def load_hdf5(h5_path, usefeatures=None):
         y - pd.DF, indexed by binID, columns are nMut, length, nSample
         N - int, number of samples
     '''
-    y = pd.read_hdf(h5_path, 'y')
-    X = pd.read_hdf(h5_path, 'X')
-    if usefeatures:
-        X = X.loc[:, usefeatures]
-    recur = pd.read_hdf(h5_path, 'recur')
-    sids = pd.read_hdf(h5_path, 'sid')
-    N = sids.unique().shape[0]
-    logger.info('Successfully load data for {} samples'.format(N))
-    # check index (binID)
-    assert np.array_equal(X.index, y.index), 'X and y have different row indexes'
-    assert np.array_equal(y.index, recur.index), 'recur and y have different row indexes'
-    logger.info('Successfully load X with shape: {}'.format(X.shape))
-    logger.info('Successfully load y with shape: {}'.format(y.shape))
-    y['length']  = y.len_ct + y.ct
-    y['nSample'] = recur.astype(np.int_)
-    del y['len_ct']
-    y.columns = ['nMut', 'length', 'nSample']
-    return X, y, N
+    store = pd.HDFStore(h5_path)
+    if '/meta' in store.keys():
+        h5_version = store['/meta']['version']
+    else:
+        h5_version = 'v0'
+    if h5_version == 'v0':
+        # old way of reading
+        y = store['y']
+        X = store['X']
+        if usefeatures:
+            X = X.loc[:, usefeatures]
+        recur = store['recur']
+        sids = store['sid']
+        N = sids.unique().shape[0]
+        # check index (binID)
+        assert np.array_equal(X.index, y.index), 'X and y have different row indexes'
+        assert np.array_equal(y.index, recur.index), 'recur and y have different row indexes'
+        y['length']  = y.len_ct + y.ct
+        y['nSample'] = recur.astype(np.int_)
+        del y['len_ct']
+        y.columns = ['nMut', 'length', 'nSample']
+        store.close()
+        logger.info('Successfully load data for {} samples'.format(N))
+        logger.info('Successfully load X with shape: {}'.format(X.shape))
+        logger.info('Successfully load y with shape: {}'.format(y.shape))
+        return X, y, N
+    elif h5_version == 'v1':
+        # ['/X', '/meta', '/y']
+        y = store['y']
+        X = store['X']
+        N = store['meta']['N']
+        assert np.array_equal(X.index, y.index), 'X and y have different row indexes'
+        logger.info('Successfully load data for {} samples'.format(N))
+        logger.info('Successfully load X with shape: {}'.format(X.shape))
+        logger.info('Successfully load y with shape: {}'.format(y.shape))
+        return X, y, N
+
 
 
 def load_fselect(fs_path, fs_name, fs_cutoff):
@@ -374,7 +394,7 @@ def retrive_score(mut, conf):
         # logger.info('Retriving {} - {} - chrom {}'.format(conf_row['name'], conf_row['type'], conf_row['chroms']))
         tb = tabix.open(conf_row['path'])
         for ix, var in mut.iterrows():
-            if (var['type'] == conf_row['type'] or \
+            if (var['type'] == conf_row['type'] or
                 (var['type'] in ['INS', 'DEL'] and conf_row['type'] == 'INDEL')):
                 try:
                     query_res = tb.query(var.chrom, var.start, var.end)

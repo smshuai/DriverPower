@@ -141,6 +141,7 @@ def get_model(X_train, y_train, N_train, use_gmean=True, method='glm'):
         model = glm.fit()
     return model
 
+
 def estimate_bgmr(model, X_test, method='glm'):
     ''' Estimate the background mutation rate
     Args:
@@ -158,6 +159,7 @@ def estimate_bgmr(model, X_test, method='glm'):
         X_test  = np.c_[X_test, np.ones(X_test.shape[0])]
         mu_pred = model.predict(X_test)
     return mu_pred
+
 
 def do_binom_test(y, N, mu, use_gmean, nsample_thresh=1, nmut_thresh=1, len_thresh=100):
     ''' Perform binomial test and BH correction
