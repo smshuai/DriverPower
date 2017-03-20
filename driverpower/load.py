@@ -9,7 +9,7 @@ import logging
 import sys
 from driverpower.feature_select import feature_score
 from tabix import TabixError
-from driverpower.preprocess import get_filter
+from driverpower.helperDP import get_filter
 
 logger = logging.getLogger('LOAD')
 

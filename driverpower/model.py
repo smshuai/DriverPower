@@ -6,7 +6,7 @@ import pandas as pd
 import statsmodels.api as sm
 from statsmodels.sandbox.stats.multicomp import multipletests
 from scipy.stats import binom_test
-from driverpower.preprocess import get_gmean
+from driverpower.helperDP import get_gmean
 import logging
 
 

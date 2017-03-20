@@ -278,6 +278,7 @@ def preprocess_v1(mut_path, callable_path, bin_path, feature_path, out_path):
     cv = cv_reader.get_chunk()
     cv = cv[cv.index.isin(keep_bin)] # cv container
     Nchunk = int(binIDs.shape[0] / 50000)
+    chunk_idx = 1
     for chunk in cv_reader:
         logger.info('Load features chunk {}/{}'.format(chunk_idx, Nchunk))
         chunk_idx += 1
@@ -301,3 +302,4 @@ def preprocess_v1(mut_path, callable_path, bin_path, feature_path, out_path):
     store['y'] = y
     store.append('X', cv, chunksize=50000)
     store.close()
+
