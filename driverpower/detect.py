@@ -13,6 +13,7 @@ from driverpower.load import load_testFile, load_fselect, load_hdf5, load_covar,
 from driverpower.model import get_model, estimate_bgmr, do_binom_test
 from driverpower.func_adj import func_adj_new
 
+
 logger = logging.getLogger('DETECT')
 
 
@@ -211,7 +212,7 @@ def detect(mut_path, callable_path, testFile_path, trainH5_path,
         result.sort_values('p.raw', inplace=True)
         # func adj
         if func_tuples:
-            # retrive scores if necessary
+            # retrieve scores if necessary
             func_cols = set([i[0] for i in func_tuples])
             to_retrived = func_cols.difference(mut.columns)
             if to_retrived:

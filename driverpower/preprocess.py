@@ -298,7 +298,7 @@ def preprocess_v1(mut_path, callable_path, bin_path, feature_path, out_path):
     assert np.array_equal(cv.index, y.index), 'binIDs in X and y tables are not matched'
     # output
     store = pd.HDFStore(out_path, mode='w')
-    store['meta'] = pd.Series({'version': 'v1', 'N':1024})
+    store['meta'] = pd.Series({'version': 'v1', 'N': ndonor})
     store['y'] = y
     store.append('X', cv, chunksize=50000)
     store.close()
