@@ -7,7 +7,7 @@ import numpy as np
 import tabix
 import logging
 import sys
-from driverpower.feature_select import feature_score
+from driverpower.helperDP import feature_score
 from tabix import TabixError
 from driverpower.helperDP import get_filter
 

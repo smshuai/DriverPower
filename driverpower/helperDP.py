@@ -42,6 +42,7 @@ def get_filter(ct, cg, len_threshold=500, recur_threshold=2, return_recur=False,
         return keep, filter_tab
     return keep # index
 
+
 def get_gmean(y, recur):
     ''' Use binomial response y and recur to produce a new gmean response.
     '''
@@ -51,3 +52,21 @@ def get_gmean(y, recur):
     ynew[:,1] = y.sum(1) - ynew[:,0]
     return ynew
 
+
+def feature_score(fscores, fnames, cutoff):
+    ''' Select features based on scores and cutoff.
+    Args:
+        fscores - np.array. Feature importance scores
+        fnames  - np.array. Feature names (same length as fscores)
+        cutoff  - cutoff for feature selection
+    Return:
+        fset - np.array. Names of selected features
+        fidx - np.array. Numerical index of selected features
+    '''
+    assert len(fnames) == len(fscores), 'Feature importance scores and names have diffent length'
+    fidx = np.where(fscores > cutoff)[0]
+    fset = fnames[fidx]
+    if len(fset) == 0:
+        logger.error('No feature is selected. Please try another cutoff')
+        sys.exit(1)
+    return fset, fidx
