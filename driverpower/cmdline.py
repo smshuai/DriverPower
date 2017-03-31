@@ -6,9 +6,9 @@ import pandas as pd
 import numpy as np
 from driverpower import __version__
 from driverpower.load import load_mut
-from driverpower.preprocess import preprocess_v1
-from driverpower.feature_select import fselect_v1
-from driverpower.model import model, get_gmean
+from driverpower.preprocess import preprocess_v1, scaling
+from driverpower.feature_select import fselect_v1, feature_score
+from driverpower.model import model
 from driverpower.func_adj import func_adj
 from driverpower.detect import detect
 

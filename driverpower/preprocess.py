@@ -7,7 +7,7 @@ import sys
 import logging
 from sklearn.preprocessing import StandardScaler, RobustScaler
 from pybedtools import BedTool
-from driverpower.load import load_mut_bed
+from driverpower.load import load_mut_bed, load_memsave
 from driverpower.detect import getMutCtCg
 
 # create logger
