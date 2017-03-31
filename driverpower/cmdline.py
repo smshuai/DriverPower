@@ -4,11 +4,10 @@ import logging
 import sys
 import pandas as pd
 import numpy as np
-from driverpower.load import load_memsave, load_mut
-from driverpower.preprocess import get_response, scaling, sampling
-from driverpower.feature_select import run_lasso, run_rndlasso, run_spearmanr, run_fregression
-from driverpower.feature_select import feature_score
 from driverpower import __version__
+from driverpower.load import load_mut
+from driverpower.preprocess import preprocess_v1
+from driverpower.feature_select import fselect_v1
 from driverpower.model import model, get_gmean
 from driverpower.func_adj import func_adj
 from driverpower.detect import detect
@@ -38,48 +37,50 @@ def get_args():
     # Load and preprocess data
     #
     parser_preprocess = subparsers.add_parser('preprocess',
-        help='Load and preprocess data')
+        help='Load and preprocess data', formatter_class=CustomFormatter)
     # required parameters
     re_parser = parser_preprocess.add_argument_group(title="required arguments")
     # required 3 tables for test data
-    re_parser.add_argument('-c', '--count', dest='path_ct', required=True, type=str,
-        help='Path to the count table')
-    re_parser.add_argument('-f', '--feature', dest='path_cv', required=True, type=str,
+    re_parser.add_argument('--variant', dest='mut_path', required=True, type=str,
+        help='Path to the variant table')
+    re_parser.add_argument('--feature', dest='feature_path', required=True, type=str,
         help='Path to the feature table')
-    re_parser.add_argument('-l', '--length', dest='path_cg', required=True, type=str,
-        help='Path to the effective length table')
+    re_parser.add_argument('--element', dest='bin_path', required=True, type=str,
+        help='Path to the element set (BED)')
     # Optional parameters
     op_parser = parser_preprocess.add_argument_group(title="optional parameters")
-    op_parser.add_argument('--len_threshold', dest='len_threshold', type=int, default=500,
-        help='Integer (default: 500). Bins with length < len_threshold will be discarded')
-    op_parser.add_argument('--recur_threshold', dest='recur_threshold', type=int, default=2,
-        help='Integer (default: 2). Bins having mutations in < recur_threshold samples will be discarded')
-    op_parser.add_argument('--sampling',
-        type=float, dest='sampling', default=1.0,
-        help='Number > 0 (default: 1). Sampling the data based on the provided value. Value in (0,1] is used as a fraction. Value > 1 is used as the number of data points.')
-    op_parser.add_argument('-o', '--output', dest='out', type=str, default='data.h5',
-        help='Path to the output file (default: ./data.h5)')
+    op_parser.add_argument('--callable', dest='callable_path', required=False, type=str,
+        help='Path to the whitelist regions', default=None)
+    # op_parser.add_argument('--len_threshold', dest='len_threshold', type=int, default=500,
+    #     help='Integer (default: 500). Bins with length < len_threshold will be discarded')
+    # op_parser.add_argument('--recur_threshold', dest='recur_threshold', type=int, default=2,
+    #     help='Integer (default: 2). Bins having mutations in < recur_threshold samples will be discarded')
+    # op_parser.add_argument('--sampling',
+    #     type=float, dest='sampling', default=1.0,
+    #     help='Number > 0 (default: 1). Sampling the data based on the provided value. Value in (0,1] is used as a fraction. Value > 1 is used as the number of data points.')
+    op_parser.add_argument('--output', dest='out_path', type=str, default='train.h5',
+        help='Path to the output file')
     #
     # Feature selection
     #
     parser_select = subparsers.add_parser('select',
-        help='Run feature selection on preprocessed data')
+        help='Run feature selection on preprocessed data', formatter_class=CustomFormatter)
     # required parameters
     re_select = parser_select.add_argument_group(title="required arguments")
-    re_select.add_argument('-d', '--data', dest='path_data', required=True, type=str,
+    re_select.add_argument('--trainH5', dest='h5_path', required=True, type=str,
         help='Path to the preprocessed training set (HDF5)')
-    # optinal parameters
+    # optional parameters
     op_select = parser_select.add_argument_group(title="optional parameters")
-    op_select.add_argument('--scaler', choices=['robust', 'standard', 'none'],
-        type=str, dest='scaler', default='robust',
-        help='robust or standard (default: robust). Scaler used to scale the data')
-    op_select.add_argument('--sampling',
-        type=float, dest='sampling', default=1.0,
-        help='Number > 0 (default: 1). Sampling the data based on the provided value. Value in (0,1] is used as a fraction. Value > 1 is used as the number of data points.')
-    op_select.add_argument('--gmean', dest='is_gmean', action="store_true",
-        help='Use geometric mean of nMut and nSample as response')
-    op_select.add_argument('-o', '--output', dest='out', type=str, default='feature_select.tsv',
-        help='Path to the output file (default: ./feature_select.tsv)')
+    op_select.add_argument('--scaler', choices=['robust', 'standard', None],
+        type=str, dest='scaler_type', default='robust',
+        help='Scaler used to scale the features')
+    # op_select.add_argument('--sampling',
+    #     type=float, dest='sampling', default=1.0,
+    #     help='Number > 0 (default: 1). Sampling the data based on the provided value. Value in (0,1] is used as a fraction. Value > 1 is used as the number of data points.')
+    op_select.add_argument('--noGmean', dest='no_gmean', required=False, action="store_true",
+        help='Do not geometric mean of nMut and nSample as response')
+    op_select.add_argument('--output', dest='out_path', type=str, default='feature_select.tsv',
+        help='Path to the output file')
     #
     # Model
     #
@@ -177,25 +178,25 @@ def get_args():
     # check for preprocess
     if args.subcommand == 'preprocess':
         # check input files
-        check_file(args.path_ct)
-        check_file(args.path_cg)
-        check_file(args.path_cv)
+        check_file(args.mut_path)
+        check_file(args.feature_path)
+        check_file(args.bin_path)
         # check output file
-        args.out = check_out(args.out)
+        args.out_path = check_out(args.out_path)
         # check sampling value
-        if args.sampling < 0:
-            logger.error('Sampling value must be greater than 0. You enter {}'.format(args.sampling))
-            sys.exit(1)
+        # if args.sampling < 0:
+        #     logger.error('Sampling value must be greater than 0. You enter {}'.format(args.sampling))
+        #     sys.exit(1)
     # check for select
     elif args.subcommand == 'select':
         # check input file
-        check_file(args.path_data)
+        check_file(args.h5_path)
         # check output file
-        args.out = check_out(args.out)
+        args.out_path = check_out(args.out_path)
         # check sampling
-        if args.sampling < 0:
-            logger.error('Sampling value must be greater than 0. You enter {}'.format(args.sampling))
-            sys.exit(1)
+        # if args.sampling < 0:
+        #     logger.error('Sampling value must be greater than 0. You enter {}'.format(args.sampling))
+        #     sys.exit(1)
     # check for model
     elif args.subcommand == 'model':
         # check input file
@@ -257,80 +258,17 @@ def check_out(path):
 
 def run_preprocess(args):
     logger.info('Sub-command Preprocess'.format(__version__))
-    # initial output HDF5
-    store = pd.HDFStore(args.out, mode='w')
-    ct, cg, cv, recur = load_memsave(args.path_ct,
-        args.path_cg, args.path_cv,
-        args.len_threshold, args.recur_threshold)
-    if cv.shape[0] == 0:
-        logger.warning('No bin left')
-    # sample IDs
-    sid = pd.Series(ct.sid.unique())
-    sid.name = 'sid'
-    # get response
-    ybinom = get_response(ct, cg)
-    # y to pd.DF
-    ybinom = pd.DataFrame(ybinom, columns=['ct','len_ct'], index=cg.index)
-    # sampling
-    cv, ybinom, recur = sampling(cv, ybinom, recur, args.sampling)
-    # write to store
-    store.append('X', cv, chunksize=50000)
-    store['y'] = ybinom
-    store['recur'] = recur
-    store['sid'] = sid
-    store.close()
+    # version 1 - preprocess
+    preprocess_v1(mut_path=args.mut_path, callable_path=args.callable_path, bin_path=args.bin_path,
+                  feature_path=args.feature_path, out_path=args.out_path)
     logger.info('Pre-process done!')
 
 
 def run_select(args):
     logger.info('Sub-command Select'.format(__version__))
-    # load data from HDF5
-    y = pd.read_hdf(args.path_data, 'y')
-    if y.shape[0] == 0:
-        logger.error('No bin in data.')
-        sys.exit(1)
-    X = pd.read_hdf(args.path_data, 'X')
-    recur = pd.read_hdf(args.path_data, 'recur')
-    sid = pd.read_hdf(args.path_data, 'sid')
-    N = sid.unique().shape[0]
-    logger.info('Successfully find data for {} samples'.format(N))
-    # check index (binID)
-    assert np.array_equal(X.index, y.index), 'X and y have different row indexes'
-    assert np.array_equal(y.index, recur.index), 'recur and y have different row indexes'
-    logger.info('Successfully load X with shape: {}'.format(X.shape))
-    logger.info('Successfully load y with shape: {}'.format(y.shape))
-    # Modify y by num of samples
-    y.len_ct = (y.len_ct + y.ct) * N - y.ct
-    # Sampling data
-    X, y, recur = sampling(X, y, recur, args.sampling)
-    # silent delete logCG if exist
-    if 'logCG' in X.columns.values:
-        del X['logCG']
-    # y to np.array
-    y = y.as_matrix()
-    if args.is_gmean:
-        y = get_gmean(y, recur)
-    # feature names
-    fnames = X.columns.values
-    # scale for Xtrain only
-    X = X.as_matrix()
-    logger.info('Training set X shape: {}'.format(X.shape))
-    logger.info('Training set y shape: {}'.format(y.shape))
-    X = scaling(Xtrain=X, scaler_type=args.scaler)
-    # spearmanr
-    rho = run_spearmanr(X, y)
-    # f regression
-    freg = run_fregression(X, y)
-    # run LassoCV
-    lasso = run_lasso(X, y)
-    # run rndlasso
-    rndlasso = run_rndlasso(X, y, lasso.alpha_)
-    # results
-    res = pd.DataFrame(np.array([rho, freg, lasso.coef_, rndlasso.scores_]).T,
-        index=fnames,
-        columns=['rho', 'freg','lasso', 'rndlasso'])
-    res.index.name = 'fname'
-    res.to_csv(args.out, sep='\t')
+    use_gmean = False if args.no_gmean else True
+    # use train h5
+    fselect_v1(h5_path=args.h5_path, scaler_type=args.scaler_type, use_gmean=use_gmean, out_path=args.out_path)
     logger.info('Feature selection done!')
 
 
