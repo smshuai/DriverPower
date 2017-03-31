@@ -15,7 +15,7 @@ if (length(args)==0) {
 res = read.table(args[1], header=TRUE, sep='\t')
 
 # pval qqplot
-source('~/DriverPower/utils/ggplot_theme.R')
+source('~/PCAWG/DriverPower/utils/ggplot_theme.R')
 pval_qqplot = function(pvals){
   require(ggplot2)
   # pvals can contain NA
