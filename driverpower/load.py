@@ -176,9 +176,9 @@ def load_all_memsave(path_cg_test, path_ct_test, path_cv_test, path_mut,
 # v0.5.0 Most functions added for DETECT
 ###
 
-# chrom 1-22,X,Y
+# chrom 1-22,X,Y,M
 VALID_CHROMS = set(['1', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19',
-                    '2', '20', '21', '22', '3', '4', '5', '6', '7', '8', '9', 'X', 'Y'])
+                    '2', '20', '21', '22', '3', '4', '5', '6', '7', '8', '9', 'X', 'Y', 'M'])
 ## For the detect module
 def load_mut_bed(mut_path):
     ''' Load mutation table with at least 6 columns (header=True).
@@ -306,6 +306,7 @@ def load_hdf5(h5_path, usefeatures=None):
         N - int, number of samples
     '''
     store = pd.HDFStore(h5_path)
+    # access version number
     if '/meta' in store.keys():
         h5_version = store['/meta']['version']
     else:
@@ -336,10 +337,13 @@ def load_hdf5(h5_path, usefeatures=None):
         y = store['y']
         X = store['X']
         N = store['meta']['N']
+        if usefeatures:
+            X = X.loc[:, usefeatures]
         assert np.array_equal(X.index, y.index), 'X and y have different row indexes'
         logger.info('Successfully load data for {} samples'.format(N))
         logger.info('Successfully load X with shape: {}'.format(X.shape))
         logger.info('Successfully load y with shape: {}'.format(y.shape))
+        store.close()
         return X, y, N
 
 
@@ -394,7 +398,7 @@ def retrive_score(mut, conf):
         # logger.info('Retriving {} - {} - chrom {}'.format(conf_row['name'], conf_row['type'], conf_row['chroms']))
         tb = tabix.open(conf_row['path'])
         for ix, var in mut.iterrows():
-            if (var['type'] == conf_row['type'] or
+            if (var['type'] == conf_row['type'] == 'SNP' or conf_row['type'] == 'ALL' or
                 (var['type'] in ['INS', 'DEL'] and conf_row['type'] == 'INDEL')):
                 try:
                     query_res = tb.query(var.chrom, var.start, var.end)
@@ -405,7 +409,11 @@ def retrive_score(mut, conf):
                         logger.warning('Retriving {} - {} score error for {}:{}-{}'\
                                        .format(conf_row['name'], conf_row['type'],
                                                var.chrom, var.start, var.end))
-                for res in query_res:
-                    if var.ref == res[conf_row.ref_ix] and var.alt == res[conf_row.alt_ix]:
-                        score[ix] = float(res[conf_row.score_ix])
+                if conf_row.ref_ix < 0:
+                    # no ref alt info (e.g., LINSIGHT score)
+                    score[ix] = np.mean([float(i[conf_row.score_ix]) for i in query_res])
+                else:
+                    for res in query_res:
+                        if var.ref == res[conf_row.ref_ix] and var.alt == res[conf_row.alt_ix]:
+                            score[ix] = float(res[conf_row.score_ix])
     return score
