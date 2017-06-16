@@ -2,10 +2,15 @@
 
 import sys
 
-header = sys.stdin.readline().strip().split()
+for line in sys.stdin:
+    if line[0] == '#':
+        continue
+    else:
+        header = line.strip().split('\t')
+        break
 chrom_ix = header.index('Chromosome')
-start_ix = header.index('Start_Position')
-end_ix = header.index('End_Position')
+start_ix = header.index('Start_position')
+end_ix = header.index('End_position')
 class_ix = header.index('Variant_Classification')
 type_ix = header.index('Variant_Type')
 sid_ix = header.index('Tumor_Sample_Barcode')

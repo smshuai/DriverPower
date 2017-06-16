@@ -267,8 +267,8 @@ def preprocess_v1(mut_path, callable_path, bin_path, feature_path, out_path):
     y['length'] = y['length'].fillna(0).astype(int)
     y['nSample'] = y['nSample'].fillna(0).astype(int)
     y['nMut'] = y['nMut'].fillna(0).astype(int)
-    # default keep bins with nMut > 0 and Length > 100bp
-    keep = np.logical_and(y['nMut']>0, y['length']>100)
+    # default keep bins with nMut >= 0 and Length > 0bp
+    keep = np.logical_and(y['nMut']>=0, y['length']>0)
     y = y[keep]
     y.sort_index(inplace=True)
     keep_bin = y.index.values
