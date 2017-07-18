@@ -12,6 +12,7 @@ setup(
     packages=find_packages(),
     description='Combined burden and functional test for coding and noncoding cancer drivers',
     py_modules=['driverpower'],
+    include_package_data=True,
     install_requires=[
         'numpy >= 1.11.1',
         'scipy >= 0.18.1',
@@ -19,14 +20,11 @@ setup(
         'scikit-learn >= 0.18',
         'statsmodels >= 0.6.1',
         'pytabix >= 0.0.2',
+        'xgboost >= 0.6a',
     ],
-    extras_require={
-        'XGB':  ["xgboost>=0.6"],
-    },
     entry_points = {
         'console_scripts': [
-            'driverpower=driverpower.cmdline:main',
-            'driverpowerGBT=driverpower.run_xgb:main [XGB]',
+            'driverpower=driverpower.interface:main',
         ],
     },
 )
