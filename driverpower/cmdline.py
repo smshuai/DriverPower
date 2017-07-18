@@ -1,3 +1,7 @@
+"""
+Command-line interface
+Version: 0.1.0
+"""
 import argparse
 import os
 import logging

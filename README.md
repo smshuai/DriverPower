@@ -1,17 +1,22 @@
 # DriverPower
-version: 0.5.0dev
+![Software version](https://img.shields.io/badge/version-1.0.0-yellow.svg)
+[![GitHub license](https://img.shields.io/badge/licence-GPL--3.0-brightgreen.svg
+)](./LICENSE)
+[![PyPI version](https://badge.fury.io/py/DriverPower.svg)](https://badge.fury.io/py/DriverPower)
+
 
 ## Introduction
 
-Cancer driver mutations are genomic variants that confer selective growth advantages to tumors, which are rare comparing to the huge amount of passenger mutations. Detecting genomic elements harboring driver mutations is an important yet challenging task, especially for non-coding cancer drivers. DriverPower is a combined burden and functional impact test for coding and non-coding cancer driver elements.
-
+DriverPower is a tool used to discover potential coding and non-coding cancer driver elements from tumour whole-genome or whole-exome somatic mutations.
 ## Installation
 
-DriverPower requires Python >= 3.5 and some other packages. If you don't have Python 3.5 or higher, we highly recommend you to install Python with [Anaconda](https://www.continuum.io/downloads). To install DriverPower, you can either download and install it from [Python Package Index (PyPI)](https://pypi.python.org/pypi/DriverPower/) by typing the following command in your terminal
+DriverPower requires Python >= 3.5 and some other packages. If you don't have Python 3.5 or higher, we recommend to install Python with [Anaconda](https://www.continuum.io/downloads).
+
+To install DriverPower, you can either download and install it from [Python Package Index (PyPI)](https://pypi.python.org/pypi/DriverPower/) by typing the following command in your terminal
 ```bash
 $ pip install driverpower
 ```
-or clone this git repository first and install with
+or download the latest source to install:
 ```bash
 $ git clone https://github.com/smshuai/DriverPower.git
 $ cd DriverPower && pip install .
@@ -130,57 +135,63 @@ Two output files could be found in ./example/output/, which should match files u
 
 ## Input data requirements
 
-### Variant table
+All input tables should be tab-delimited (TSV) and have a header. Compressed tables (e.g., .gz and .xz) are also accepted.
 
-Variant table (-variant) should be a tab-delimited text file **with** header. Variant table records mutations (SNPs, MNPs and indels)  and each row in the table corresponds to one mutation. This table can be derived from MAF or VCF files. A minimum of six columns are required:
+### Response table (y)
 
-1. `chrom`: Chromosome of the mutation in [1-22, X, Y]. Corresponds to `Chromosome` in [MAF Specification](https://wiki.nci.nih.gov/display/TCGA/Mutation+Annotation+Format+(MAF)+Specification).
-2. `start`: 0-indexed start coordinate of the mutation. Corresponds to `Start_Position - 1` in MAF.
-3. `end`: 1-indexed end coordinate of the mutation. Corresponds to `End_Position` in MAF.
-4. `ref`: Reference allele of the mutation. Corresponds to `Reference_Allele` in MAF.
-5. `alt`: Mutated allele of the mutation. Corresponds to `Tumor_Seq_Allele2` in MAF.
-6. `sid`: Sample identifier.
-7. `type`: [OPTIONAL] Type of the mutation, in [SNP, DNP, TNP, ONP, INS, DEL]. Corresponds to `Variant_Type` in MAF. If `type` is not provided, DriverPower will deduce `type` from `ref`and `alt`.
-8. One or multiple columns of functional impact scores: [OPTIONAL]. One functional impact measurement per column. If no functional impact score is provided, DriverPower can retrieve scores based on a configuration file.
+This table should have exactly 5 columns:
 
-Example:
-
-| chrom | start   | end     | type | ref | alt   | sid     | CADD  | DANN  | ... |
-|-------|---------|---------|------|-----|-------|---------|-------|-------|-----|
-| 17    | 7577604 | 7577606 | INS  | -   | AACCT | DO36801 | 6.834 | NA    | ... |
-| 17    | 7578405 | 7578406 | SNP  | C   | T     | DO7990  | 4.992 | 0.999 | ... |
-
-### Test files table
-Test files table (-testFile) is a CSV file
-
-### Element table
-
-Element table (-element) should be a 4-column BED file (no header). Four columns are in order of chromosome, start, end and binID. Chromosome names should not contain 'chr' and in [1-22, X, Y]. If you have a [BED12](https://genome.ucsc.edu/FAQ/FAQformat#format1) file, an one-liner conversion with [BedTools](http://bedtools.readthedocs.io/en/latest/) could be
-
-```
-bedtools bed12tobed6 -i in.bed12 | cut -f1,2,3,4 > out.bed4
-```
+- `binID`: identifier of genomic element and used as key.
+- `length`: effective length of the element.
+- `nMut`: number of observed mutations.
+- `nSample`: number of observed samples with mutations.
+- `N`: total number of samples.
 
 Example:
 
-(First three coding blocks of *TP53*)
+| binID | length | nMut | nSample | N |
+|-------|--------|------|---------|---|
+| TP53.CDS |  |  | 100 | |
+| KRAS.CDS |  |  | 100 | |
 
-|    |         |         |      |
-|----|---------|---------|------|
-| 17 | 7565256 | 7565332 | TP53 |
-| 17 | 7569523 | 7569562 | TP53 |
-| 17 | 7572926 | 7573008 | TP53 |
+### Feature table (X)
 
-### Feature table
-
-Feature table is also a tab-delimited text file **with** header. The first column in the table should be `binID`. `binID` in column 1 must be unique. Column 2 to the last column should be features used in mutation rate prediction with one feature per column.
+This table should have 2+ columns:
+- `binID`: identifier of genomic element and used as key.
+- Column 2+: one feature per column. Unique feature names are required.
 
 Example:
 
 | binID | GERP    | E128-H3K27ac | ... |
 |-------|---------|--------------|-----|
-| TP53  | 4.80287 | 1.19475      | ... |
-| KRAS  | 3.56563 | 2.53435      | ... |
+| TP53.CDS  | 4.80287 | 1.19475      | ... |
+| KRAS.CDS  | 3.56563 | 2.53435      | ... |
+
+### Feature importance table (fi)
+
+This table should have 2 two columns:
+- `name`: name of features, should match the column name in feature table.
+- `importance`: feature importance score.
+
+Example:
+
+| name | importance |
+|------|-------------|
+| GERP         | 0.3 |
+| E128-H3K27ac | 0.5 |
+
+### Functional score table (fs)
+
+This table should have 2+ columns:
+- `binID`: identifier of genomic element and used as key.
+- Column 2+: one type of functional impact score per column.
+
+Example:
+
+| binID | CADD    | EIGEN | ... |
+|-------|---------|--------------|-----|
+| TP53.CDS  | 4.80287 | 1.19475      | ... |
+| KRAS.CDS  | 3.56563 | 2.53435      | ... |
 
 ## Parameters
 
