@@ -152,13 +152,13 @@ def save_fi(fi_scores, feature_names, project_name, out_dir):
         out_dir (str): output directory. 
 
     Returns:
-        None.
+        pd.DF: feature importance table
         
     """
-    res = pd.DataFrame([feature_names, fi_scores], columns=['name', 'importance'])
+    res = pd.DataFrame({'name':feature_names, 'importance':fi_scores})
     path = os.path.join(out_dir, project_name+'.feature_importance.tsv')
     res.to_csv(path, sep='\t')
-    return
+    return res
 
 
 def read_glm(path):

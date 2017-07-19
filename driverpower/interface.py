@@ -45,17 +45,17 @@ def get_args():
     dat_bmr.add_argument('--response', dest='y_path', required=True, type=str,
                          help='Path to the training response table')
     dat_bmr.add_argument('--featImp', dest='fi_path', required=False, type=str,
-                         help='Path to the feature importance table', default=None)
+                         help='Path to the feature importance table [optional]', default=None)
     # Parameters
     par_bmr = parser_bmr.add_argument_group(title="Parameters")
     par_bmr.add_argument('--method', dest='model_name', required=True, type=str,
                          help='Algorithms to use', choices=['GLM', 'GBM'])
     par_bmr.add_argument('--featImpCut', dest='fi_cut', required=False, type=float,
-                         help='Cutoff of feature importance score', default=0.5)
+                         help='Cutoff of feature importance score [optional]', default=0.5)
     par_bmr.add_argument('--name', dest='project_name', required=False, type=str,
-                         help='Identifier for output files', default='DriverPower')
+                         help='Identifier for output files [optional]', default='DriverPower')
     par_bmr.add_argument('--outDir', dest='out_dir', type=str,
-                         help='Directory of output files', default='./output/')
+                         help='Directory of output files [optional]', default='./output/')
     #
     # Inference
     #
@@ -75,40 +75,40 @@ def get_args():
                            help='Path to the model information')
     # Optional data
     dat_infer.add_argument('--featImp', dest='fi_path', required=False, type=str,
-                           help='Path to the feature importance table', default=None)
+                           help='Path to the feature importance table [optional]', default=None)
     dat_infer.add_argument('--funcScore', dest='fs_path', required=False, type=str,
-                           help='Path to the functional score table', default=None)
+                           help='Path to the functional score table [optional]', default=None)
     # Parameters
     par_infer = parser_infer.add_argument_group(title="Parameters")
     par_infer.add_argument('--method', dest='test_method', required=False, type=str,
-                           help='Test method to use', choices=['auto', 'binomial', 'negative_binomial'], default='auto')
+                           help='Test method to use [optional]', choices=['auto', 'binomial', 'negative_binomial'], default='auto')
     par_infer.add_argument('--featImpCut', dest='fi_cut', required=False, type=float,
-                           help='Cutoff of feature importance score', default=0.5)
+                           help='Cutoff of feature importance score [optional]', default=0.5)
     par_infer.add_argument('--scale', dest='scale', required=False, type=float,
-                           help='Scaling factor for theta in negative binomial distribution', default=1)
+                           help='Scaling factor for theta in negative binomial distribution [optional]', default=1)
     par_infer.add_argument('--funcScoreCut', dest='fs_cut', required=False, type=str,
-                           help='Score name:cutoff pairs for all scores e.g., "CADD:0.01;DANN:0.03;EIGEN:0.3"',
+                           help='Score name:cutoff pairs for all scores e.g., "CADD:0.01;DANN:0.03;EIGEN:0.3" [optional]',
                            default=None)
     par_infer.add_argument('--geoMean', dest='use_gmean', required=False, type=bool,
-                           help='Use geometric mean in test', default=True)
+                           help='Use geometric mean in test [optional]', default=True)
     par_infer.add_argument('--name', dest='project_name', required=False, type=str,
-                           help='Identifier for output files', default='DriverPower')
+                           help='Identifier for output files [optional]', default='DriverPower')
     par_infer.add_argument('--outDir', dest='out_dir', type=str,
-                           help='Directory of output files', default='./output/')
+                           help='Directory of output files [optional]', default='./output/')
     args = parser.parse_args()
     return args
 
 
 def main():
     args = get_args()
-    logger.info('DriverPower {}'.format(__version__))
+    logger.info('Welcome to DriverPower v{}'.format(__version__))
     if args.subcommand == 'model':
         run_bmr(model_name=args.model_name,
                 X_path=args.X_path,
                 y_path=args.y_path,
                 fi_cut=args.fi_cut,
                 fi_path=args.fi_path,
-                project_name=args.fi_name,
+                project_name=args.project_name,
                 out_dir=args.out_dir)
     elif args.subcommand == 'infer':
         make_inference(args)
