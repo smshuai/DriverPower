@@ -32,10 +32,13 @@ def read_feature(path, use_features=None):
     """
     if path.lower().endswith(('.h5', '.hdf5')):
         # HDF5
-        X = pd.read_hdf(path, 'X', columns=['binID'] + use_features)
-    elif path.lower().endswith(('')):
+        if use_features:
+            X = pd.read_hdf(path, 'X', columns=['binID'] + use_features)
+        else:
+            X = pd.read_hdf(path, 'X')
+    elif path.lower().endswith(('.buffer')):
         # XGBoost binary
-        pass
+        X = xgb.DMatrix(path)
     else:
         # TSV or compressed TSV
         if use_features:
