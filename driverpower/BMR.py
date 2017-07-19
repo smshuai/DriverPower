@@ -26,7 +26,7 @@ def run_bmr(model_name, X_path, y_path,
             kfold=3, param_path=None,
             project_name='DriverPower', out_dir='./DriverPower.output/'):
     """ Wrapper function for BMR model.
-    
+
     Args:
         model_name (str): 'GLM' or 'GBM'
         X_path (str): path to training X
@@ -36,9 +36,9 @@ def run_bmr(model_name, X_path, y_path,
         kfold (int): K fold CV for GBM
         project_name (str): name of the project
         out_dir (str): directory for saving output files
-        
+
     Returns:
-        
+
     """
     use_features = read_fi(fi_path, fi_cut)
     run_feature_select = False if use_features else True
@@ -138,7 +138,7 @@ def run_lasso(X, y, max_iter=3000, cv=5, n_threads=3):
     # sub-sampling X and y (300,000)
     use_ix = np.random.choice(y_logit.shape[0], 300000, replace=False)
     Xsub = X[use_ix, :]
-    ysub = y[use_ix]
+    ysub = y_logit[use_ix]
     reg = LassoCV(max_iter=max_iter, cv=cv, copy_X=False, n_jobs=n_threads)
     lassocv = reg.fit(Xsub, ysub)
     logger.info('LassoCV alpha = {}'.format(lassocv.alpha_))
