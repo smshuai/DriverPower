@@ -14,7 +14,7 @@ setup(
     py_modules=['driverpower'],
     include_package_data=True,
     install_requires=[
-        'numpy >= 1.11.1',
+        'numpy >= 1.13.0',
         'scipy >= 0.18.1',
         'pandas >= 0.18.1',
         'scikit-learn >= 0.18',
