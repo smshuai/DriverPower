@@ -10,9 +10,13 @@ import os
 import pkg_resources
 import pandas as pd
 import numpy as np
-import xgboost as xgb
 from sklearn.externals import joblib
-from statsmodels.iolib import smpickle
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    import xgboost as xgb
+    from statsmodels.iolib import smpickle
+
 
 logger = logging.getLogger('IO')
 
@@ -57,7 +61,9 @@ def read_feature(path, use_features=None):
             X.fillna(0, inplace=True)
         logger.info('Successfully load {} features for {} bins'.format(X.shape[1], X.shape[0]))
         return X
-    else:
+    elif type(X) is xgb.DMatrix:
+        # xgb.DMatrix
+        logger.info('Successfully load {} features for {} bins'.format(X.num_col(), X.num_row()))
         return X
 
 
@@ -169,9 +175,9 @@ def save_fi(fi_scores, feature_names, project_name, out_dir):
         pd.DF: feature importance table
         
     """
-    res = pd.DataFrame({'name':feature_names, 'importance':fi_scores})
+    res = pd.DataFrame({'name':feature_names, 'importance':fi_scores}, columns=['name', 'importance'])
     path = os.path.join(out_dir, project_name+'.feature_importance.tsv')
-    res.to_csv(path, sep='\t')
+    res.to_csv(path, sep='\t', index=False)
     return res
 
 

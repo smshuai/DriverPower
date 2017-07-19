@@ -10,12 +10,15 @@ This module supports:
 import logging
 import sys
 import numpy as np
-import xgboost as xgb
-from statsmodels.sandbox.stats.multicomp import multipletests
 from scipy.stats import binom_test, nbinom
 from driverpower.dataIO import read_model_info, read_feature, read_response, read_fi, read_glm, read_scaler, read_fs
 from driverpower.dataIO import save_result
 from driverpower.BMR import scale_data
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    import xgboost as xgb
+    from statsmodels.sandbox.stats.multicomp import multipletests
 
 
 logger = logging.getLogger('Infer')

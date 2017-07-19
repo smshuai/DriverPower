@@ -9,14 +9,18 @@ Two types of BMR model are supported:
 import logging
 import sys
 import numpy as np
-import xgboost as xgb
-import statsmodels.api as sm
 from sklearn.preprocessing import RobustScaler
 from sklearn.linear_model import LassoCV, RandomizedLasso
 from sklearn.model_selection import KFold
 from scipy.special import logit
 from driverpower.dataIO import read_feature, read_response, read_fi, read_param
 from driverpower.dataIO import save_scaler, save_fi, save_glm, save_gbm, save_model_info
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    import xgboost as xgb
+    import statsmodels.api as sm
+
 
 logger = logging.getLogger('BMR')
 
