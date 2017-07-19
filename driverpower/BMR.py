@@ -63,12 +63,12 @@ def run_bmr(model_name, X_path, y_path,
             fi = save_fi(fi_scores, feature_names, project_name, out_dir)
             # Remove unimportant features
             use_features = (fi.importance >= fi_cut).values
-            X = X[:, feature_names.isin(use_features)]
+            X = X[:, np.isin(feature_names, use_features)]
         # Run GLM to get trained model
         model = run_glm(X, y)
         save_glm(model, project_name, out_dir)
         # Run dispersion test
-        pval, theta = dispersion_test(y.nMut, model.fittedvalues)
+        pval, theta = dispersion_test(y.nMut.values, model.fittedvalues)
         # Save model info.
         model_info = {'model_name': model_name,
                       'pval_dispersion': pval,
@@ -94,7 +94,7 @@ def run_bmr(model_name, X_path, y_path,
             save_gbm(model, k, project_name, out_dir)
             k += 1
         # Run dispersion test
-        pval, theta = dispersion_test(y.nMut, y.nPred)
+        pval, theta = dispersion_test(y.nMut.values, y.nPred.values)
         model_info = {'model_name': model_name,
                       'pval_dispersion': pval,
                       'theta': theta,
@@ -196,6 +196,7 @@ def run_glm(X, y):
         sm.model: trained GLM models.
         
     """
+    logger.info('Building GLM')
     # make two columns response (# success, # failure)
     y_binom = np.zeros((y.shape[0], 2), dtype=np.int_)
     y_binom[:,0] = y.nMut
@@ -218,7 +219,21 @@ def run_gbm(dtrain, dvalid, param):
     return bst
 
 
-def dispersion_test(pred, obs):
-    pval = 0
-    theta = 1
+def dispersion_test(yhat, y):
+    """ Implement the regression based dispersion test.
+
+    Args:
+        yhat (np.array): predicted mutation count
+        y (np.array): observed mutation count
+
+    Returns:
+        float, float: p-value, theta
+
+    """
+    # (np.power((y - yhat), 2) - y) / yhat for Poisson regression
+    aux = (np.power((y - yhat), 2) - yhat) / yhat
+    mod = sm.OLS(aux, yhat)
+    res = mod.fit()
+    theta = res.params[0]
+    pval = res.pvalues[0]
     return pval, theta

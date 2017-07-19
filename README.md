@@ -155,7 +155,7 @@ Two output files could be found in ./example/output/, which should match files u
 1. **Format**:
 - TSV (compressed TSV) with header. Used for GLM and GBM. (slow loading)
 - [HDF5](https://pandas.pydata.org/pandas-docs/stable/io.html#io-hdf5) (*.h5 or *.hdf5). The HDF5 must contain key `X`, which is the feature table in [pandas.DataFrame](https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html). Used for GLM. (fast loading)
-- XGBoost [binary data](http://xgboost.readthedocs.io/en/latest/python/python_intro.html#data-interface) file. Used for GBM. (fast loading)
+- XGBoost [binary data](http://xgboost.readthedocs.io/en/latest/python/python_intro.html#data-interface) file (*.buffer). Used for GBM. (fast loading)
 2. **Fields**:
 - `binID`: identifier of genomic element and used as key.
 - Column 2+: one feature per column. Unique feature names are required.
