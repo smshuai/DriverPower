@@ -134,59 +134,60 @@ Two output files could be found in ./example/output/, which should match files u
 
 
 ## Input data requirements
-
-All input tables should be tab-delimited (TSV) and have a header. Compressed tables (e.g., .gz and .xz) are also accepted.
-
-### Response table (y)
-
-This table should have exactly 5 columns:
-
+#### Response table (`--response`)
+1. **Format**: TSV (tab-delimited text) with header. Compressed tables are also accepted.
+2. **Fields**:
 - `binID`: identifier of genomic element and used as key.
 - `length`: effective length of the element.
 - `nMut`: number of observed mutations.
 - `nSample`: number of observed samples with mutations.
 - `N`: total number of samples.
-
-Example:
-
+3. **Example**:
+ 
 | binID | length | nMut | nSample | N |
 |-------|--------|------|---------|---|
 | TP53.CDS |  |  | 100 | |
 | KRAS.CDS |  |  | 100 | |
 
-### Feature table (X)
+-----
+#### Feature table (`--feature`)
 
-This table should have 2+ columns:
+1. **Format**:
+- TSV (compressed TSV) with header. Used for GLM and GBM. (slow loading)
+- [HDF5](https://pandas.pydata.org/pandas-docs/stable/io.html#io-hdf5) (*.h5 or *.hdf5). The HDF5 must contain key `X`, which is the feature table in [pandas.DataFrame](https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html). Used for GLM. (fast loading)
+- XGBoost [binary data](http://xgboost.readthedocs.io/en/latest/python/python_intro.html#data-interface) file. Used for GBM. (fast loading)
+2. **Fields**:
 - `binID`: identifier of genomic element and used as key.
 - Column 2+: one feature per column. Unique feature names are required.
 
-Example:
+3. **Example**:
 
 | binID | GERP    | E128-H3K27ac | ... |
 |-------|---------|--------------|-----|
 | TP53.CDS  | 4.80287 | 1.19475      | ... |
 | KRAS.CDS  | 3.56563 | 2.53435      | ... |
 
-### Feature importance table (fi)
-
-This table should have 2 two columns:
+-----
+#### Feature importance table (`--featImp`)
+1. **Format**: TSV (compressed TSV with header.
+2. **Fields**:
 - `name`: name of features, should match the column name in feature table.
 - `importance`: feature importance score.
-
-Example:
+3. **Example**:
 
 | name | importance |
 |------|-------------|
 | GERP         | 0.3 |
 | E128-H3K27ac | 0.5 |
 
-### Functional score table (fs)
+-----
+#### Functional score table (`--funcScore`)
 
-This table should have 2+ columns:
+1. **Format**: TSV (compressed TSV) with header.
+2. **Fields**:
 - `binID`: identifier of genomic element and used as key.
 - Column 2+: one type of functional impact score per column.
-
-Example:
+3. **Example**:
 
 | binID | CADD    | EIGEN | ... |
 |-------|---------|--------------|-----|
@@ -194,20 +195,40 @@ Example:
 | KRAS.CDS  | 3.56563 | 2.53435      | ... |
 
 ## Parameters
+#### Sub-command `model`
+- `--method`: [required] method used for the background model. Must be GLM or GBM.
+- `--featImpCut`: [optional] cutoff for feature importance score. Features with score >= cutoff will be used in the model. Only used for GLM. Default is 0.5.
+- `--gbmParam`: [optional] path to the parameter pickle for GBM. The pickle file must contain a valid python dictionary for [XGBoost parameters](https://github.com/dmlc/xgboost/blob/master/doc/parameter.md). The default pickle file is generated as follow:
+```python
+import pickle
+# Default parameters for XGBoost used in DriverPower
+param = {'max_depth':8,
+         'eta':0.05,
+         'subsample':0.6,
+         'nthread':15,
+         'objective':'count:poisson',
+         'verbose':0,
+         'max_delta_step':1.2,
+         'eval_metric':'poisson-nloglik'}
+# Dump to pickle file ./xgb.param.pkl
+with open('./xgb.param.pkl', 'wb') as f:
+    pickle.dump(param, f)
+```
+- `--name`: [optional] Prefix for output files. Default is 'DriverPower'.
+- `--outDir`: [optional] Directory for output files. Default is './output/'.
+-----
+#### Sub-command `infer`
+- `--method`: [optional] probability distribution used to generate p-values (binom, negbinom, auto). Default is auto. Decision will be made automatically based on the dispersion test.
+- `--featImpCut`: [optional] same as in sub-command `model`.
+- `--scale`: [optional]
+- `--funcScoreCut`: [optional]
+- `--geoMean`: [optional] Use geometric mean of nMut and nSample in test. Default is `True`.
+- `--name`: [optional] Prefix for output files. Default is 'DriverPower'.
+- `--outDir`: [optional] Directory for output files. Default is './output/'.
 
-
+-----
 ## LICENSE
 DriverPower is distributed under the terms of the [GNU General Public License 3.0](https://www.gnu.org/licenses/gpl-3.0.txt).
 
 ## Change Log
 - 2017/03/02: Release version 0.4.0, which is used in the PCAWG driver analysis.
-
-## TODO
-For v0.5.0:
-- New 'detect' module that uses test BEDs and mutations directly, and use multiple scores
-- Use configure file to locate functional scores
-- DANN scores (and FunSeq2 scores maybe)
-- New way of calculating functional impact of elements (average of best of each sample)
-
-Future plans:
-- New prediction algorithms (GBM)

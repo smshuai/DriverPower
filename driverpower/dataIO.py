@@ -30,21 +30,32 @@ def read_feature(path, use_features=None):
         pd.df: A panda DF indexed by binID.
 
     """
-    if use_features:
-        X = pd.read_csv(path, sep='\t', header=0, index_col='binID',
-                        usecols=['binID'] + use_features)
+    if path.lower().endswith(('.h5', '.hdf5')):
+        # HDF5
+        X = pd.read_hdf(path, 'X', columns=['binID'] + use_features)
+    elif path.lower().endswith(('')):
+        # XGBoost binary
+        pass
     else:
-        X = pd.read_csv(path, sep='\t', header=0, index_col='binID')
-    # sanity check
-    assert len(X.index.values) == len(X.index.unique()), "binID in feature table is not unique."
-    na_count = X.isnull().sum()
-    if na_count.sum() > 0:
-        na_names = na_count.index.values[np.where(na_count>0)]
-        logger.warning('NA values found in features [{}]'.format(', '.join(na_names)))
-        logger.warning('Fill NA with 0')
-        X.fillna(0, inplace=True)
-    logger.info('Successfully load {} features for {} bins'.format(X.shape[1], X.shape[0]))
-    return X
+        # TSV or compressed TSV
+        if use_features:
+            X = pd.read_csv(path, sep='\t', header=0, index_col='binID',
+                            usecols=['binID'] + use_features)
+        else:
+            X = pd.read_csv(path, sep='\t', header=0, index_col='binID')
+    if type(X) is pd.DataFrame:
+        # sanity check
+        assert len(X.index.values) == len(X.index.unique()), "binID in feature table is not unique."
+        na_count = X.isnull().sum()
+        if na_count.sum() > 0:
+            na_names = na_count.index.values[np.where(na_count>0)]
+            logger.warning('NA values found in features [{}]'.format(', '.join(na_names)))
+            logger.warning('Fill NA with 0')
+            X.fillna(0, inplace=True)
+        logger.info('Successfully load {} features for {} bins'.format(X.shape[1], X.shape[0]))
+        return X
+    else:
+        return X
 
 
 def read_response(path):

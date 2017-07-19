@@ -60,12 +60,23 @@ def run_bmr(model_name, X_path, y_path,
             alpha = run_lasso(X, y)
             # Run rnd lasso to get feature importance
             fi_scores = run_rndlasso(X, y, alpha)
-            save_fi(fi_scores, feature_names, project_name, out_dir)
+            fi = save_fi(fi_scores, feature_names, project_name, out_dir)
+            # Remove unimportant features
+            use_features = (fi.importance >= fi_cut).values
+            X = X[:, feature_names.isin(use_features)]
         # Run GLM to get trained model
         model = run_glm(X, y)
         save_glm(model, project_name, out_dir)
         # Run dispersion test
         pval, theta = dispersion_test(y.nMut, model.fittedvalues)
+        # Save model info.
+        model_info = {'model_name': model_name,
+                      'pval_dispersion': pval,
+                      'theta': theta,
+                      'feature_names': feature_names,
+                      'use_features': use_features,
+                      'project_name': project_name,
+                      'model_dir': out_dir}
     elif model_name == 'GBM':
         # make xgb data
         X = xgb.DMatrix(data=X, label=y.nMut, feature_names=feature_names)
@@ -84,16 +95,14 @@ def run_bmr(model_name, X_path, y_path,
             k += 1
         # Run dispersion test
         pval, theta = dispersion_test(y.nMut, y.nPred)
+        model_info = {'model_name': model_name,
+                      'pval_dispersion': pval,
+                      'theta': theta,
+                      'kfold': kfold,
+                      'feature_names': feature_names}
     else:
         logger.error('Unknown background model: {}. Please use GLM or GBM'.format(model_name))
         sys.exit(1)
-    # Save some parameters and information of the model/training data, including:
-    # pval_dispersion, theta, feature_names, k-fold
-    model_info = {'model_name': model_name,
-                  'pval_dispersion': pval,
-                  'theta': theta,
-                  'kfold': kfold,
-                  'feature_names': feature_names}
     save_model_info(model_info, project_name, out_dir)
 
 
@@ -210,4 +219,6 @@ def run_gbm(dtrain, dvalid, param):
 
 
 def dispersion_test(pred, obs):
+    pval = 0
+    theta = 1
     return pval, theta
