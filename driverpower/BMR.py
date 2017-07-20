@@ -66,7 +66,8 @@ def run_bmr(model_name, X_path, y_path,
             fi_scores = run_rndlasso(X, y, alpha)
             fi = save_fi(fi_scores, feature_names, project_name, out_dir)
             # Remove unimportant features
-            use_features = (fi.importance >= fi_cut).values
+            keep = (fi.importance >= fi_cut).values
+            use_features = fi.name.values[keep]
             X = X[:, np.isin(feature_names, use_features)]
         # Run GLM to get trained model
         model = run_glm(X, y)
