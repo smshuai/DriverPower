@@ -37,7 +37,8 @@ def read_feature(path, use_features=None):
     if path.lower().endswith(('.h5', '.hdf5')):
         # HDF5
         if use_features:
-            X = pd.read_hdf(path, 'X', columns=['binID'] + use_features)
+            X = pd.read_hdf(path, 'X')
+            X = X.loc[:, use_features]
         else:
             X = pd.read_hdf(path, 'X')
     elif path.lower().endswith(('.buffer')):
@@ -247,7 +248,7 @@ def read_model_info(path):
     return model_info
 
 
-def save_model_info(model_info, out_dir, project_name):
+def save_model_info(model_info, project_name, out_dir):
     path = os.path.join(out_dir, project_name+'.model_info.pkl')
     with open(path, 'wb') as f:
         pickle.dump(model_info, f)

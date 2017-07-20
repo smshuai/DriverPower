@@ -71,9 +71,10 @@ def run_bmr(model_name, X_path, y_path,
             X = X[:, np.isin(feature_names, use_features)]
         # Run GLM to get trained model
         model = run_glm(X, y)
+        yhat = model.fittedvalues * y.length * y.N
         save_glm(model, project_name, out_dir)
         # Run dispersion test
-        pval, theta = dispersion_test(y.nMut.values, model.fittedvalues)
+        pval, theta = dispersion_test(yhat, y.nMut.values)
         # Save model info.
         model_info = {'model_name': model_name,
                       'pval_dispersion': pval,
@@ -109,7 +110,7 @@ def run_bmr(model_name, X_path, y_path,
         logger.error('Unknown background model: {}. Please use GLM or GBM'.format(model_name))
         sys.exit(1)
     save_model_info(model_info, project_name, out_dir)
-
+    logger.info('Job done!')
 
 def scale_data(X, scaler=None):
     """ Scale X with robust scaling.
