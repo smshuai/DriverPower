@@ -105,12 +105,15 @@ def run_bmr(model_name, X_path, y_path,
                       'pval_dispersion': pval,
                       'theta': theta,
                       'kfold': kfold,
-                      'feature_names': feature_names}
+                      'feature_names': feature_names,
+                      'project_name': project_name,
+                      'model_dir': out_dir}
     else:
         logger.error('Unknown background model: {}. Please use GLM or GBM'.format(model_name))
         sys.exit(1)
-    save_model_info(model_info, project_name, out_dir)
+    save_model_info(model_info, project_name, out_dir, model_name)
     logger.info('Job done!')
+
 
 def scale_data(X, scaler=None):
     """ Scale X with robust scaling.

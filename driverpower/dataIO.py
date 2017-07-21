@@ -248,8 +248,8 @@ def read_model_info(path):
     return model_info
 
 
-def save_model_info(model_info, project_name, out_dir):
-    path = os.path.join(out_dir, project_name+'.model_info.pkl')
+def save_model_info(model_info, project_name, out_dir, model_name):
+    path = os.path.join(out_dir, '{}.{}.model_info.pkl'.format(project_name, model_name))
     with open(path, 'wb') as f:
         pickle.dump(model_info, f)
 

@@ -176,6 +176,8 @@ def functional_adjustment(y, fs_path, fs_cut, test_method,
     Returns:
 
     """
+    if not fs_path:
+        return y
     # Convert fs_cut to a dict. "CADD:0.01;DANN:0.03;EIGEN:0.3"
     fs_cut_dict = dict([i.split(':') for i in fs_cut.strip().split(';')])
     fs = read_fs(fs_path, fs_cut_dict)
