@@ -118,13 +118,13 @@ def main():
                        model_info_path=args.model_info_path,
                        X_path=args.X_path,
                        y_path=args.y_path,
-                       scaler_path=args.scaler_path,
                        fs_path=args.fs_path,
                        fs_cut=args.fs_cut,
                        test_method=args.test_method,
                        scale=args.scale,
-                       use_gmean=args.use_gmean)
-
+                       use_gmean=args.use_gmean,
+                       project_name=args.project_name,
+                       out_dir=args.out_dir)
 
 if __name__ == '__main__':
     main()

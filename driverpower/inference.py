@@ -28,7 +28,8 @@ logger = logging.getLogger('Infer')
 def make_inference(model_dir, model_info_path,
                    X_path, y_path,
                    fs_path=None, fs_cut=None,
-                   test_method='auto', scale=1, use_gmean=True):
+                   test_method='auto', scale=1, use_gmean=True,
+                   project_name='DriverPower', out_dir='./output'):
     """ Main wrapper function for inference
 
     Args:
@@ -76,13 +77,13 @@ def make_inference(model_dir, model_info_path,
     offset = y.length * y.N + 1
     y['raw_p'] = burden_test(count, y.nPred, offset,
                              test_method, model_info, scale)
-    y['raw_q'] = bh_fdr(y.p_raw)
+    y['raw_q'] = bh_fdr(y.raw_p)
     # functional adjustment
     y = functional_adjustment(y, fs_path, fs_cut, test_method,
                               model_info, scale, use_gmean)
     # save to disk
-    save_result(y)
-
+    save_result(y, project_name, out_dir)
+    logger.info('Job done!')
 
 def predict_with_glm(X, y, model_dir, model_info):
     """ Predict number of mutation with GLM.

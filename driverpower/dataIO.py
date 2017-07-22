@@ -254,5 +254,6 @@ def save_model_info(model_info, project_name, out_dir, model_name):
         pickle.dump(model_info, f)
 
 
-def save_result(y):
-    pass
+def save_result(y, project_name, out_dir):
+    path = os.path.join(out_dir, '{}.result.tsv'.format(project_name))
+    y.to_csv(path, sep='\t')
