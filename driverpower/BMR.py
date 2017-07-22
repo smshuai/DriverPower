@@ -74,7 +74,7 @@ def run_bmr(model_name, X_path, y_path,
         yhat = model.fittedvalues * y.length * y.N
         save_glm(model, project_name, out_dir)
         # Run dispersion test
-        pval, theta = dispersion_test(yhat, y.nMut.values)
+        pval, theta = dispersion_test(yhat.values, y.nMut.values)
         # Save model info.
         model_info = {'model_name': model_name,
                       'pval_dispersion': pval,
@@ -85,8 +85,8 @@ def run_bmr(model_name, X_path, y_path,
                       'model_dir': out_dir}
     elif model_name == 'GBM':
         # make xgb data
-        X = xgb.DMatrix(data=X, label=y.nMut, feature_names=feature_names)
-        X.set_base_margin(np.log(y.length+1/y.N) + np.log(y.N))
+        X = xgb.DMatrix(data=X, label=y.nMut.values, feature_names=feature_names)
+        X.set_base_margin(np.array(np.log(y.length+1/y.N) + np.log(y.N)))
         # k-fold CV
         ks = KFold(n_splits=kfold)
         param = read_param(param_path)
@@ -219,7 +219,7 @@ def run_glm(X, y):
 
 def run_gbm(dtrain, dvalid, param):
     # specify validations set to watch performance
-    watchlist = [(dvalid, 'eval'), (dtrain, 'train')]
+    watchlist = [(dvalid, 'eval')]
     bst = xgb.train(params=param,
                     dtrain=dtrain,
                     num_boost_round=5000,
