@@ -64,21 +64,23 @@ def get_args():
                                          help='Infer driver elements',
                                          formatter_class=CustomFormatter)
     # Input data
-    dat_infer = parser_infer.add_argument_group(title="Input data")
     # Required data
+    dat_infer = parser_infer.add_argument_group(title="Required input data")
     dat_infer.add_argument('--feature', dest='X_path', required=True, type=str,
                            help='Path to the test feature table')
     dat_infer.add_argument('--response', dest='y_path', required=True, type=str,
                            help='Path to the test response table')
-    dat_infer.add_argument('--modelDir', dest='model_dir', required=False, type=str,
-                           help='Directory of the trained model(s)', default=None)
     dat_infer.add_argument('--modelInfo', dest='model_info_path', required=True, type=str,
                            help='Path to the model information')
     # Optional data
-    dat_infer.add_argument('--funcScore', dest='fs_path', required=False, type=str,
-                           help='Path to the functional score table [optional]', default=None)
+    dat_infer_op = parser_infer.add_argument_group(title="Optional input data")
+    dat_infer_op.add_argument('--modelDir', dest='model_dir', required=False, type=str,
+                           help='Directory of the trained model(s)', default=None)
+    dat_infer_op.add_argument('--funcScore', dest='fs_path', required=False, type=str,
+                           help='Path to the functional score table', default=None)
     # Parameters
     par_infer = parser_infer.add_argument_group(title="Parameters")
+
     par_infer.add_argument('--method', dest='test_method', required=False, type=str,
                            help='Test method to use [optional]', choices=['auto', 'binomial', 'negative_binomial'], default='auto')
     par_infer.add_argument('--scale', dest='scale', required=False, type=float,
@@ -112,7 +114,16 @@ def main():
                 project_name=args.project_name,
                 out_dir=args.out_dir)
     elif args.subcommand == 'infer':
-        make_inference(args)
+        make_inference(model_dir=args.model_dir,
+                       model_info_path=args.model_info_path,
+                       X_path=args.X_path,
+                       y_path=args.y_path,
+                       scaler_path=args.scaler_path,
+                       fs_path=args.fs_path,
+                       fs_cut=args.fs_cut,
+                       test_method=args.test_method,
+                       scale=args.scale,
+                       use_gmean=args.use_gmean)
 
 
 if __name__ == '__main__':

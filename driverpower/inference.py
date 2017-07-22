@@ -27,7 +27,6 @@ logger = logging.getLogger('Infer')
 
 def make_inference(model_dir, model_info_path,
                    X_path, y_path, scaler_path=None,
-                   fi_path=None, fi_cut=0.5,
                    fs_path=None, fs_cut=None,
                    test_method='auto', scale=1, use_gmean=True):
     """ Main wrapper function for inference
@@ -37,8 +36,6 @@ def make_inference(model_dir, model_info_path,
         model_info_path (str): path to the model information
         X_path (str): path to the X
         y_path (str): path to the y
-        fi_path (str): path to the feature importance table
-        fi_cut (float): cutoff of feature importance
         fs_path (str): path to the functional score file
         fs_cut (str): "CADD:0.01;DANN:0.03;EIGEN:0.3"
         test_method (str): 'binomial', 'negative_binomial' or 'auto'.
