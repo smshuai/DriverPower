@@ -26,7 +26,7 @@ logger = logging.getLogger('Infer')
 
 
 def make_inference(model_dir, model_info_path,
-                   X_path, y_path, scaler_path=None,
+                   X_path, y_path,
                    fs_path=None, fs_cut=None,
                    test_method='auto', scale=1, use_gmean=True):
     """ Main wrapper function for inference
@@ -59,6 +59,7 @@ def make_inference(model_dir, model_info_path,
     y = y.loc[use_bins, :]
     # scale X for GLM
     if model_name == 'GLM':
+        scaler_path = os.path.join(model_info['model_dir'], model_info['project_name'] + '.feature_scaler.pkl')
         scaler = read_scaler(scaler_path)
         X = scale_data(X, scaler)
         X = X[:, np.isin(model_info['feature_names'], model_info['use_features'])]
