@@ -55,8 +55,8 @@ def get_args():
                          help='Cutoff of feature importance score [optional]', default=0.5)
     par_bmr.add_argument('--name', dest='project_name', required=False, type=str,
                          help='Identifier for output files [optional]', default='DriverPower')
-    par_bmr.add_argument('--outDir', dest='out_dir', type=str,
-                         help='Directory of output files [optional]', default='./output/')
+    par_bmr.add_argument('--modelDir', dest='out_dir', type=str,
+                         help='Directory of output model files [optional]', default='./output/')
     #
     # Inference
     #
