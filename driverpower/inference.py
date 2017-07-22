@@ -9,9 +9,10 @@ This module supports:
 
 import logging
 import sys
+import os
 import numpy as np
 from scipy.stats import binom_test, nbinom
-from driverpower.dataIO import read_model_info, read_feature, read_response, read_fi, read_glm, read_scaler, read_fs
+from driverpower.dataIO import read_model_info, read_feature, read_response, read_gbm, read_glm, read_scaler, read_fs
 from driverpower.dataIO import save_result
 from driverpower.BMR import scale_data
 import warnings
@@ -24,7 +25,7 @@ with warnings.catch_warnings():
 logger = logging.getLogger('Infer')
 
 
-def make_inference(model_path, model_info_path,
+def make_inference(model_dir, model_info_path,
                    X_path, y_path, scaler_path=None,
                    fi_path=None, fi_cut=0.5,
                    fs_path=None, fs_cut=None,
@@ -48,8 +49,9 @@ def make_inference(model_path, model_info_path,
 
     """
     model_info = read_model_info(model_info_path)
+    model_dir = model_dir if model_dir else model_info['model_dir']
     model_name = model_info['model_name']
-    use_features = read_fi(fi_path, fi_cut)
+    # Load data
     X = read_feature(X_path)
     # order X by feature names of training data
     X = X.loc[:, model_info['feature_names']]
@@ -62,11 +64,12 @@ def make_inference(model_path, model_info_path,
     if model_name == 'GLM':
         scaler = read_scaler(scaler_path)
         X = scale_data(X, scaler)
+        X = X[:, np.isin(model_info['feature_names'], model_info['use_features'])]
     # make prediction
     if model_name == 'GLM':
-        y['nPred'] = predict_with_glm(X, y, model_path)
+        y['nPred'] = predict_with_glm(X, y, model_dir, model_info)
     elif model_name == 'GBM':
-        y['nPred'] = predict_with_gbm(X, y, model_path)
+        y['nPred'] = predict_with_gbm(X, y, model_dir, model_info)
     else:
         logger.error('Unknown background model: {}. Please use GLM or GBM'.format(model_name))
         sys.exit(1)
@@ -83,26 +86,51 @@ def make_inference(model_path, model_info_path,
     save_result(y)
 
 
-def predict_with_glm(X, y, model_path):
+def predict_with_glm(X, y, model_dir, model_info):
     """ Predict number of mutation with GLM.
 
     Args:
         X (np.array): feature matrix.
         y (pd.df): response.
-        model_path (str): path to the model pkl.
+        model_dir (str): directory to the model pkl.
+        model_info (dict): model meta-data.
 
     Returns:
         np.array: array of predictions.
 
     """
+    assert model_info['model_name'] == 'GLM',\
+        'Wrong model name in model info: {}. Need GLM.'.format(model_info['model_name'])
+    model_path = os.path.join(model_dir, model_info['project_name']+'.GLM.pkl')
     model = read_glm(model_path)
     # Add const. to X
     X = np.c_[X, np.ones(X.shape[0])]
-    pred = model.predict(X) * y.length * y.N
+    pred = np.array(model.predict(X) * y.length * y.N)
     return pred
 
 
-def predict_with_gbm(X, y, model_path):
+def predict_with_gbm(X, y, model_dir, model_info):
+    """
+
+    Args:
+        X:
+        y:
+        model_dir:
+        model_info:
+
+    Returns:
+
+    """
+    assert model_info['model_name'] == 'GBM',\
+        'Wrong model name in model info: {}. Need GBM.'.format(model_info['model_name'])
+    testData = xgb.DMatrix(data=X, label=y.nMut.values, feature_names=model_info['feature_names'])
+    testData.set_base_margin(np.array(np.log(y.length+1/y.N) + np.log(y.N)))
+    kfold = model_info['kfold']
+    pred = np.zeros(y.shape[0])
+    for k in range(1, kfold+1):
+        model = read_gbm(k, model_info['project_name'], model_dir)
+        pred += model.predict(X)
+    pred = pred / kfold
     return pred
 
 

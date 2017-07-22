@@ -236,7 +236,7 @@ def save_gbm(bst, k, project_name, out_dir):
     return
 
 
-def load_gbm(k, project_name, out_dir):
+def read_gbm(k, project_name, out_dir):
     path = os.path.join(out_dir, '{}.GBM.model.fold{}'.format(project_name, k))
     bst = xgb.Booster(model_file=path)
     return bst

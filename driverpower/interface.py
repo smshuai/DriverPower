@@ -8,6 +8,7 @@ Sub-commands:
 
 import logging
 import argparse
+import os
 import sys
 from driverpower import __version__
 from driverpower.BMR import run_bmr
@@ -69,21 +70,17 @@ def get_args():
                            help='Path to the test feature table')
     dat_infer.add_argument('--response', dest='y_path', required=True, type=str,
                            help='Path to the test response table')
-    dat_infer.add_argument('--model', dest='model_path', required=True, type=str,
-                           help='Path to the trained model')
+    dat_infer.add_argument('--modelDir', dest='model_dir', required=False, type=str,
+                           help='Directory of the trained model(s)', default=None)
     dat_infer.add_argument('--modelInfo', dest='model_info_path', required=True, type=str,
                            help='Path to the model information')
     # Optional data
-    dat_infer.add_argument('--featImp', dest='fi_path', required=False, type=str,
-                           help='Path to the feature importance table [optional]', default=None)
     dat_infer.add_argument('--funcScore', dest='fs_path', required=False, type=str,
                            help='Path to the functional score table [optional]', default=None)
     # Parameters
     par_infer = parser_infer.add_argument_group(title="Parameters")
     par_infer.add_argument('--method', dest='test_method', required=False, type=str,
                            help='Test method to use [optional]', choices=['auto', 'binomial', 'negative_binomial'], default='auto')
-    par_infer.add_argument('--featImpCut', dest='fi_cut', required=False, type=float,
-                           help='Cutoff of feature importance score [optional]', default=0.5)
     par_infer.add_argument('--scale', dest='scale', required=False, type=float,
                            help='Scaling factor for theta in negative binomial distribution [optional]', default=1)
     par_infer.add_argument('--funcScoreCut', dest='fs_cut', required=False, type=str,
@@ -96,6 +93,10 @@ def get_args():
     par_infer.add_argument('--outDir', dest='out_dir', type=str,
                            help='Directory of output files [optional]', default='./output/')
     args = parser.parse_args()
+    ###
+    # Check and modify args
+    ###
+    args.out_dir = os.path.abspath(args.out_dir)
     return args
 
 
