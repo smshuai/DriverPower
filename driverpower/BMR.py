@@ -9,14 +9,18 @@ Two types of BMR model are supported:
 import logging
 import sys
 import numpy as np
-import xgboost as xgb
-import statsmodels.api as sm
 from sklearn.preprocessing import RobustScaler
 from sklearn.linear_model import LassoCV, RandomizedLasso
 from sklearn.model_selection import KFold
 from scipy.special import logit
 from driverpower.dataIO import read_feature, read_response, read_fi, read_param
 from driverpower.dataIO import save_scaler, save_fi, save_glm, save_gbm, save_model_info
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    import xgboost as xgb
+    import statsmodels.api as sm
+
 
 logger = logging.getLogger('BMR')
 
@@ -62,13 +66,15 @@ def run_bmr(model_name, X_path, y_path,
             fi_scores = run_rndlasso(X, y, alpha)
             fi = save_fi(fi_scores, feature_names, project_name, out_dir)
             # Remove unimportant features
-            use_features = (fi.importance >= fi_cut).values
+            keep = (fi.importance >= fi_cut).values
+            use_features = fi.name.values[keep]
             X = X[:, np.isin(feature_names, use_features)]
         # Run GLM to get trained model
         model = run_glm(X, y)
+        yhat = model.fittedvalues * y.length * y.N
         save_glm(model, project_name, out_dir)
         # Run dispersion test
-        pval, theta = dispersion_test(y.nMut.values, model.fittedvalues)
+        pval, theta = dispersion_test(yhat.values, y.nMut.values)
         # Save model info.
         model_info = {'model_name': model_name,
                       'pval_dispersion': pval,
@@ -79,8 +85,8 @@ def run_bmr(model_name, X_path, y_path,
                       'model_dir': out_dir}
     elif model_name == 'GBM':
         # make xgb data
-        X = xgb.DMatrix(data=X, label=y.nMut, feature_names=feature_names)
-        X.set_base_margin(np.log(y.length+1/y.N) + np.log(y.N))
+        X = xgb.DMatrix(data=X, label=y.nMut.values, feature_names=feature_names)
+        X.set_base_margin(np.array(np.log(y.length+1/y.N) + np.log(y.N)))
         # k-fold CV
         ks = KFold(n_splits=kfold)
         param = read_param(param_path)
@@ -99,11 +105,14 @@ def run_bmr(model_name, X_path, y_path,
                       'pval_dispersion': pval,
                       'theta': theta,
                       'kfold': kfold,
-                      'feature_names': feature_names}
+                      'feature_names': feature_names,
+                      'project_name': project_name,
+                      'model_dir': out_dir}
     else:
         logger.error('Unknown background model: {}. Please use GLM or GBM'.format(model_name))
         sys.exit(1)
-    save_model_info(model_info, project_name, out_dir)
+    save_model_info(model_info, project_name, out_dir, model_name)
+    logger.info('Job done!')
 
 
 def scale_data(X, scaler=None):
@@ -210,7 +219,7 @@ def run_glm(X, y):
 
 def run_gbm(dtrain, dvalid, param):
     # specify validations set to watch performance
-    watchlist = [(dvalid, 'eval'), (dtrain, 'train')]
+    watchlist = [(dvalid, 'eval')]
     bst = xgb.train(params=param,
                     dtrain=dtrain,
                     num_boost_round=5000,

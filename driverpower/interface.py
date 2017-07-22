@@ -8,6 +8,7 @@ Sub-commands:
 
 import logging
 import argparse
+import os
 import sys
 from driverpower import __version__
 from driverpower.BMR import run_bmr
@@ -54,8 +55,8 @@ def get_args():
                          help='Cutoff of feature importance score [optional]', default=0.5)
     par_bmr.add_argument('--name', dest='project_name', required=False, type=str,
                          help='Identifier for output files [optional]', default='DriverPower')
-    par_bmr.add_argument('--outDir', dest='out_dir', type=str,
-                         help='Directory of output files [optional]', default='./output/')
+    par_bmr.add_argument('--modelDir', dest='out_dir', type=str,
+                         help='Directory of output model files [optional]', default='./output/')
     #
     # Inference
     #
@@ -63,27 +64,25 @@ def get_args():
                                          help='Infer driver elements',
                                          formatter_class=CustomFormatter)
     # Input data
-    dat_infer = parser_infer.add_argument_group(title="Input data")
     # Required data
+    dat_infer = parser_infer.add_argument_group(title="Required input data")
     dat_infer.add_argument('--feature', dest='X_path', required=True, type=str,
                            help='Path to the test feature table')
     dat_infer.add_argument('--response', dest='y_path', required=True, type=str,
                            help='Path to the test response table')
-    dat_infer.add_argument('--model', dest='model_path', required=True, type=str,
-                           help='Path to the trained model')
     dat_infer.add_argument('--modelInfo', dest='model_info_path', required=True, type=str,
                            help='Path to the model information')
     # Optional data
-    dat_infer.add_argument('--featImp', dest='fi_path', required=False, type=str,
-                           help='Path to the feature importance table [optional]', default=None)
-    dat_infer.add_argument('--funcScore', dest='fs_path', required=False, type=str,
-                           help='Path to the functional score table [optional]', default=None)
+    dat_infer_op = parser_infer.add_argument_group(title="Optional input data")
+    dat_infer_op.add_argument('--modelDir', dest='model_dir', required=False, type=str,
+                           help='Directory of the trained model(s)', default=None)
+    dat_infer_op.add_argument('--funcScore', dest='fs_path', required=False, type=str,
+                           help='Path to the functional score table', default=None)
     # Parameters
     par_infer = parser_infer.add_argument_group(title="Parameters")
+
     par_infer.add_argument('--method', dest='test_method', required=False, type=str,
                            help='Test method to use [optional]', choices=['auto', 'binomial', 'negative_binomial'], default='auto')
-    par_infer.add_argument('--featImpCut', dest='fi_cut', required=False, type=float,
-                           help='Cutoff of feature importance score [optional]', default=0.5)
     par_infer.add_argument('--scale', dest='scale', required=False, type=float,
                            help='Scaling factor for theta in negative binomial distribution [optional]', default=1)
     par_infer.add_argument('--funcScoreCut', dest='fs_cut', required=False, type=str,
@@ -96,6 +95,10 @@ def get_args():
     par_infer.add_argument('--outDir', dest='out_dir', type=str,
                            help='Directory of output files [optional]', default='./output/')
     args = parser.parse_args()
+    ###
+    # Check and modify args
+    ###
+    args.out_dir = os.path.abspath(args.out_dir)
     return args
 
 
@@ -111,8 +114,17 @@ def main():
                 project_name=args.project_name,
                 out_dir=args.out_dir)
     elif args.subcommand == 'infer':
-        make_inference(args)
-
+        make_inference(model_dir=args.model_dir,
+                       model_info_path=args.model_info_path,
+                       X_path=args.X_path,
+                       y_path=args.y_path,
+                       fs_path=args.fs_path,
+                       fs_cut=args.fs_cut,
+                       test_method=args.test_method,
+                       scale=args.scale,
+                       use_gmean=args.use_gmean,
+                       project_name=args.project_name,
+                       out_dir=args.out_dir)
 
 if __name__ == '__main__':
     main()
