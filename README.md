@@ -3,6 +3,7 @@
 [![GitHub license](https://img.shields.io/badge/licence-GPL--3.0-brightgreen.svg
 )](./LICENSE)
 [![PyPI version](https://badge.fury.io/py/DriverPower.svg)](https://badge.fury.io/py/DriverPower)
+[![Documentation Status](https://readthedocs.org/projects/driverpower/badge/?version=latest)](http://driverpower.readthedocs.io/en/latest/?badge=latest)
 
 
 ## Introduction

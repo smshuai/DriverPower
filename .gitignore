@@ -9,5 +9,5 @@
 *.Rhistory
 *.log
 
-
+/docs/build
 *.html
