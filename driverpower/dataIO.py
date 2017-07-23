@@ -5,7 +5,6 @@ Input file types: X (tsv), y (tsv), functional scores (tsv), models (pkl)
 """
 import logging
 import pickle
-import sys
 import os
 import pkg_resources
 import pandas as pd
@@ -14,6 +13,8 @@ from sklearn.externals import joblib
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+
     import xgboost as xgb
     from statsmodels.iolib import smpickle
 
