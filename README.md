@@ -1,7 +1,6 @@
 # DriverPower
-![Software version](https://img.shields.io/badge/version-1.0.0-yellow.svg)
-[![GitHub license](https://img.shields.io/badge/licence-GPL--3.0-brightgreen.svg
-)](./LICENSE)
+![Github version](https://img.shields.io/badge/version-1.0.0-yellow.svg)
+[![GitHub license](https://img.shields.io/badge/license-AGPL-blue.svg)](./LICENSE)
 [![PyPI version](https://badge.fury.io/py/DriverPower.svg)](https://badge.fury.io/py/DriverPower)
 [![Documentation Status](https://readthedocs.org/projects/driverpower/badge/?version=latest)](http://driverpower.readthedocs.io/en/latest/?badge=latest)
 

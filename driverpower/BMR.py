@@ -90,17 +90,17 @@ def run_bmr(model_name, X_path, y_path,
         # k-fold CV
         ks = KFold(n_splits=kfold)
         param = read_param(param_path)
-        y['nPred'] = np.nan
+        yhat = np.zeros(y.shape[0])
         k = 1  # idx of model fold
         for train, valid in ks.split(range(X.num_row())):
             # train the model
             model = run_gbm(X.slice(train), X.slice(valid), param)
-            # predict on valid
-            y.iloc[valid, 'nPred'] = model.predict(X.slice(valid))
             save_gbm(model, k, project_name, out_dir)
+            # predict on valid
+            yhat[valid] = model.predict(X.slice(valid))
             k += 1
         # Run dispersion test
-        pval, theta = dispersion_test(y.nMut.values, y.nPred.values)
+        pval, theta = dispersion_test(yhat, y.nMut.values)
         model_info = {'model_name': model_name,
                       'pval_dispersion': pval,
                       'theta': theta,
