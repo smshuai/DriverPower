@@ -1,5 +1,5 @@
-DriverPower: a tool for computational driver discovery
-======================================================
+DriverPower: a tool for computational cancer driver discovery
+=============================================================
 
 .. toctree::
     :maxdepth: 2
