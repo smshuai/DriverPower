@@ -22,7 +22,7 @@ with warnings.catch_warnings():
     from statsmodels.sandbox.stats.multicomp import multipletests
 
 
-logger = logging.getLogger('Infer')
+logger = logging.getLogger('INFER')
 
 
 def make_inference(model_dir, model_info_path,
