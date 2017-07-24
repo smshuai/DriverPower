@@ -14,7 +14,7 @@ import numpy as np
 from scipy.stats import binom_test, nbinom
 from driverpower.dataIO import read_model_info, read_feature, read_response, read_gbm, read_glm, read_scaler, read_fs
 from driverpower.dataIO import save_result
-from driverpower.BMR import scale_data
+from driverpower.model import scale_data
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -22,7 +22,7 @@ with warnings.catch_warnings():
     from statsmodels.sandbox.stats.multicomp import multipletests
 
 
-logger = logging.getLogger('Infer')
+logger = logging.getLogger('INFER')
 
 
 def make_inference(model_dir, model_info_path,
@@ -85,6 +85,7 @@ def make_inference(model_dir, model_info_path,
     save_result(y, project_name, out_dir)
     logger.info('Job done!')
 
+
 def predict_with_glm(X, y, model_dir, model_info):
     """ Predict number of mutation with GLM.
 
@@ -127,7 +128,7 @@ def predict_with_gbm(X, y, model_dir, model_info):
     kfold = model_info['kfold']
     pred = np.zeros(y.shape[0])
     for k in range(1, kfold+1):
-        model = read_gbm(k, model_info['project_name'], model_dir)
+        model = read_gbm(k, model_info['project_name'], model_dir, model_info['params'])
         pred += model.predict(X)
     pred = pred / kfold
     return pred
