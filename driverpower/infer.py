@@ -14,7 +14,7 @@ import numpy as np
 from scipy.stats import binom_test, nbinom
 from driverpower.dataIO import read_model_info, read_feature, read_response, read_gbm, read_glm, read_scaler, read_fs
 from driverpower.dataIO import save_result
-from driverpower.BMR import scale_data
+from driverpower.model import scale_data
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)

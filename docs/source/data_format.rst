@@ -1,5 +1,5 @@
-Input data format
-=================
+Data format
+===========
 
 Response table (``--response``)
 -------------------------------
@@ -91,3 +91,9 @@ binID       CADD    EIGEN    ...
 TP53.CDS    4.80287 1.19475  ...
 KRAS.CDS    3.56563 2.53435  ...
 ========    ======= =======  ===
+
+Model and model information files (output of ``model``)
+-------------------------------------------------------
+
+Result table (output of ``infer``)
+----------------------------------

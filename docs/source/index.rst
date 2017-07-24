@@ -7,11 +7,11 @@ DriverPower: a tool for computational driver discovery
 
     install
     quick_start
+    command_line
     data_format
-    sub_model
-    sub_infer
+
 
 
 License
 -------
-`GNU General Public License v3.0 <https://github.com/smshuai/DriverPower/blob/master/LICENSE>`_
+DriverPower is distributed under the terms of the `GNU General Public License v3.0 <https://github.com/smshuai/DriverPower/blob/master/LICENSE>`_
