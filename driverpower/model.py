@@ -23,7 +23,7 @@ with warnings.catch_warnings():
     import statsmodels.api as sm
 
 
-logger = logging.getLogger('BMR')
+logger = logging.getLogger('MODEL')
 
 
 def run_bmr(model_name, X_path, y_path,
@@ -91,7 +91,7 @@ def run_bmr(model_name, X_path, y_path,
         yhat = np.zeros(y.shape[0])
         k = 1  # idx of model fold
         fi_scores_all = pd.DataFrame(np.nan, columns=['fold' + str(i) for i in range(1, kfold+1)], index=feature_names)
-        for train, valid in ks.split(range(X.num_row())):
+        for train, valid in ks.split(range(X.shape[0])):
             # make xgb train and valid data
             Xtrain = xgb.DMatrix(data=X[train, :], label=y.nMut.values[train], feature_names=feature_names)
             Xvalid = xgb.DMatrix(data=X[valid, :], label=y.nMut.values[valid], feature_names=feature_names)
@@ -230,13 +230,19 @@ def run_glm(X, y):
 
 
 def run_gbm(dtrain, dvalid, param):
+    # check training arguments in param
+    n_round = param.get('num_boost_round', 5000)
+    early_stop = param.get('early_stopping_rounds', 5)
+    verbose_eval = param.get('verbose_eval', 100)
     # specify validations set to watch performance
     watchlist = [(dvalid, 'eval')]
     bst = xgb.train(params=param,
                     dtrain=dtrain,
-                    num_boost_round=5000,
+                    num_boost_round=n_round,
                     evals=watchlist,
-                    early_stopping_rounds=5)
+                    early_stopping_rounds=early_stop,
+                    verbose_eval = verbose_eval
+                   )
     return bst
 
 
