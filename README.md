@@ -1,4 +1,4 @@
-# <img align="left" width="240" height="40" src="https://raw.githubusercontent.com/smshuai/DriverPower/v1.0/docs/source/logo.png">
+# <img align="left" width="360" height="60" src="https://raw.githubusercontent.com/smshuai/DriverPower/v1.0/docs/source/logo.png">
 ***a tool for computational driver discovery***
 
 ![Github version](https://img.shields.io/badge/version-1.0.0-yellow.svg)
