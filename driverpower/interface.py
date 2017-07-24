@@ -11,8 +11,8 @@ import argparse
 import os
 import sys
 from driverpower import __version__
-from driverpower.BMR import run_bmr
-from driverpower.inference import make_inference
+from driverpower.model import run_bmr
+from driverpower.infer import make_inference
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                     format='%(asctime)s | %(levelname)s: %(message)s',

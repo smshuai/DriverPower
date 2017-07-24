@@ -85,6 +85,7 @@ def make_inference(model_dir, model_info_path,
     save_result(y, project_name, out_dir)
     logger.info('Job done!')
 
+
 def predict_with_glm(X, y, model_dir, model_info):
     """ Predict number of mutation with GLM.
 
@@ -127,7 +128,7 @@ def predict_with_gbm(X, y, model_dir, model_info):
     kfold = model_info['kfold']
     pred = np.zeros(y.shape[0])
     for k in range(1, kfold+1):
-        model = read_gbm(k, model_info['project_name'], model_dir)
+        model = read_gbm(k, model_info['project_name'], model_dir, model_info['params'])
         pred += model.predict(X)
     pred = pred / kfold
     return pred

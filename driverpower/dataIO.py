@@ -210,7 +210,7 @@ def save_glm(model, project_name, out_dir):
         None.
 
     """
-    path = os.path.join(out_dir, project_name+'.GLM.pkl')
+    path = os.path.join(out_dir, project_name+'.GLM.model.pkl')
     model.save(path, remove_data=True)
     return
 
@@ -237,9 +237,9 @@ def save_gbm(bst, k, project_name, out_dir):
     return
 
 
-def read_gbm(k, project_name, out_dir):
+def read_gbm(k, project_name, out_dir, param):
     path = os.path.join(out_dir, '{}.GBM.model.fold{}'.format(project_name, k))
-    bst = xgb.Booster(model_file=path)
+    bst = xgb.Booster(params=param, model_file=path)  # param is keeping to bypass the max_delta_step bug.
     return bst
 
 
