@@ -1,4 +1,5 @@
-# DriverPower
+# <img align="left" width="240" height="40" src="https://github.com/smshuai/DriverPower/blob/v1.0/docs/source/logo.svg"> A tool for computational driver discovery
+
 ![Github version](https://img.shields.io/badge/version-1.0.0-yellow.svg)
 [![GitHub license](https://img.shields.io/badge/license-AGPL-blue.svg)](./LICENSE)
 [![PyPI version](https://badge.fury.io/py/DriverPower.svg)](https://badge.fury.io/py/DriverPower)
