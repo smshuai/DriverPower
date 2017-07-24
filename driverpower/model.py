@@ -9,6 +9,7 @@ Two types of BMR model are supported:
 import logging
 import sys
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import RobustScaler
 from sklearn.linear_model import LassoCV, RandomizedLasso
 from sklearn.model_selection import KFold
@@ -48,13 +49,11 @@ def run_bmr(model_name, X_path, y_path,
     run_feature_select = False if use_features else True
     X = read_feature(X_path, use_features)
     y = read_response(y_path)
+    feature_names = X.columns.values
     # use bins with both X and y
     use_bins = np.intersect1d(X.index.values, y.index.values)
-    X = X.loc[use_bins, :]
+    X = X.loc[use_bins, :].values  # X is np.array now
     y = y.loc[use_bins, :]
-    feature_names = X.columns.values
-    # convert X to np.array
-    X = X.values
     if model_name == 'GLM':
         # Scale data is necessary for GLM
         X, scaler = scale_data(X)
@@ -84,24 +83,33 @@ def run_bmr(model_name, X_path, y_path,
                       'project_name': project_name,
                       'model_dir': out_dir}
     elif model_name == 'GBM':
-        # make xgb data
-        X = xgb.DMatrix(data=X, label=y.nMut.values, feature_names=feature_names)
-        X.set_base_margin(np.array(np.log(y.length+1/y.N) + np.log(y.N)))
+        # calculate base margin
+        offset = np.array(np.log(y.length+1/y.N) + np.log(y.N))
         # k-fold CV
         ks = KFold(n_splits=kfold)
         param = read_param(param_path)
         yhat = np.zeros(y.shape[0])
         k = 1  # idx of model fold
-        fi_scores = np.zeros(feature_names.shape[0])
+        fi_scores_all = pd.DataFrame(np.nan, columns=['fold' + str(i) for i in range(1, kfold+1)], index=feature_names)
         for train, valid in ks.split(range(X.num_row())):
+            # make xgb train and valid data
+            Xtrain = xgb.DMatrix(data=X[train, :], label=y.nMut.values[train], feature_names=feature_names)
+            Xvalid = xgb.DMatrix(data=X[valid, :], label=y.nMut.values[valid], feature_names=feature_names)
+            # add offset
+            Xtrain.set_base_margin(offset[train])
+            Xvalid.set_base_margin(offset[valid])
             # train the model
-            model = run_gbm(X.slice(train), X.slice(valid), param)
+            model = run_gbm(Xtrain, Xvalid, param)
             save_gbm(model, k, project_name, out_dir)
             # predict on valid
-            yhat[valid] = model.predict(X.slice(valid))
+            yhat[valid] = model.predict(Xvalid)
             # get feature importance score
-            fi_scores += model.get_score(importance_type='gain')
+            fi_scores_all['fold' + str(k)] = pd.Series(model.get_score(importance_type='gain'))
             k += 1
+        # Save feature importance result
+        fi_scores_all.fillna(0, inplace=True)
+        fi_scores = fi_scores_all.mean(axis=1).values  # get average score for each feature
+        save_fi(fi_scores, fi_scores_all.index.values, project_name, out_dir)
         # Run dispersion test
         pval, theta = dispersion_test(yhat, y.nMut.values)
         model_info = {'model_name': model_name,
