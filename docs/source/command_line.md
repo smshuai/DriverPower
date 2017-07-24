@@ -26,22 +26,25 @@ Command-line options for this command can be viewed as follows:
 ```bash
 $ driverpower model -h
 usage: driverpower model [-h] --feature str --response str [--featImp str]
-                         --method {GLM,GBM} [--featImpCut float] [--name str]
+                         --method {GLM,GBM} [--featImpCut float]
+                         [--gbmParam str] [--gbmFold int] [--name str]
                          [--modelDir str]
 
 optional arguments:
   -h, --help          show this help message and exit
 
-Input data:
+input data:
   --feature str       Path to the training feature table (default: None)
   --response str      Path to the training response table (default: None)
   --featImp str       Path to the feature importance table [optional]
                       (default: None)
 
-Parameters:
+parameters:
   --method {GLM,GBM}  Algorithms to use (default: None)
   --featImpCut float  Cutoff of feature importance score [optional] (default:
                       0.5)
+  --gbmParam str      Path to the parameter pickle [optional] (default: None)
+  --gbmFold int       Train gbm with k-fold, k>=2 [optional] (default: 3)
   --name str          Identifier for output files [optional] (default:
                       DriverPower)
   --modelDir str      Directory of output model files [optional] (default:
@@ -49,23 +52,25 @@ Parameters:
 ```
 
 * **Input**
-    * Required data are `--feature` and `--response`.
-    * Optional data are `--featImp`.
+    * Required data: `--feature` and `--response` for training elements.
+    * Optional data: `--featImp`.
 * **Output**
-    * GLM model is saved at `"[modelDir]/[name].GLM.model.pkl"`.
-    The corresponding model information is saved at `"[modelDir]/[name].GLM.model_info.pkl"`.
-    * GBM models are saved as`"[modelDir]/[name].GBM.model.fold[k]"`.
-    The corresponding model information is saved at `"[modelDir]/[name].GBM.model_info.pkl`
-    * Feature importance table: returned for both GLM and GBM when no input `--featImp`.
+    * all output files are in `--modelDir`.
+    * `[name].GLM.model.pkl`: the GLM model file.
+    * `[name].GBM.model.fold[k]`: the GBM model files.
+    * `[name].[GLM|GBM].model_info.pkl`: the corresponding GLM or GBM model information.
+    * `[name].feature_importance.tsv`: the feature importance table, which is returned when no input `--featImp`.
     For GLM, feature importance is the number of times a feature is used by randomized lasso.
     For GBM, feature importance is the average gain of the feature across all gradient boosting trees.
 ```eval_rst
-.. important:: Please DO NOT rename the model files because their names are recorded in model information. Model files can be moved to another directory as long as ``--modelDir`` is specified in ``infer``.
+.. important:: Please **DO NOT** rename the model files because their names are recorded in model information. Model files can be moved to another directory as long as ``--modelDir`` is specified in ``infer``.
 ```
 * **Parameters**
     * `--method`: [*required*] method used for the background model. Must be GLM or GBM.
-    * `--featImpCut`: [*optional*] cutoff for feature importance score. Features with score >= cutoff will be used in the model. Only used for GLM. Default is 0.5.
-    * `--gbmParam`: [*optional*] path to the parameter pickle for GBM. The pickle file must contain a valid python dictionary for [XGBoost parameters](https://github.com/dmlc/xgboost/blob/master/doc/parameter.md).
+    * `--featImpCut`: [*optional*] cutoff for feature importance score.
+    Features with score >= cutoff will be used in the model. Only used for GLM. Default is 0.5.
+    * `--gbmParam`: [*optional*] path to the parameter pickle for GBM.
+    The pickle file must contain a valid python dictionary for [XGBoost parameters](https://github.com/dmlc/xgboost/blob/master/doc/parameter.md).
     * `--gbmFold`: [*optional*] Number of model fold to train for GBM. Fold must be an integer >= 2. Default value is 3.
     * `--name`:  [*optional*] Prefix for output files. Default is 'DriverPower'.
     * `--modelDir`: [*optional*] Directory for output model and model information files. Default is './output/'.
@@ -77,23 +82,29 @@ Parameters:
     the rest fold is used to validate the model.
     Hence, three model files will be generated at the end. The prediction will then be the average of three models.  
     * Training phase can take hours for large training set and consume a large amount of memories.
-    For example, using our default training set (~1M elements and 1373 features), training randomized lasso plus GLM takes about xx hours and xx RAMs.
+    For example, using our default training set (~1M elements and 1373 features),
+    training randomized lasso plus GLM takes about xx hours and xx RAMs.
     Training 3-fold GBM with xx cores takes about xx hours and xx RAMs. 
     * The default pickle file for `--gbmParam` is generated as follow:
 
 ```python
 import pickle
-# Default parameters for XGBoost used in DriverPower
+
+# Default parameter for XGBoost used in DriverPower
 param = {'max_depth': 8,
          'eta': 0.05,
          'subsample': 0.6,
          'nthread': 15,
          'objective': 'count:poisson',
-         'verbose': 0,
          'max_delta_step': 1.2,
-         'eval_metric': 'poisson-nloglik'}
-# Dump to pickle file ./xgb.param.pkl
-with open('./xgb.param.pkl', 'wb') as f:
+         'eval_metric': 'poisson-nloglik',
+         'verbose_eval': 100,  # print evalutation every 100 rounds
+         'early_stopping_rounds': 5,
+         'num_boost_round': 5000  # max number of rounds
+        }
+
+# Dump to pickle
+with open('xgb_param.pkl', 'wb') as f:
     pickle.dump(param, f)
     
 ``` 
@@ -105,24 +116,21 @@ Command-line options for this command can be viewed as follows:
 ```bash
 $ driverpower infer -h
 usage: driverpower infer [-h] --feature str --response str --modelInfo str
-                         [--modelDir str] [--funcScore str]
+                         [--funcScore str]
                          [--method {auto,binomial,negative_binomial}]
                          [--scale float] [--funcScoreCut str] [--geoMean bool]
-                         [--name str] [--outDir str]
+                         [--modelDir str] [--name str] [--outDir str]
 
 optional arguments:
   -h, --help            show this help message and exit
 
-Required input data:
+input data:
   --feature str         Path to the test feature table (default: None)
   --response str        Path to the test response table (default: None)
   --modelInfo str       Path to the model information (default: None)
-
-Optional input data:
-  --modelDir str        Directory of the trained model(s) (default: None)
   --funcScore str       Path to the functional score table (default: None)
 
-Parameters:
+parameters:
   --method {auto,binomial,negative_binomial}
                         Test method to use [optional] (default: auto)
   --scale float         Scaling factor for theta in negative binomial
@@ -131,6 +139,7 @@ Parameters:
                         "CADD:0.01;DANN:0.03;EIGEN:0.3" [optional] (default:
                         None)
   --geoMean bool        Use geometric mean in test [optional] (default: True)
+  --modelDir str        Directory of the trained model(s) (default: None)
   --name str            Identifier for output files [optional] (default:
                         DriverPower)
   --outDir str          Directory of output files [optional] (default:
@@ -138,13 +147,22 @@ Parameters:
 ```
 
 * **Input**
+    * Required data: `--feature` and `--response` for test elements; `--modelInfo` from `driverpower model`.
+    * Optional data: `--funcScore`. Only required for test with functional adjustment.
 * **Output**
+    * Driver discovery result saved in `"[outDir]/[name].result.tsv"`.
 * **Parameters**
-    * `--method`: [optional] probability distribution used to generate p-values (binom, negbinom, auto). Default is auto. Decision will be made automatically based on the dispersion test.
-    * `--featImpCut`: [optional] same as in sub-command `model`.
-    * `--scale`: [optional]
-    * `--funcScoreCut`: [optional]
-    * `--geoMean`: [optional] Use geometric mean of nMut and nSample in test. Default is `True`.
-    * `--name`: [optional] Prefix for output files. Default is 'DriverPower'.
-    * `--outDir`: [optional] Directory for output files. Default is './output/'.
+    * `--method`: [*optional*] probability distribution used to generate p-values (binomial, negative_binomial or auto).
+    Default is auto, which means decision will be made automatically based on the dispersion test of training data.
+    * `--scale`: [*optional*] scaling factor of theta for negative binomial distribution.
+    The theta is calculated from dispersion test. Default is 1. Only used for negative binomial distribution.
+    * `--funcScoreCut`: [*optional*] Cutoff of each functional impact scores.
+    The format of this parameter is a string in "NAME1:CUTOFF1;NAME2:CUTOFF2...",
+    such as "CADD:0.01;DANN:0.03;EIGEN:0.3".
+    Cutoff must in (0,1] and the name must match column names of `--funcScore`.
+    * `--geoMean`: [*optional*] Whether to use geometric mean of nMut and nSample in test. Default is `True`.
+    * `--modelDir`: [*optional*] Directory of model files from `driverpower model`.
+    Only required when models have been moved to a different directory.
+    * `--name`: [*optional*] Prefix for output files. Default is 'DriverPower'.
+    * `--outDir`: [*optional*] Directory for output files. Default is './output/'.
 * **Notes**

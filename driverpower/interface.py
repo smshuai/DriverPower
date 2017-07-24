@@ -68,23 +68,17 @@ def get_args():
                                          help='Infer driver elements',
                                          formatter_class=CustomFormatter)
     # Input data
-    # Required data
-    dat_infer = parser_infer.add_argument_group(title="required input data")
+    dat_infer = parser_infer.add_argument_group(title="input data")
     dat_infer.add_argument('--feature', dest='X_path', required=True, type=str,
                            help='Path to the test feature table')
     dat_infer.add_argument('--response', dest='y_path', required=True, type=str,
                            help='Path to the test response table')
     dat_infer.add_argument('--modelInfo', dest='model_info_path', required=True, type=str,
                            help='Path to the model information')
-    # Optional data
-    dat_infer_op = parser_infer.add_argument_group(title="optional input data")
-    dat_infer_op.add_argument('--modelDir', dest='model_dir', required=False, type=str,
-                           help='Directory of the trained model(s)', default=None)
-    dat_infer_op.add_argument('--funcScore', dest='fs_path', required=False, type=str,
+    dat_infer.add_argument('--funcScore', dest='fs_path', required=False, type=str,
                            help='Path to the functional score table', default=None)
     # Parameters
     par_infer = parser_infer.add_argument_group(title="parameters")
-
     par_infer.add_argument('--method', dest='test_method', required=False, type=str,
                            help='Test method to use [optional]', choices=['auto', 'binomial', 'negative_binomial'], default='auto')
     par_infer.add_argument('--scale', dest='scale', required=False, type=float,
@@ -94,6 +88,8 @@ def get_args():
                            default=None)
     par_infer.add_argument('--geoMean', dest='use_gmean', required=False, type=bool,
                            help='Use geometric mean in test [optional]', default=True)
+    par_infer.add_argument('--modelDir', dest='model_dir', required=False, type=str,
+                           help='Directory of the trained model(s)', default=None)
     par_infer.add_argument('--name', dest='project_name', required=False, type=str,
                            help='Identifier for output files [optional]', default='DriverPower')
     par_infer.add_argument('--outDir', dest='out_dir', type=str,
