@@ -40,7 +40,7 @@ def get_args():
                                        help='Build the background mutation model',
                                        formatter_class=CustomFormatter)
     # Input data
-    dat_bmr = parser_bmr.add_argument_group(title="Input data")
+    dat_bmr = parser_bmr.add_argument_group(title="input data")
     dat_bmr.add_argument('--feature', dest='X_path', required=True, type=str,
                          help='Path to the training feature table')
     dat_bmr.add_argument('--response', dest='y_path', required=True, type=str,
@@ -48,11 +48,15 @@ def get_args():
     dat_bmr.add_argument('--featImp', dest='fi_path', required=False, type=str,
                          help='Path to the feature importance table [optional]', default=None)
     # Parameters
-    par_bmr = parser_bmr.add_argument_group(title="Parameters")
+    par_bmr = parser_bmr.add_argument_group(title="parameters")
     par_bmr.add_argument('--method', dest='model_name', required=True, type=str,
                          help='Algorithms to use', choices=['GLM', 'GBM'])
     par_bmr.add_argument('--featImpCut', dest='fi_cut', required=False, type=float,
                          help='Cutoff of feature importance score [optional]', default=0.5)
+    par_bmr.add_argument('--gbmParam', dest='param_path', required=False, type=str,
+                         help='Path to the parameter pickle [optional]', default=None)
+    par_bmr.add_argument('--gbmFold', dest='kfold', required=False, type=int,
+                         help='Train gbm with k-fold, k>=2 [optional]', default=3)
     par_bmr.add_argument('--name', dest='project_name', required=False, type=str,
                          help='Identifier for output files [optional]', default='DriverPower')
     par_bmr.add_argument('--modelDir', dest='out_dir', type=str,
@@ -65,7 +69,7 @@ def get_args():
                                          formatter_class=CustomFormatter)
     # Input data
     # Required data
-    dat_infer = parser_infer.add_argument_group(title="Required input data")
+    dat_infer = parser_infer.add_argument_group(title="required input data")
     dat_infer.add_argument('--feature', dest='X_path', required=True, type=str,
                            help='Path to the test feature table')
     dat_infer.add_argument('--response', dest='y_path', required=True, type=str,
@@ -73,13 +77,13 @@ def get_args():
     dat_infer.add_argument('--modelInfo', dest='model_info_path', required=True, type=str,
                            help='Path to the model information')
     # Optional data
-    dat_infer_op = parser_infer.add_argument_group(title="Optional input data")
+    dat_infer_op = parser_infer.add_argument_group(title="optional input data")
     dat_infer_op.add_argument('--modelDir', dest='model_dir', required=False, type=str,
                            help='Directory of the trained model(s)', default=None)
     dat_infer_op.add_argument('--funcScore', dest='fs_path', required=False, type=str,
                            help='Path to the functional score table', default=None)
     # Parameters
-    par_infer = parser_infer.add_argument_group(title="Parameters")
+    par_infer = parser_infer.add_argument_group(title="parameters")
 
     par_infer.add_argument('--method', dest='test_method', required=False, type=str,
                            help='Test method to use [optional]', choices=['auto', 'binomial', 'negative_binomial'], default='auto')
@@ -111,6 +115,8 @@ def main():
                 y_path=args.y_path,
                 fi_cut=args.fi_cut,
                 fi_path=args.fi_path,
+                kfold=args.kfold,
+                param_path=args.param_path,
                 project_name=args.project_name,
                 out_dir=args.out_dir)
     elif args.subcommand == 'infer':

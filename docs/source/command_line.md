@@ -21,7 +21,7 @@ The DriverPower sub-commands include:
 
 ## The `model` sub-command
 
-The `model` sub-command is used to build the background mutation model.
+The `model` sub-command is used to build the background mutation model with training data.
 Command-line options for this command can be viewed as follows:
 ```bash
 $ driverpower model -h
@@ -48,9 +48,59 @@ Parameters:
                       ./output/)
 ```
 
+* **Input**
+    * Required data are `--feature` and `--response`.
+    * Optional data are `--featImp`.
+* **Output**
+    * GLM model is saved at `"[modelDir]/[name].GLM.model.pkl"`.
+    The corresponding model information is saved at `"[modelDir]/[name].GLM.model_info.pkl"`.
+    * GBM models are saved as`"[modelDir]/[name].GBM.model.fold[k]"`.
+    The corresponding model information is saved at `"[modelDir]/[name].GBM.model_info.pkl`
+    * Feature importance table: returned for both GLM and GBM when no input `--featImp`.
+    For GLM, feature importance is the number of times a feature is used by randomized lasso.
+    For GBM, feature importance is the average gain of the feature across all gradient boosting trees.
+```eval_rst
+.. important:: Please DO NOT rename the model files because their names are recorded in model information. Model files can be moved to another directory as long as ``--modelDir`` is specified in ``infer``.
+```
+* **Parameters**
+    * `--method`: [*required*] method used for the background model. Must be GLM or GBM.
+    * `--featImpCut`: [*optional*] cutoff for feature importance score. Features with score >= cutoff will be used in the model. Only used for GLM. Default is 0.5.
+    * `--gbmParam`: [*optional*] path to the parameter pickle for GBM. The pickle file must contain a valid python dictionary for [XGBoost parameters](https://github.com/dmlc/xgboost/blob/master/doc/parameter.md).
+    * `--gbmFold`: [*optional*] Number of model fold to train for GBM. Fold must be an integer >= 2. Default value is 3.
+    * `--name`:  [*optional*] Prefix for output files. Default is 'DriverPower'.
+    * `--modelDir`: [*optional*] Directory for output model and model information files. Default is './output/'.
+* **Notes**
+    * Input data requirements can be found at [data format](https://driverpower.readthedocs.org/en/latest/data_format.html).
+    * `--gbmFold` controls the split of training data by k-fold cross-validation.
+    For example, default 3-fold model means the training data are divided into 3 equal folds.
+    Each time, two folds of data are used to train the model and
+    the rest fold is used to validate the model.
+    Hence, three model files will be generated at the end. The prediction will then be the average of three models.  
+    * Training phase can take hours for large training set and consume a large amount of memories.
+    For example, using our default training set (~1M elements and 1373 features), training randomized lasso plus GLM takes about xx hours and xx RAMs.
+    Training 3-fold GBM with xx cores takes about xx hours and xx RAMs. 
+    * The default pickle file for `--gbmParam` is generated as follow:
+
+```python
+import pickle
+# Default parameters for XGBoost used in DriverPower
+param = {'max_depth': 8,
+         'eta': 0.05,
+         'subsample': 0.6,
+         'nthread': 15,
+         'objective': 'count:poisson',
+         'verbose': 0,
+         'max_delta_step': 1.2,
+         'eval_metric': 'poisson-nloglik'}
+# Dump to pickle file ./xgb.param.pkl
+with open('./xgb.param.pkl', 'wb') as f:
+    pickle.dump(param, f)
+    
+``` 
+
 ## The `infer` sub-command
 
-The `infer` sub-command is used to call drivers from test data.
+The `infer` sub-command is used to call drivers from test data with pre-trained models.
 Command-line options for this command can be viewed as follows:
 ```bash
 $ driverpower infer -h
@@ -87,32 +137,14 @@ Parameters:
                         ./output/)
 ```
 
-- `--method`: [required] method used for the background model. Must be GLM or GBM.
-- `--featImpCut`: [optional] cutoff for feature importance score. Features with score >= cutoff will be used in the model. Only used for GLM. Default is 0.5.
-- `--gbmParam`: [optional] path to the parameter pickle for GBM. The pickle file must contain a valid python dictionary for [XGBoost parameters](https://github.com/dmlc/xgboost/blob/master/doc/parameter.md). The default pickle file is generated as follow:
-```python
-import pickle
-# Default parameters for XGBoost used in DriverPower
-param = {'max_depth':8,
-         'eta':0.05,
-         'subsample':0.6,
-         'nthread':15,
-         'objective':'count:poisson',
-         'verbose':0,
-         'max_delta_step':1.2,
-         'eval_metric':'poisson-nloglik'}
-# Dump to pickle file ./xgb.param.pkl
-with open('./xgb.param.pkl', 'wb') as f:
-    pickle.dump(param, f)
-```
-- `--name`: [optional] Prefix for output files. Default is 'DriverPower'.
-- `--outDir`: [optional] Directory for output files. Default is './output/'.
------
-#### Sub-command `infer`
-- `--method`: [optional] probability distribution used to generate p-values (binom, negbinom, auto). Default is auto. Decision will be made automatically based on the dispersion test.
-- `--featImpCut`: [optional] same as in sub-command `model`.
-- `--scale`: [optional]
-- `--funcScoreCut`: [optional]
-- `--geoMean`: [optional] Use geometric mean of nMut and nSample in test. Default is `True`.
-- `--name`: [optional] Prefix for output files. Default is 'DriverPower'.
-- `--outDir`: [optional] Directory for output files. Default is './output/'.
+* **Input**
+* **Output**
+* **Parameters**
+    * `--method`: [optional] probability distribution used to generate p-values (binom, negbinom, auto). Default is auto. Decision will be made automatically based on the dispersion test.
+    * `--featImpCut`: [optional] same as in sub-command `model`.
+    * `--scale`: [optional]
+    * `--funcScoreCut`: [optional]
+    * `--geoMean`: [optional] Use geometric mean of nMut and nSample in test. Default is `True`.
+    * `--name`: [optional] Prefix for output files. Default is 'DriverPower'.
+    * `--outDir`: [optional] Directory for output files. Default is './output/'.
+* **Notes**
