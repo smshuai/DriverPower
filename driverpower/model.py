@@ -13,6 +13,7 @@ import pandas as pd
 from sklearn.preprocessing import RobustScaler
 from sklearn.linear_model import LassoCV, RandomizedLasso
 from sklearn.model_selection import KFold
+from sklearn.utils import resample
 from scipy.special import logit
 from driverpower.dataIO import read_feature, read_response, read_fi, read_param
 from driverpower.dataIO import save_scaler, save_fi, save_glm, save_gbm, save_model_info
@@ -92,6 +93,7 @@ def run_bmr(model_name, X_path, y_path,
         k = 1  # idx of model fold
         fi_scores_all = pd.DataFrame(np.nan, columns=['fold' + str(i) for i in range(1, kfold+1)], index=feature_names)
         for train, valid in ks.split(range(X.shape[0])):
+            logger.info('Training GBM fold {}/{}'.format(k, kfold))
             # make xgb train and valid data
             Xtrain = xgb.DMatrix(data=X[train, :], label=y.nMut.values[train], feature_names=feature_names)
             Xvalid = xgb.DMatrix(data=X[valid, :], label=y.nMut.values[valid], feature_names=feature_names)
@@ -246,21 +248,28 @@ def run_gbm(dtrain, dvalid, param):
     return bst
 
 
-def dispersion_test(yhat, y):
-    """ Implement the regression based dispersion test.
+def dispersion_test(yhat, y, k=100):
+    """ Implement the regression based dispersion test with k re-sampling.
 
     Args:
         yhat (np.array): predicted mutation count
         y (np.array): observed mutation count
+        k (int):
 
     Returns:
         float, float: p-value, theta
 
     """
-    # (np.power((y - yhat), 2) - y) / yhat for Poisson regression
-    aux = (np.power((y - yhat), 2) - yhat) / yhat
-    mod = sm.OLS(aux, yhat)
-    res = mod.fit()
-    theta = res.params[0]
-    pval = res.pvalues[0]
+    theta = 0
+    pval = 0
+    for i in range(k):
+        y_sub, yhat_sub = resample(y, yhat, random_state=i)
+        # (np.power((y - yhat), 2) - y) / yhat for Poisson regression
+        aux = (np.power((y_sub - yhat_sub), 2) - yhat_sub) / yhat_sub
+        mod = sm.OLS(aux, yhat_sub)
+        res = mod.fit()
+        theta += res.params[0]
+        pval += res.pvalues[0]
+    theta = theta/k
+    pval = pval/k
     return pval, theta
