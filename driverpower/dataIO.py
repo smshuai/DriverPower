@@ -14,8 +14,8 @@ import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
-
     import xgboost as xgb
+    import statsmodels
     from statsmodels.iolib import smpickle
 
 
@@ -211,7 +211,10 @@ def save_glm(model, project_name, out_dir):
 
     """
     path = os.path.join(out_dir, project_name+'.GLM.model.pkl')
-    model.save(path, remove_data=True)
+    with warnings.catch_warnings():
+        # https://github.com/statsmodels/statsmodels/issues/3563
+        warnings.filterwarnings('ignore', category=statsmodels.CacheWriteWarning)
+        model.save(path, remove_data=True)
     return
 
 
