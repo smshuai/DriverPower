@@ -133,7 +133,7 @@ def scale_data(X, scaler=None):
     """ Scale X with robust scaling.
     
     Args:
-        X (pd.df): feature matrix indexed by binID.
+        X (np.array): feature matrix indexed by binID.
         scaler (RobustScaler): pre-trained scaler. Default is None
         
     Returns:
