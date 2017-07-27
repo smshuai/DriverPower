@@ -37,7 +37,7 @@ def read_feature(path, use_features=None):
     """
     if path.lower().endswith(('.h5', '.hdf5')):
         # HDF5
-        if use_features:
+        if use_features is not None:
             X = pd.read_hdf(path, 'X')
             X = X.loc[:, use_features]
         else:
@@ -47,7 +47,7 @@ def read_feature(path, use_features=None):
         X = xgb.DMatrix(path)
     else:
         # TSV or compressed TSV
-        if use_features:
+        if use_features is not None:
             X = pd.read_csv(path, sep='\t', header=0, index_col='binID',
                             usecols=['binID'] + use_features)
         else:
@@ -153,7 +153,7 @@ def read_fi(path, cutoff=0.5):
         list: useful features. Return None if path is None.
 
     """
-    if path:
+    if path is not None:
         fi = pd.read_csv(path, sep='\t', header=0, index_col='name',
                          usecols=['name', 'importance'])
         assert len(fi.index.values) == len(fi.index.unique()), \
@@ -228,7 +228,7 @@ def read_param(path=None):
         dict: parameter dict.
     """
     # use default if path is None
-    path = path if path else pkg_resources.resource_filename(__name__, 'xgb_param.pkl')
+    path = path if path is not None else pkg_resources.resource_filename(__name__, 'xgb_param.pkl')
     with open(path, 'rb') as f:
         param = pickle.load(f)
     return param

@@ -1,4 +1,4 @@
-# <img align="left" width="360" height="60" src="https://raw.githubusercontent.com/smshuai/DriverPower/v1.0/docs/source/logo.png">
+# <img align="left" width="360" height="60" src="https://raw.githubusercontent.com/smshuai/DriverPower/v1.0/docs/source/pics/logo.png">
 ***a tool for computational cancer driver discovery***
 
 ![Github version](https://img.shields.io/badge/version-1.0.0-yellow.svg)

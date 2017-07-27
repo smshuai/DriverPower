@@ -142,7 +142,7 @@ def scale_data(X, scaler=None):
             only returned when there is no pre-trained scaler.
     
     """
-    if scaler:
+    if scaler is not None:
         return scaler.transform(X)
     else:
         scaler = RobustScaler(copy=False)

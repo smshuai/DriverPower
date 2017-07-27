@@ -7,7 +7,7 @@ If you don't have Python 3.5 or higher, we recommend to install Python with [Ana
 You can install DriverPower from the
 [Python Package Index (PyPI)](https://pypi.python.org/pypi/DriverPower/)
 by simply typing the following command in your terminal:
-```bash
+```console
 $ pip install driverpower
 ```
 
@@ -18,7 +18,7 @@ $ pip install driverpower
 
 ## Install from source
 You can also download the latest source from [GitHub](https://github.com/smshuai/DriverPower/releases) and install DriverPower like:
-```bash
+```console
 $ wget link_to_latest_release
 $ cd DriverPower && pip install .
 ```

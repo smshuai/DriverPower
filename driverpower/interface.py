@@ -98,7 +98,12 @@ def get_args():
     ###
     # Check and modify args
     ###
-    args.out_dir = os.path.abspath(args.out_dir)
+    if len(sys.argv) == 1:
+        # print help when no argument
+        parser.print_help()
+        sys.exit(1)
+    if hasattr(args, 'out_dir'):
+        args.out_dir = os.path.abspath(args.out_dir)
     return args
 
 
