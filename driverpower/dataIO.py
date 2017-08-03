@@ -14,8 +14,8 @@ import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
-
     import xgboost as xgb
+    import statsmodels
     from statsmodels.iolib import smpickle
 
 
@@ -24,9 +24,9 @@ logger = logging.getLogger('IO')
 
 def read_feature(path, use_features=None):
     """Read X (features) table in TSV format (or compressed).
-    
+
     X must contain a column named 'binID' (key) and other columns will be treated as features.
-    
+
     Args:
         path (str): Path to the file.
         use_features (list): List of features to load.
@@ -37,7 +37,7 @@ def read_feature(path, use_features=None):
     """
     if path.lower().endswith(('.h5', '.hdf5')):
         # HDF5
-        if use_features:
+        if use_features is not None:
             X = pd.read_hdf(path, 'X')
             X = X.loc[:, use_features]
         else:
@@ -47,7 +47,7 @@ def read_feature(path, use_features=None):
         X = xgb.DMatrix(path)
     else:
         # TSV or compressed TSV
-        if use_features:
+        if use_features is not None:
             X = pd.read_csv(path, sep='\t', header=0, index_col='binID',
                             usecols=['binID'] + use_features)
         else:
@@ -153,7 +153,7 @@ def read_fi(path, cutoff=0.5):
         list: useful features. Return None if path is None.
 
     """
-    if path:
+    if path is not None:
         fi = pd.read_csv(path, sep='\t', header=0, index_col='name',
                          usecols=['name', 'importance'])
         assert len(fi.index.values) == len(fi.index.unique()), \
@@ -211,7 +211,10 @@ def save_glm(model, project_name, out_dir):
 
     """
     path = os.path.join(out_dir, project_name+'.GLM.model.pkl')
-    model.save(path, remove_data=True)
+    with warnings.catch_warnings():
+        # https://github.com/statsmodels/statsmodels/issues/3563
+        warnings.filterwarnings('ignore', category=statsmodels.CacheWriteWarning)
+        model.save(path, remove_data=True)
     return
 
 
@@ -225,7 +228,7 @@ def read_param(path=None):
         dict: parameter dict.
     """
     # use default if path is None
-    path = path if path else pkg_resources.resource_filename(__name__, 'xgb_param.pkl')
+    path = path if path is not None else pkg_resources.resource_filename(__name__, 'xgb_param.pkl')
     with open(path, 'rb') as f:
         param = pickle.load(f)
     return param
@@ -256,5 +259,7 @@ def save_model_info(model_info, project_name, out_dir, model_name):
 
 
 def save_result(y, project_name, out_dir):
+    # sort by last but 2 column
+    y = y.sort_values(y.columns[-2], ascending=True)
     path = os.path.join(out_dir, '{}.result.tsv'.format(project_name))
     y.to_csv(path, sep='\t')
