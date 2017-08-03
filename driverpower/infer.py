@@ -129,7 +129,7 @@ def predict_with_gbm(X, y, model_dir, model_info):
     pred = np.zeros(y.shape[0])
     for k in range(1, kfold+1):
         model = read_gbm(k, model_info['project_name'], model_dir, model_info['params'])
-        pred += model.predict(X)
+        pred += model.predict(testData)
     pred = pred / kfold
     return pred
 
