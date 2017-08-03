@@ -76,7 +76,7 @@ def get_args():
     dat_infer.add_argument('--modelInfo', dest='model_info_path', required=True, type=str,
                            help='Path to the model information')
     dat_infer.add_argument('--funcScore', dest='fs_path', required=False, type=str,
-                           help='Path to the functional score table', default=None)
+                           help='Path to the functional score table [optional]', default=None)
     # Parameters
     par_infer = parser_infer.add_argument_group(title="parameters")
     par_infer.add_argument('--method', dest='test_method', required=False, type=str,
@@ -84,12 +84,13 @@ def get_args():
     par_infer.add_argument('--scale', dest='scale', required=False, type=float,
                            help='Scaling factor for theta in negative binomial distribution [optional]', default=1)
     par_infer.add_argument('--funcScoreCut', dest='fs_cut', required=False, type=str,
-                           help='Score name:cutoff pairs for all scores e.g., "CADD:0.01;DANN:0.03;EIGEN:0.3" [optional]',
+                           help='Score name:cutoff pairs for all scores e.g.,'
+                                '"CADD:0.01;DANN:0.03;EIGEN:0.3" [optional]',
                            default=None)
     par_infer.add_argument('--geoMean', dest='use_gmean', required=False, type=bool,
                            help='Use geometric mean in test [optional]', default=True)
     par_infer.add_argument('--modelDir', dest='model_dir', required=False, type=str,
-                           help='Directory of the trained model(s)', default=None)
+                           help='Directory of the trained model(s) [optional]', default=None)
     par_infer.add_argument('--name', dest='project_name', required=False, type=str,
                            help='Identifier for output files [optional]', default='DriverPower')
     par_infer.add_argument('--outDir', dest='out_dir', type=str,

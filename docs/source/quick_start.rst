@@ -32,7 +32,6 @@ and gradient boosting machines (GBM).
 See :ref:`the model sub-command <model>` for all parameters and notes. Example code snippets are as follows:
 
 .. code-block:: bash
-    :linenos:
     :caption: *Train a generalized linear model with feature selection by randomized lasso*
     :name: train-glm
 
@@ -42,7 +41,6 @@ See :ref:`the model sub-command <model>` for all parameters and notes. Example c
         --method GLM
 
 .. code-block:: bash
-    :linenos:
     :caption: *Train a gradient boosting machine with default parameters*
     :name: train-gbm
 

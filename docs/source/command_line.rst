@@ -100,13 +100,11 @@ Command-line options for this command can be viewed as follows:
       Hence, three model files will be generated at the end. The prediction will then be the average of three models.
     * Training phase can take hours for large training set and consume a large amount of memories.
       For example, using our default training set (~1M elements and 1373 features),
-      training randomized lasso plus GLM takes about xx hours and xx RAMs.
-      Training 3-fold GBM with xx cores takes about xx hours and xx RAMs.
+      training randomized lasso plus GLM with single core takes about 2-10 hours and 80G RAMs.
+      Training 3-fold GBM with 15 cores takes about 10-24 hours and 80G RAMs.
     * The default pickle file for ``--gbmParam`` is generated as follow:
 
 .. literalinclude:: ../../driverpower/xgb_param_default.py
-    :linenos:
-    :lines: 1-19
 
 The ``infer`` sub-command
 -------------------------
@@ -130,18 +128,20 @@ Command-line options for this command can be viewed as follows:
       --feature str         Path to the test feature table (default: None)
       --response str        Path to the test response table (default: None)
       --modelInfo str       Path to the model information (default: None)
-      --funcScore str       Path to the functional score table (default: None)
+      --funcScore str       Path to the functional score table [optional]
+                            (default: None)
 
     parameters:
       --method {auto,binomial,negative_binomial}
                             Test method to use [optional] (default: auto)
       --scale float         Scaling factor for theta in negative binomial
                             distribution [optional] (default: 1)
-      --funcScoreCut str    Score name:cutoff pairs for all scores e.g.,
-                            "CADD:0.01;DANN:0.03;EIGEN:0.3" [optional] (default:
-                            None)
+      --funcScoreCut str    Score name:cutoff pairs for all scores
+                            e.g.,"CADD:0.01;DANN:0.03;EIGEN:0.3" [optional]
+                            (default: None)
       --geoMean bool        Use geometric mean in test [optional] (default: True)
-      --modelDir str        Directory of the trained model(s) (default: None)
+      --modelDir str        Directory of the trained model(s) [optional] (default:
+                            None)
       --name str            Identifier for output files [optional] (default:
                             DriverPower)
       --outDir str          Directory of output files [optional] (default:

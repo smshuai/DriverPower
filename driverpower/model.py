@@ -150,7 +150,7 @@ def scale_data(X, scaler=None):
         return scaler.transform(X), scaler
 
 
-def run_lasso(X, y, max_iter=3000, cv=5, n_threads=3):
+def run_lasso(X, y, max_iter=3000, cv=5, n_threads=1):
     """ Implement LassoCV in sklearn
     
     Args:
