@@ -24,9 +24,9 @@ logger = logging.getLogger('IO')
 
 def read_feature(path, use_features=None):
     """Read X (features) table in TSV format (or compressed).
-    
+
     X must contain a column named 'binID' (key) and other columns will be treated as features.
-    
+
     Args:
         path (str): Path to the file.
         use_features (list): List of features to load.
@@ -259,5 +259,7 @@ def save_model_info(model_info, project_name, out_dir, model_name):
 
 
 def save_result(y, project_name, out_dir):
+    # sort by last but 2 column
+    y = y.sort_values(y.columns[-2], ascending=True)
     path = os.path.join(out_dir, '{}.result.tsv'.format(project_name))
     y.to_csv(path, sep='\t')
