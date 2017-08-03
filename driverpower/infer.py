@@ -47,7 +47,8 @@ def make_inference(model_dir, model_info_path,
 
     """
     model_info = read_model_info(model_info_path)
-    model_dir = model_dir if model_dir else model_info['model_dir']
+    logger.info('Model type: {}'.format(model_info['model_name']))
+    model_dir = model_dir if model_dir is not None else model_info['model_dir']
     model_name = model_info['model_name']
     # Load data
     X = read_feature(X_path)
@@ -152,13 +153,15 @@ def burden_test(count, pred, offset, test_method, model_info, s):
     if test_method == 'auto':
         test_method = 'binomial' if model_info['pval_dispersion'] > 0.05 else 'negative_binomial'
     if test_method == 'negative_binomial':
+        logger.info('Using negative binomial test with s={}, theta={}'.format(s, model_info['theta']))
         theta = s * model_info['theta']
         pvals = np.array([negbinom_test(x, mu, theta)
                           for x, mu in zip(count, pred)])
     elif test_method == 'binomial':
+        logger.info('Using binomial test')
         pvals = np.array([binom_test(x, n, p, 'greater')
                           for x, n, p in zip(count, offset,
-                                             count/offset)])
+                                             pred/offset)])
     else:
         logger.error('Unknown test method: {}. Please use binomial, negative_binomial or auto'.format(test_method))
         sys.exit(1)
@@ -223,11 +226,11 @@ def functional_adjustment(y, fs_path, fs_cut, test_method,
         threshold = -10*np.log10(float(cutoff))  # convert to phred-scale
         # Calculate weight for near-significant elements
         weight = score+'_weight'
-        y[weight] = y.score / threshold
+        y[weight] = y[score] / threshold
         y.loc[y.raw_q>.25, weight] = 1
         # Calculate nMut * weight for near-significant elements
         n_score = score+'_nMut'
-        y[n_score] = y.weight * y.nMut
+        y[n_score] = y[weight] * y.nMut
         # Calculate p-values (q-values) for near-significant elements
         count = np.sqrt(y.loc[y.raw_q<=.25, n_score] * y.loc[y.raw_q<=.25, 'nSample'])\
             if use_gmean else y.loc[y.raw_q<=.25, n_score]
