@@ -17,9 +17,10 @@ $ pip install driverpower
 
 
 ## Install from source
-You can also download the latest source from [GitHub](https://github.com/smshuai/DriverPower/releases) and install DriverPower like:
+You can also download the [latest source](https://github.com/smshuai/DriverPower/releases/latest/) from GitHub to install.
+For example, to install version 1.0.0:
 ```console
-$ wget link_to_latest_release
-$ cd DriverPower && pip install .
+$ tar -xzf DriverPower-1.0.0.tar.gz
+$ cd DriverPower-1.0.0/ && pip install .
 ```
 See the importance note above if you have issue with the XGBoost installation.

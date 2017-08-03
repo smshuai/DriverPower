@@ -19,10 +19,10 @@ To install DriverPower, you can either download and install it from [Python Pack
 ```bash
 $ pip install driverpower
 ```
-or download the latest source to install:
-```bash
-$ git clone https://github.com/smshuai/DriverPower.git
-$ cd DriverPower && pip install .
+or download the [latest source](https://github.com/smshuai/DriverPower/releases/latest/) to install. For example, to install version 1.0.0:
+```console
+$ tar -xzf DriverPower-1.0.0.tar.gz
+$ cd DriverPower-1.0.0/ && pip install .
 ```
 See more details at [installation](https://driverpower.readthedocs.org/en/latest/install.html).
 
