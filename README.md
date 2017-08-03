@@ -30,4 +30,5 @@ See more details at [installation](https://driverpower.readthedocs.org/en/latest
 DriverPower is distributed under the terms of the [GNU General Public License 3.0](https://www.gnu.org/licenses/gpl-3.0.txt).
 
 ## Change Log
+- 2017/08/03: Release version 1.0.0, which is used in our manuscript.
 - 2017/03/02: Release version 0.4.0, which is used in the PCAWG driver analysis.
