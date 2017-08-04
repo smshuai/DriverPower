@@ -23,11 +23,14 @@ logger = logging.getLogger('DP')
 
 def get_args():
     class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
-                          argparse.MetavarTypeHelpFormatter):
+                          argparse.MetavarTypeHelpFormatter,
+                          argparse.RawDescriptionHelpFormatter):
         pass
     parser = argparse.ArgumentParser(prog='driverpower',
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description='DriverPower v{}: Combined burden and functional impact '
-                                                 'tests for coding and non-coding cancer driver discovery'.format(__version__))
+                                                 'tests for coding and non-coding cancer driver discovery.\n\n'
+                                                 'See documentation at http://driverpower.readthedocs.io/en/latest/'.format(__version__))
     # global argument
     parser.add_argument('-v', '--version', dest='version', action="store_true",
                         help='Print the version of DriverPower')
@@ -38,7 +41,10 @@ def get_args():
     #
     parser_bmr = subparsers.add_parser('model',
                                        help='Build the background mutation model',
-                                       formatter_class=CustomFormatter)
+                                       formatter_class=CustomFormatter,
+                                       description='DriverPower v{}: Combined burden and functional impact '
+                                                   'tests for coding and non-coding cancer driver discovery.\n\n'
+                                                   'See documentation at http://driverpower.readthedocs.io/en/latest/'.format(__version__))
     # Input data
     dat_bmr = parser_bmr.add_argument_group(title="input data")
     dat_bmr.add_argument('--feature', dest='X_path', required=True, type=str,
@@ -66,7 +72,10 @@ def get_args():
     #
     parser_infer = subparsers.add_parser('infer',
                                          help='Infer driver elements',
-                                         formatter_class=CustomFormatter)
+                                         formatter_class=CustomFormatter,
+                                         description = 'DriverPower v{}: Combined burden and functional impact '
+                                                       'tests for coding and non-coding cancer driver discovery.\n\n'
+                                                       'See documentation at http://driverpower.readthedocs.io/en/latest/'.format(__version__))
     # Input data
     dat_infer = parser_infer.add_argument_group(title="input data")
     dat_infer.add_argument('--feature', dest='X_path', required=True, type=str,
