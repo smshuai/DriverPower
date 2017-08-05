@@ -55,3 +55,14 @@ See :ref:`the model sub-command <model>` for all parameters and notes. Example c
 Step 3: Call the driver candidates
 ----------------------------------
 
+.. code-block:: bash
+    :caption: *Call driver candidates with CADD scores*
+
+    $ driverpower infer \
+        --feature PATH_TO_X \
+        --response PATH_TO_y \
+        --modelInfo PATH_TO_model_info \
+        --funcScore PATH_TO_func_score \
+        --funcScoreCut 'CADD:0.01' \
+        --name 'DriverPower' \
+        --outDir ./output/

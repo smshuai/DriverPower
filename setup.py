@@ -19,7 +19,6 @@ setup(
         'pandas >= 0.18.1',
         'scikit-learn >= 0.18',
         'statsmodels >= 0.6.1',
-        'pytabix >= 0.0.2',
         'xgboost >= 0.6a',
     ],
     entry_points = {

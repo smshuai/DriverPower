@@ -1,5 +1,5 @@
-# <img align="left" width="360" height="60" src="https://raw.githubusercontent.com/smshuai/DriverPower/v1.0/docs/source/pics/logo.png">
-***a tool for computational cancer driver discovery***
+# <img align="left" width="172" height="127" src="https://raw.githubusercontent.com/smshuai/DriverPower/v1.0/docs/source/pics/logo.png">
+***A tool for computational cancer driver discovery***
 
 ![Github version](https://img.shields.io/badge/version-1.0.0-yellow.svg)
 [![GitHub license](https://img.shields.io/badge/license-AGPL-blue.svg)](./LICENSE)
@@ -19,10 +19,10 @@ To install DriverPower, you can either download and install it from [Python Pack
 ```bash
 $ pip install driverpower
 ```
-or download the latest source to install:
-```bash
-$ git clone https://github.com/smshuai/DriverPower.git
-$ cd DriverPower && pip install .
+or download the [latest source](https://github.com/smshuai/DriverPower/releases/latest/) to install. For example, to install version 1.0.0:
+```console
+$ tar -xzf DriverPower-1.0.0.tar.gz
+$ cd DriverPower-1.0.0/ && pip install .
 ```
 See more details at [installation](https://driverpower.readthedocs.org/en/latest/install.html).
 
@@ -30,4 +30,5 @@ See more details at [installation](https://driverpower.readthedocs.org/en/latest
 DriverPower is distributed under the terms of the [GNU General Public License 3.0](https://www.gnu.org/licenses/gpl-3.0.txt).
 
 ## Change Log
+- 2017/08/03: Release version 1.0.0, which is used in our manuscript.
 - 2017/03/02: Release version 0.4.0, which is used in the PCAWG driver analysis.
