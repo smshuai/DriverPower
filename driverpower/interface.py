@@ -30,7 +30,8 @@ def get_args():
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description='DriverPower v{}: Combined burden and functional impact '
                                                  'tests for coding and non-coding cancer driver discovery.\n\n'
-                                                 'See documentation at http://driverpower.readthedocs.io/en/latest/'.format(__version__))
+                                                 'See documentation and examples at '
+                                                 'http://driverpower.readthedocs.io/en/latest/'.format(__version__))
     # global argument
     parser.add_argument('-v', '--version', dest='version', action="store_true",
                         help='Print the version of DriverPower')
@@ -44,7 +45,8 @@ def get_args():
                                        formatter_class=CustomFormatter,
                                        description='DriverPower v{}: Combined burden and functional impact '
                                                    'tests for coding and non-coding cancer driver discovery.\n\n'
-                                                   'See documentation at http://driverpower.readthedocs.io/en/latest/'.format(__version__))
+                                                   'See documentation and examples at '
+                                                   'http://driverpower.readthedocs.io/en/latest/'.format(__version__))
     # Input data
     dat_bmr = parser_bmr.add_argument_group(title="input data")
     dat_bmr.add_argument('--feature', dest='X_path', required=True, type=str,
@@ -75,7 +77,8 @@ def get_args():
                                          formatter_class=CustomFormatter,
                                          description = 'DriverPower v{}: Combined burden and functional impact '
                                                        'tests for coding and non-coding cancer driver discovery.\n\n'
-                                                       'See documentation at http://driverpower.readthedocs.io/en/latest/'.format(__version__))
+                                                       'See documentation and examples at '
+                                                       'http://driverpower.readthedocs.io/en/latest/'.format(__version__))
     # Input data
     dat_infer = parser_infer.add_argument_group(title="input data")
     dat_infer.add_argument('--feature', dest='X_path', required=True, type=str,
