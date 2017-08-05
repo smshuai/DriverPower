@@ -1,13 +1,13 @@
 theme_Publication <- function(base_size=14, base_family="Helvetica") {
   library(ggthemes)
   (theme_foundation(base_size=base_size, base_family=base_family)
-    + theme(plot.title = element_text(face = "bold",
-                                      size = rel(1.2), hjust = 0.5),
+    + theme(plot.title = element_text(face = "plain",
+                                      size = rel(1), hjust = 0.5),
             text = element_text(),
             panel.background = element_rect(colour = NA),
             plot.background = element_rect(colour = NA),
             panel.border = element_rect(colour = 'black'),
-            axis.title = element_text(face = "bold",size = rel(1)),
+            axis.title = element_text(face = "plain",size = rel(1)),
             axis.title.y = element_text(angle=90,vjust =2),
             axis.title.x = element_text(vjust = -0.2),
             axis.text = element_text(), 
