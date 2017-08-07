@@ -1,5 +1,5 @@
 # DriverPower
-version: 0.5.0dev
+version: 0.5.0
 
 ## Introduction
 
