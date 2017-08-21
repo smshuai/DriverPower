@@ -52,7 +52,7 @@ def run_bmr(model_name, X_path, y_path,
     y = read_response(y_path)
     feature_names = X.columns.values
     # use bins with both X and y
-    use_bins = np.intersect1d(X.index.values, y.index.values)
+    use_bins = np.intersect1d(X.index.values, y.loc[y.length>50,:].index.values)
     X = X.loc[use_bins, :].values  # X is np.array now
     y = y.loc[use_bins, :]
     if model_name == 'GLM':
