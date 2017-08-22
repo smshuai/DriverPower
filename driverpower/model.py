@@ -14,6 +14,7 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.linear_model import LassoCV, RandomizedLasso
 from sklearn.model_selection import KFold
 from sklearn.utils import resample
+from sklearn.metrics import r2_score, explained_variance_score
 from scipy.special import logit
 from driverpower.dataIO import read_feature, read_response, read_fi, read_param
 from driverpower.dataIO import save_scaler, save_fi, save_glm, save_gbm, save_model_info
@@ -53,6 +54,7 @@ def run_bmr(model_name, X_path, y_path,
     feature_names = X.columns.values
     # use bins with both X and y
     use_bins = np.intersect1d(X.index.values, y.loc[y.length>50,:].index.values)
+    logger.info('Use {} bins in model training'.format(use_bins.shape[0]))
     X = X.loc[use_bins, :].values  # X is np.array now
     y = y.loc[use_bins, :]
     if model_name == 'GLM':
@@ -262,6 +264,10 @@ def dispersion_test(yhat, y, k=100):
     """
     theta = 0
     pval = 0
+    # report metrics of training set
+    r2 = r2_score(y, yhat)
+    var_exp = explained_variance_score(y, yhat)
+    logger.info('Model metrics for training set: r2={:.2f}, Variance explained={:.2f}'.format(r2, var_exp))
     for i in range(k):
         y_sub, yhat_sub = resample(y, yhat, random_state=i)
         # (np.power((y - yhat), 2) - y) / yhat for Poisson regression
