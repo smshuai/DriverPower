@@ -12,6 +12,7 @@ import sys
 import os
 import numpy as np
 from scipy.stats import binom_test, nbinom
+from sklearn.metrics import r2_score, explained_variance_score
 from driverpower.dataIO import read_model_info, read_feature, read_response, read_gbm, read_glm, read_scaler, read_fs
 from driverpower.dataIO import save_result
 from driverpower.model import scale_data
@@ -73,6 +74,10 @@ def make_inference(model_dir, model_info_path,
     else:
         logger.error('Unknown background model: {}. Please use GLM or GBM'.format(model_name))
         sys.exit(1)
+    # print test set metrics
+    r2 = r2_score(y.nMut, y.nPred)
+    var_exp = explained_variance_score(y.nMut, y.nPred)
+    logger.info('Model metrics for test set: r2={:.2f}, Variance explained={:.2f}'.format(r2, var_exp))
     # burden test
     count = np.sqrt(y.nMut * y.nSample) if use_gmean else y.nMut
     offset = y.length * y.N + 1
