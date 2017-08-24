@@ -232,7 +232,9 @@ def functional_adjustment(y, fs_path, fs_cut, test_method,
         # Calculate weight for near-significant elements
         weight = score+'_weight'
         y[weight] = y[score] / threshold
+        # set 1 to the rest
         y.loc[y.raw_q>.25, weight] = 1
+        y[weight].fillna(1, inplace=True)
         # Calculate nMut * weight for near-significant elements
         n_score = score+'_nMut'
         y[n_score] = y[weight] * y.nMut
@@ -244,7 +246,8 @@ def functional_adjustment(y, fs_path, fs_cut, test_method,
         y[p_adj] = y.raw_p
         y.loc[y.raw_q<=.25, p_adj] = burden_test(count, y.loc[y.raw_q<=.25, 'nPred'],
                                                  offset, test_method, model_info, scale)
-        y[score+'_q'] = bh_fdr(y[p_adj])
+        q_adj = score+'_q'
+        y[q_adj] = bh_fdr(y[p_adj])
         avg_weight += y[weight]
         ct += 1
     # Use combined weights if more than 2 scores are used
