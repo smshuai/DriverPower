@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Make required response table from mutations, elements and optionally whitelist regions.
 All data should be in the BED format.
