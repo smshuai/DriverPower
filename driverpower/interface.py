@@ -58,7 +58,7 @@ def get_args():
     # Parameters
     par_bmr = parser_bmr.add_argument_group(title="parameters")
     par_bmr.add_argument('--method', dest='model_name', required=True, type=str,
-                         help='Algorithms to use', choices=['GLM', 'GBM'])
+                         help='Algorithms to use', choices=['Binomial', 'NegativeBinomial', 'GBM'])
     par_bmr.add_argument('--featImpCut', dest='fi_cut', required=False, type=float,
                          help='Cutoff of feature importance score [optional]', default=0.5)
     par_bmr.add_argument('--gbmParam', dest='param_path', required=False, type=str,

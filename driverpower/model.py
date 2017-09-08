@@ -10,6 +10,7 @@ import logging
 import sys
 import numpy as np
 import pandas as pd
+from scipy import stats
 from sklearn.preprocessing import RobustScaler
 from sklearn.linear_model import LassoCV, RandomizedLasso
 from sklearn.model_selection import KFold
@@ -17,7 +18,7 @@ from sklearn.utils import resample
 from sklearn.metrics import r2_score, explained_variance_score
 from scipy.special import logit
 from driverpower.dataIO import read_feature, read_response, read_fi, read_param
-from driverpower.dataIO import save_scaler, save_fi, save_glm, save_gbm, save_model_info
+from driverpower.dataIO import save_fi, save_gbm, save_model_info
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -59,7 +60,7 @@ def run_bmr(model_name, X_path, y_path,
     logger.info('Use {} bins in model training'.format(use_bins.shape[0]))
     X = X.loc[use_bins, :].values  # X is np.array now
     y = y.loc[use_bins, :]
-    if model_name == 'GLM':
+    if model_name in ('Binomial', 'NegativeBinomial'):
         # Scale data is necessary for GLM
         X, scaler = scale_data(X)
         if run_feature_select:
@@ -73,10 +74,12 @@ def run_bmr(model_name, X_path, y_path,
             use_features = fi.name.values[keep]
             X = X[:, np.isin(feature_names, use_features)]
         # Run GLM to get trained model
-        model = run_glm(X, y)
-        yhat = model.fittedvalues * y.length * y.N
+        model = run_glm(X, y, model_name)
+        yhat = model.fittedvalues * y.length * y.N if model_name == 'Binomial' else model.fittedvalues
+        # report metrics
+        report_metrics(yhat.values, y.nMut.values)
         # Run dispersion test
-        pval, theta = dispersion_test(yhat.values, y.nMut.values)
+        pval, theta = dispersion_test(yhat.values, y.nMut.values) if model_name == 'Binomial' else (0, model.scale)
         # remove actual data from GLM model; save space
         with warnings.catch_warnings():
             # https://github.com/statsmodels/statsmodels/issues/3563
@@ -120,6 +123,8 @@ def run_bmr(model_name, X_path, y_path,
         fi_scores_all.fillna(0, inplace=True)
         fi_scores = fi_scores_all.mean(axis=1).values  # get average score for each feature
         save_fi(fi_scores, fi_scores_all.index.values, project_name, out_dir)
+        # report metrics
+        report_metrics(yhat, y.nMut.values)
         # Run dispersion test
         pval, theta = dispersion_test(yhat, y.nMut.values)
         model_info = {'model_name': model_name,
@@ -131,7 +136,7 @@ def run_bmr(model_name, X_path, y_path,
                       'project_name': project_name,
                       'model_dir': out_dir}
     else:
-        logger.error('Unknown background model: {}. Please use GLM or GBM'.format(model_name))
+        logger.error('Unknown background model: {}. Please use Binomial, NegativeBinomial or GBM'.format(model_name))
         sys.exit(1)
     save_model_info(model_info, project_name, out_dir, model_name)
     logger.info('Job done!')
@@ -216,8 +221,8 @@ def run_rndlasso(X, y, alpha,
     return fi_scores
 
 
-def run_glm(X, y):
-    """ Train the binomial GLM
+def run_glm(X, y, model_name):
+    """ Train the binomial/negative binomial GLM
     
     Args:
         X (np.array): scaled X. 
@@ -227,14 +232,22 @@ def run_glm(X, y):
         sm.model: trained GLM models.
         
     """
-    logger.info('Building GLM')
-    # make two columns response (# success, # failure)
-    y_binom = np.zeros((y.shape[0], 2), dtype=np.int_)
-    y_binom[:,0] = y.nMut
-    y_binom[:,1] = y.length * y.N - y.nMut
     # Add const manually. sm.add_constant cannot add 1 for shape (1, n)
     X = np.c_[X, np.ones(X.shape[0])]
-    glm = sm.GLM(y_binom, X, family=sm.families.Binomial())
+    if model_name == 'Binomial':
+        logger.info('Building binomial GLM')
+        # make two columns response (# success, # failure)
+        y_binom = np.zeros((y.shape[0], 2), dtype=np.int_)
+        y_binom[:, 0] = y.nMut
+        y_binom[:, 1] = y.length * y.N - y.nMut
+        glm = sm.GLM(y_binom, X, family=sm.families.Binomial())
+    elif model_name == 'NegativeBinomial':
+        logger.info('Building negative binomial GLM')
+        # use nMut as response and length as exposure
+        glm = sm.GLM(y.nMut.values, X, family=sm.families.NegativeBinomial(), exposure=y.length.values)
+    else:
+        sys.stderr.write('Unknown GLM name {}. Must be Binomial or NegativeBinomial'.format(model_name))
+        sys.exit(1)
     model = glm.fit()
     return model
 
@@ -256,6 +269,14 @@ def run_gbm(dtrain, dvalid, param):
     return bst
 
 
+def report_metrics(yhat, y):
+    # report metrics of training set
+    r2 = r2_score(y, yhat)
+    var_exp = explained_variance_score(y, yhat)
+    r = stats.pearsonr(yhat, y)
+    logger.info('Model metrics for training set: r2={:.2f}, Variance explained={:.2f}, Pearson\'r={:.2f}'.format(r2, var_exp, r))
+
+
 def dispersion_test(yhat, y, k=100):
     """ Implement the regression based dispersion test with k re-sampling.
 
@@ -270,10 +291,6 @@ def dispersion_test(yhat, y, k=100):
     """
     theta = 0
     pval = 0
-    # report metrics of training set
-    r2 = r2_score(y, yhat)
-    var_exp = explained_variance_score(y, yhat)
-    logger.info('Model metrics for training set: r2={:.2f}, Variance explained={:.2f}'.format(r2, var_exp))
     for i in range(k):
         y_sub, yhat_sub = resample(y, yhat, random_state=i)
         # (np.power((y - yhat), 2) - y) / yhat for Poisson regression
