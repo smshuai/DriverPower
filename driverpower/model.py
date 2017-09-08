@@ -21,8 +21,10 @@ from driverpower.dataIO import save_scaler, save_fi, save_glm, save_gbm, save_mo
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
     import xgboost as xgb
     import statsmodels.api as sm
+    import statsmodels
 
 
 logger = logging.getLogger('MODEL')
@@ -75,6 +77,11 @@ def run_bmr(model_name, X_path, y_path,
         yhat = model.fittedvalues * y.length * y.N
         # Run dispersion test
         pval, theta = dispersion_test(yhat.values, y.nMut.values)
+        # remove actual data from GLM model; save space
+        with warnings.catch_warnings():
+            # https://github.com/statsmodels/statsmodels/issues/3563
+            warnings.filterwarnings('ignore', category=statsmodels.CacheWriteWarning)
+            model.remove_data()
         # Save model info.
         model_info = {'model_name': model_name,
                       'model': model,
