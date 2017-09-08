@@ -60,7 +60,6 @@ def run_bmr(model_name, X_path, y_path,
     if model_name == 'GLM':
         # Scale data is necessary for GLM
         X, scaler = scale_data(X)
-        save_scaler(scaler, project_name, out_dir)
         if run_feature_select:
             # Run lasso to get alpha
             alpha = run_lasso(X, y)
@@ -74,17 +73,17 @@ def run_bmr(model_name, X_path, y_path,
         # Run GLM to get trained model
         model = run_glm(X, y)
         yhat = model.fittedvalues * y.length * y.N
-        save_glm(model, project_name, out_dir)
         # Run dispersion test
         pval, theta = dispersion_test(yhat.values, y.nMut.values)
         # Save model info.
         model_info = {'model_name': model_name,
+                      'model': model,
+                      'scaler': scaler,
                       'pval_dispersion': pval,
                       'theta': theta,
                       'feature_names': feature_names,
                       'use_features': use_features,
-                      'project_name': project_name,
-                      'model_dir': out_dir}
+                      'project_name': project_name}
     elif model_name == 'GBM':
         # calculate base margin
         offset = np.array(np.log(y.length+1/y.N) + np.log(y.N))
