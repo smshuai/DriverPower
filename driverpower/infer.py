@@ -48,7 +48,6 @@ def make_inference(model_dir, model_info_path,
     """
     model_info = read_model_info(model_info_path)
     logger.info('Model type: {}'.format(model_info['model_name']))
-    model_dir = model_dir if model_dir is not None else model_info['model_dir']
     model_name = model_info['model_name']
     # Load data
     X = read_feature(X_path)

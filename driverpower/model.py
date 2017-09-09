@@ -79,7 +79,7 @@ def run_bmr(model_name, X_path, y_path,
         # report metrics
         report_metrics(yhat, y.nMut.values)
         # Run dispersion test
-        pval, theta = dispersion_test(yhat.values, y.nMut.values) if model_name == 'Binomial' else (0, model.scale)
+        pval, theta = dispersion_test(yhat, y.nMut.values) if model_name == 'Binomial' else (0, model.scale)
         # remove actual data from GLM model; save space
         with warnings.catch_warnings():
             # https://github.com/statsmodels/statsmodels/issues/3563
