@@ -273,7 +273,7 @@ def report_metrics(yhat, y):
     # report metrics of training set
     r2 = r2_score(y, yhat)
     var_exp = explained_variance_score(y, yhat)
-    r = stats.pearsonr(yhat, y)
+    r = stats.pearsonr(yhat, y)[0]
     logger.info('Model metrics for training set: r2={:.2f}, Variance explained={:.2f}, Pearson\'r={:.2f}'.format(r2, var_exp, r))
 
 
