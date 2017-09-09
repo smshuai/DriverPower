@@ -75,9 +75,9 @@ def run_bmr(model_name, X_path, y_path,
             X = X[:, np.isin(feature_names, use_features)]
         # Run GLM to get trained model
         model = run_glm(X, y, model_name)
-        yhat = model.fittedvalues * y.length * y.N if model_name == 'Binomial' else model.fittedvalues
+        yhat = (model.fittedvalues * y.length * y.N).values if model_name == 'Binomial' else model.fittedvalues
         # report metrics
-        report_metrics(yhat.values, y.nMut.values)
+        report_metrics(yhat, y.nMut.values)
         # Run dispersion test
         pval, theta = dispersion_test(yhat.values, y.nMut.values) if model_name == 'Binomial' else (0, model.scale)
         # remove actual data from GLM model; save space
