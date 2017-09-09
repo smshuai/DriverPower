@@ -161,8 +161,8 @@ def burden_test(count, pred, offset, test_method, model_info, s):
     if test_method == 'negative_binomial':
         logger.info('Using negative binomial test with s={}, theta={}'.format(s, model_info['theta']))
         theta = s * model_info['theta']
-        pvals = np.array([negbinom_test(x, mu, theta)
-                          for x, mu in zip(count, pred)])
+        pvals = np.array([negbinom_test(x, mu, theta, o)
+                          for x, mu, o in zip(count, pred, offset)])
     elif test_method == 'binomial':
         logger.info('Using binomial test')
         pvals = np.array([binom_test(x, n, p, 'greater')
@@ -174,7 +174,7 @@ def burden_test(count, pred, offset, test_method, model_info, s):
     return pvals
 
 
-def negbinom_test(x, mu, theta):
+def negbinom_test(x, mu, theta, offset):
     """ Test with negative binomial distribution
 
     Convert mu and theta to scipy parameters n and p:
@@ -191,6 +191,8 @@ def negbinom_test(x, mu, theta):
         float: p-value from NB CDF. pval = 1 - F(n<x)
 
     """
+    if offset == 1:  # element with 0 bp
+        return 1
     p = 1 / (theta * mu + 1)
     n = mu * p / (1 - p)
     pval = 1 - nbinom.cdf(x, n, p, loc=1)
