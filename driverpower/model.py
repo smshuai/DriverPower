@@ -244,7 +244,7 @@ def run_glm(X, y, model_name):
     elif model_name == 'NegativeBinomial':
         logger.info('Building negative binomial GLM')
         # use nMut as response and length*N as exposure
-        glm = sm.GLM(y.nMut.values, X, family=sm.families.NegativeBinomial(), exposure=y.length.values*y.N.values)
+        glm = sm.GLM(y.nMut.values, X, family=sm.families.NegativeBinomial(), exposure=y.length.values*y.N.values+1)
     else:
         sys.stderr.write('Unknown GLM name {}. Must be Binomial or NegativeBinomial'.format(model_name))
         sys.exit(1)

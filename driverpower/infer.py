@@ -105,7 +105,7 @@ def predict_with_glm(X, y, model_dir, model_info):
     if model_info['model_name'] == 'Binomial':
         pred = np.array(model_info['model'].predict(X) * y.length * y.N)
     elif model_info['model_name'] == 'NegativeBinomial':
-        pred = np.array(model_info['model'].predict(X, exposure=(y.length*y.N).values))
+        pred = np.array(model_info['model'].predict(X, exposure=(y.length*y.N).values+1))
     else:
         sys.stderr.write('Wrong model name in model info: {}. Need Binomial or NegativeBinomial.'.format(model_info['model_name']))
         sys.exit(1)
