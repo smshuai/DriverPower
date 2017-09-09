@@ -12,10 +12,9 @@ import sys
 import os
 import numpy as np
 from scipy.stats import binom_test, nbinom
-from sklearn.metrics import r2_score, explained_variance_score
-from driverpower.dataIO import read_model_info, read_feature, read_response, read_gbm, read_glm, read_scaler, read_fs
+from driverpower.dataIO import read_model_info, read_feature, read_response, read_gbm, read_fs
 from driverpower.dataIO import save_result
-from driverpower.model import scale_data
+from driverpower.model import scale_data, report_metrics
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -61,23 +60,20 @@ def make_inference(model_dir, model_info_path,
     X = X.loc[use_bins, :].values  # X is np.array now
     y = y.loc[use_bins, :]
     # scale X for GLM
-    if model_name == 'GLM':
-        scaler_path = os.path.join(model_info['model_dir'], model_info['project_name'] + '.feature_scaler.pkl')
-        scaler = read_scaler(scaler_path)
+    if model_name in ('Binomial', 'NegativeBinomial'):
+        scaler = model_info['scaler']
         X = scale_data(X, scaler)
         X = X[:, np.isin(model_info['feature_names'], model_info['use_features'])]
     # make prediction
-    if model_name == 'GLM':
+    if model_name in ('Binomial', 'NegativeBinomial'):
         y['nPred'] = predict_with_glm(X, y, model_dir, model_info)
     elif model_name == 'GBM':
         y['nPred'] = predict_with_gbm(X, y, model_dir, model_info)
     else:
-        logger.error('Unknown background model: {}. Please use GLM or GBM'.format(model_name))
+        logger.error('Unknown background model: {}. Please use Binomial, NegativeBinomial or GBM'.format(model_name))
         sys.exit(1)
     # print test set metrics
-    r2 = r2_score(y.nMut, y.nPred)
-    var_exp = explained_variance_score(y.nMut, y.nPred)
-    logger.info('Model metrics for test set: r2={:.2f}, Variance explained={:.2f}'.format(r2, var_exp))
+    report_metrics(y.nPred.values, y.nMut.values)
     # burden test
     count = np.sqrt(y.nMut * y.nSample) if use_gmean else y.nMut
     offset = y.length * y.N + 1
@@ -105,13 +101,15 @@ def predict_with_glm(X, y, model_dir, model_info):
         np.array: array of predictions.
 
     """
-    assert model_info['model_name'] == 'GLM',\
-        'Wrong model name in model info: {}. Need GLM.'.format(model_info['model_name'])
-    model_path = os.path.join(model_dir, model_info['project_name']+'.GLM.pkl')
-    model = read_glm(model_path)
     # Add const. to X
     X = np.c_[X, np.ones(X.shape[0])]
-    pred = np.array(model.predict(X) * y.length * y.N)
+    if model_info['model_name'] == 'Binomial':
+        pred = np.array(model_info['model'].predict(X) * y.length * y.N)
+    elif model_info['model_name'] == 'NegativeBinomial':
+        pred = np.array(model_info['model'].predict(X))
+    else:
+        sys.stderr.write('Wrong model name in model info: {}. Need Binomial or NegativeBinomial.'.format(model_info['model_name']))
+        sys.exit(1)
     return pred
 
 
