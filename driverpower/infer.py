@@ -29,7 +29,7 @@ def make_inference(model_dir, model_info_path,
                    X_path, y_path,
                    fs_path=None, fs_cut=None,
                    test_method='auto', scale=1, use_gmean=True,
-                   project_name='DriverPower', out_dir='./output'):
+                   project_name= None, out_dir='./output'):
     """ Main wrapper function for inference
 
     Args:
@@ -49,6 +49,10 @@ def make_inference(model_dir, model_info_path,
     model_info = read_model_info(model_info_path)
     logger.info('Model type: {}'.format(model_info['model_name']))
     model_name = model_info['model_name']
+    if project_name is None:
+        project_name = model_info['project_name']  # use old project name if it's not provided
+    # check/make output dir
+    os.makedirs(out_dir, exist_ok=True)
     # Load data
     X = read_feature(X_path)
     # order X by feature names of training data

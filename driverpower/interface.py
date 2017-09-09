@@ -104,7 +104,7 @@ def get_args():
     par_infer.add_argument('--modelDir', dest='model_dir', required=False, type=str,
                            help='Directory of the trained model(s) [optional]', default=None)
     par_infer.add_argument('--name', dest='project_name', required=False, type=str,
-                           help='Identifier for output files [optional]', default='DriverPower')
+                           help='Identifier for output files [optional]', default=None)
     par_infer.add_argument('--outDir', dest='out_dir', type=str,
                            help='Directory of output files [optional]', default='./output/')
     args = parser.parse_args()
