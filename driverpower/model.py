@@ -18,7 +18,7 @@ from sklearn.utils import resample
 from sklearn.metrics import r2_score, explained_variance_score
 from scipy.special import logit
 from driverpower.dataIO import read_feature, read_response, read_fi, read_param
-from driverpower.dataIO import save_fi, save_gbm, save_model_info
+from driverpower.dataIO import save_fi, save_prediction, save_model_info
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -34,7 +34,8 @@ logger = logging.getLogger('MODEL')
 def run_bmr(model_name, X_path, y_path,
             fi_cut=0.5, fi_path=None,
             kfold=3, param_path=None,
-            project_name='DriverPower', out_dir='./DriverPower.output/'):
+            project_name='DriverPower', out_dir='./DriverPower.output/',
+            save_pred=False):
     """ Wrapper function for BMR model.
 
     Args:
@@ -46,6 +47,7 @@ def run_bmr(model_name, X_path, y_path,
         kfold (int): K fold CV for GBM
         project_name (str): name of the project
         out_dir (str): directory for saving output files
+        save_pred (bool): save the prediction for training set
 
     Returns:
 
@@ -78,6 +80,8 @@ def run_bmr(model_name, X_path, y_path,
         yhat = (model.fittedvalues * y.length * y.N).values if model_name == 'Binomial' else model.fittedvalues
         # report metrics
         report_metrics(yhat, y.nMut.values)
+        if save_pred:
+            save_prediction(yhat, y, project_name, out_dir, model_name)
         # Run dispersion test
         pval, theta = dispersion_test(yhat, y.nMut.values) if model_name == 'Binomial' else (0, model.scale)
         # remove actual data from GLM model; save space
@@ -103,6 +107,8 @@ def run_bmr(model_name, X_path, y_path,
         yhat = np.zeros(y.shape[0])
         k = 1  # idx of model fold
         fi_scores_all = pd.DataFrame(np.nan, columns=['fold' + str(i) for i in range(1, kfold+1)], index=feature_names)
+        # model dict (key is the fold and value is the booster
+        model = dict()
         for train, valid in ks.split(range(X.shape[0])):
             logger.info('Training GBM fold {}/{}'.format(k, kfold))
             # make xgb train and valid data
@@ -112,12 +118,13 @@ def run_bmr(model_name, X_path, y_path,
             Xtrain.set_base_margin(offset[train])
             Xvalid.set_base_margin(offset[valid])
             # train the model
-            model = run_gbm(Xtrain, Xvalid, param)
-            save_gbm(model, k, project_name, out_dir)
+            bst = run_gbm(Xtrain, Xvalid, param)
+            # add the bst to model
+            model[k] = bst
             # predict on valid
-            yhat[valid] = model.predict(Xvalid)
+            yhat[valid] = bst.predict(Xvalid)
             # get feature importance score
-            fi_scores_all['fold' + str(k)] = pd.Series(model.get_score(importance_type='gain'))
+            fi_scores_all['fold' + str(k)] = pd.Series(bst.get_score(importance_type='gain'))
             k += 1
         # Save feature importance result
         fi_scores_all.fillna(0, inplace=True)
@@ -125,9 +132,12 @@ def run_bmr(model_name, X_path, y_path,
         save_fi(fi_scores, fi_scores_all.index.values, project_name, out_dir)
         # report metrics
         report_metrics(yhat, y.nMut.values)
+        if save_pred:
+            save_prediction(yhat, y, project_name, out_dir, model_name)
         # Run dispersion test
         pval, theta = dispersion_test(yhat, y.nMut.values)
         model_info = {'model_name': model_name,
+                      'model': model,
                       'pval_dispersion': pval,
                       'theta': theta,
                       'kfold': kfold,

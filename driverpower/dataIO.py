@@ -245,6 +245,12 @@ def read_gbm(k, project_name, out_dir, param):
     bst = xgb.Booster(params=param, model_file=path)  # param is keeping to bypass the max_delta_step bug.
     return bst
 
+def save_prediction(ypred, y, project_name, out_dir, model_name):
+    y['pred'] = ypred
+    path = os.path.join(out_dir, '{}.{}.model.train.pred.tsv'.format(project_name, model_name))
+    y.to_csv(path, sep='\t')
+    return
+
 
 def read_model_info(path):
     with open(path, 'rb') as f:

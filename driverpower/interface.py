@@ -65,6 +65,8 @@ def get_args():
                          help='Path to the parameter pickle [optional]', default=None)
     par_bmr.add_argument('--gbmFold', dest='kfold', required=False, type=int,
                          help='Train gbm with k-fold, k>=2 [optional]', default=3)
+    par_bmr.add_argument('--predict', dest='pred', required=False, type=bool,
+                         help='Output the prediction for training set [optional]', default=False)
     par_bmr.add_argument('--name', dest='project_name', required=False, type=str,
                          help='Identifier for output files [optional]', default='DriverPower')
     par_bmr.add_argument('--modelDir', dest='out_dir', type=str,
@@ -130,6 +132,7 @@ def main():
                 fi_cut=args.fi_cut,
                 fi_path=args.fi_path,
                 kfold=args.kfold,
+                save_pred=args.pred,
                 param_path=args.param_path,
                 project_name=args.project_name,
                 out_dir=args.out_dir)
