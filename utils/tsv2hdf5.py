@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ Convert a tsv feature table to hdf5 for faster loading
 $ tsv2hdf5.py FEATURE OUT_PATH [USE_BINS]
 """

@@ -18,7 +18,7 @@ from sklearn.utils import resample
 from sklearn.metrics import r2_score, explained_variance_score
 from scipy.special import logit
 from driverpower.dataIO import read_feature, read_response, read_fi, read_param
-from driverpower.dataIO import save_fi, save_prediction, save_model_info
+from driverpower.dataIO import save_fi, save_prediction, save_model
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -146,7 +146,7 @@ def run_bmr(model_name, X_path, y_path,
     else:
         logger.error('Unknown background model: {}. Please use Binomial, NegativeBinomial or GBM'.format(model_name))
         sys.exit(1)
-    save_model_info(model_info, project_name, out_dir, model_name)
+    save_model(model_info, project_name, out_dir, model_name)
     logger.info('Job done!')
 
 

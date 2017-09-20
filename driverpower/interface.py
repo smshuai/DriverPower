@@ -87,8 +87,8 @@ def get_args():
                            help='Path to the test feature table')
     dat_infer.add_argument('--response', dest='y_path', required=True, type=str,
                            help='Path to the test response table')
-    dat_infer.add_argument('--modelInfo', dest='model_info_path', required=True, type=str,
-                           help='Path to the model information')
+    dat_infer.add_argument('--model', dest='model_path', required=True, type=str,
+                           help='Path to the model pickle')
     dat_infer.add_argument('--funcScore', dest='fs_path', required=False, type=str,
                            help='Path to the functional score table [optional]', default=None)
     # Parameters
@@ -137,8 +137,7 @@ def main():
                 project_name=args.project_name,
                 out_dir=args.out_dir)
     elif args.subcommand == 'infer':
-        make_inference(model_dir=args.model_dir,
-                       model_info_path=args.model_info_path,
+        make_inference(model_path=args.model_path,
                        X_path=args.X_path,
                        y_path=args.y_path,
                        fs_path=args.fs_path,
@@ -148,6 +147,7 @@ def main():
                        use_gmean=args.use_gmean,
                        project_name=args.project_name,
                        out_dir=args.out_dir)
+
 
 if __name__ == '__main__':
     main()
