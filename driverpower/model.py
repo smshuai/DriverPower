@@ -8,6 +8,7 @@ Two types of BMR model are supported:
 
 import logging
 import sys
+import gc
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -126,6 +127,10 @@ def run_bmr(model_name, X_path, y_path,
             # get feature importance score
             fi_scores_all['fold' + str(k)] = pd.Series(bst.get_score(importance_type='gain'))
             k += 1
+            # delete used data
+            del Xtrain, Xvalid
+            # run gc
+            gc.collect()
         # Save feature importance result
         fi_scores_all.fillna(0, inplace=True)
         fi_scores = fi_scores_all.mean(axis=1).values  # get average score for each feature
