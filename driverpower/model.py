@@ -8,7 +8,6 @@ Two types of BMR model are supported:
 
 import logging
 import sys
-import gc
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -59,7 +58,7 @@ def run_bmr(model_name, X_path, y_path,
     y = read_response(y_path)
     feature_names = X.columns.values
     # use bins with both X and y
-    use_bins = np.intersect1d(X.index.values, y.loc[y.length>50,:].index.values)
+    use_bins = np.intersect1d(X.index.values, y.loc[y.length>=500,:].index.values)
     logger.info('Use {} bins in model training'.format(use_bins.shape[0]))
     X = X.loc[use_bins, :].values  # X is np.array now
     y = y.loc[use_bins, :]
@@ -129,8 +128,6 @@ def run_bmr(model_name, X_path, y_path,
             k += 1
             # delete used data
             del Xtrain, Xvalid
-            # run gc
-            gc.collect()
         # Save feature importance result
         fi_scores_all.fillna(0, inplace=True)
         fi_scores = fi_scores_all.mean(axis=1).values  # get average score for each feature
