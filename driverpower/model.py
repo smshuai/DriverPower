@@ -118,16 +118,12 @@ def run_bmr(model_name, X_path, y_path,
             Xtrain.set_base_margin(offset[train])
             Xvalid.set_base_margin(offset[valid])
             # train the model
-            bst = run_gbm(Xtrain, Xvalid, param)
-            # add the bst to model
-            model[k] = bst
+            model[k] = run_gbm(Xtrain, Xvalid, param)
             # predict on valid
-            yhat[valid] = bst.predict(Xvalid)
+            yhat[valid] = model[k].predict(Xvalid)
             # get feature importance score
-            fi_scores_all['fold' + str(k)] = pd.Series(bst.get_score(importance_type='gain'))
+            fi_scores_all['fold' + str(k)] = pd.Series(model[k].get_score(importance_type='gain'))
             k += 1
-            # delete used data
-            del Xtrain, Xvalid
         # Save feature importance result
         fi_scores_all.fillna(0, inplace=True)
         fi_scores = fi_scores_all.mean(axis=1).values  # get average score for each feature
