@@ -45,6 +45,7 @@ def run_bmr(model_name, X_path, y_path,
         fi_cut (float): cutoff for feature importance
         fi_path (str): path to the feature importance
         kfold (int): K fold CV for GBM
+        param_path (str): path to the GBM parameters pkl
         project_name (str): name of the project
         out_dir (str): directory for saving output files
         save_pred (bool): save the prediction for training set
@@ -109,7 +110,7 @@ def run_bmr(model_name, X_path, y_path,
         fi_scores_all = pd.DataFrame(np.nan, columns=['fold' + str(i) for i in range(1, kfold+1)], index=feature_names)
         # model dict (key is the fold and value is the booster
         model = dict()
-        for train, valid in ks.split(range(X.shape[0])):
+        for valid, train in ks.split(range(X.shape[0])):
             logger.info('Training GBM fold {}/{}'.format(k, kfold))
             # make xgb train and valid data
             Xtrain = xgb.DMatrix(data=X[train, :], label=y.nMut.values[train], feature_names=feature_names)

@@ -9,14 +9,11 @@ import os
 import pkg_resources
 import pandas as pd
 import numpy as np
-from sklearn.externals import joblib
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     import xgboost as xgb
-    import statsmodels
-    from statsmodels.iolib import smpickle
 
 
 logger = logging.getLogger('IO')
