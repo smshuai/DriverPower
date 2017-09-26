@@ -132,6 +132,7 @@ def predict_with_gbm(X, y, model):
     kfold = model['kfold']
     pred = np.zeros(y.shape[0])
     for k in range(1, kfold+1):
+        model['model'][k].set_param(model['params'])  # Bypass a bug of dumping without max_delta_step
         pred += model['model'][k].predict(testData)
     pred = pred / kfold
     return pred
