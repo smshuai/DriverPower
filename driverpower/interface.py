@@ -103,8 +103,6 @@ def get_args():
                            default=None)
     par_infer.add_argument('--geoMean', dest='use_gmean', required=False, type=bool,
                            help='Use geometric mean in test [optional]', default=True)
-    par_infer.add_argument('--modelDir', dest='model_dir', required=False, type=str,
-                           help='Directory of the trained model(s) [optional]', default=None)
     par_infer.add_argument('--name', dest='project_name', required=False, type=str,
                            help='Identifier for output files [optional]', default=None)
     par_infer.add_argument('--outDir', dest='out_dir', type=str,

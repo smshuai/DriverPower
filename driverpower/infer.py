@@ -41,6 +41,7 @@ def make_inference(model_path,
         test_method (str): 'binomial', 'negative_binomial' or 'auto'.
         scale (float): scaling factor used in negative binomial distribution.
         use_gmean (bool): use geometric mean in test.
+        out_dir (str): output file directory
 
     Returns:
 
