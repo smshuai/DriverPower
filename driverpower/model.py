@@ -58,8 +58,19 @@ def run_bmr(model_name, X_path, y_path,
     X = read_feature(X_path, use_features)
     y = read_response(y_path)
     feature_names = X.columns.values
+    # down-sampling 0 mutation elements
+    pct_zero = y[y.nMut == 0].shape[0] / y.shape[0] * 100
+    pct_req = 0.1
+    if pct_zero > 10:
+        logger.info('{:.2f}% elements have zero mutation. Downsampling to {}%'.format(pct_zero, pct_req*100))
+        ct_req = int(y.shape[0] * pct_req)
+        y_nonzero = y[y.nMut>0]
+        y_zero = y[y.nMut==0]
+        y_zero = y_zero.sample(n=ct_req, replace=False)
+        y = pd.concat([y_nonzero, y_zero])
+        del y_nonzero, y_zero
     # use bins with both X and y
-    use_bins = np.intersect1d(X.index.values, y.loc[y.length>=500,:].index.values)
+    use_bins = np.intersect1d(X.index.values, y.loc[y.length>=100, :].index.values)
     logger.info('Use {} bins in model training'.format(use_bins.shape[0]))
     X = X.loc[use_bins, :].values  # X is np.array now
     y = y.loc[use_bins, :]
