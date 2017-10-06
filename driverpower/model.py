@@ -121,21 +121,28 @@ def run_bmr(model_name, X_path, y_path,
         fi_scores_all = pd.DataFrame(np.nan, columns=['fold' + str(i) for i in range(1, kfold+1)], index=feature_names)
         # model dict (key is the fold and value is the booster
         model = dict()
+        X_dict = dict()  # dict to hold X for each fold (key)
+        X_idx = dict()  # dict to hold index of X for each fold (key)
+        # split data into k fold
         for valid, train in ks.split(range(X.shape[0])):
-            logger.info('Training GBM fold {}/{}'.format(k, kfold))
-            # make xgb train and valid data
-            Xtrain = xgb.DMatrix(data=X[train, :], label=y.nMut.values[train], feature_names=feature_names)
-            Xvalid = xgb.DMatrix(data=X[valid, :], label=y.nMut.values[valid], feature_names=feature_names)
+            logger.info('Split data fold {}/{}'.format(k, kfold))
+            X_dict[k] = xgb.DMatrix(data=X[train, :], label=y.nMut.values[train], feature_names=feature_names)
+            X_idx[k] = train
             # add offset
-            Xtrain.set_base_margin(offset[train])
-            Xvalid.set_base_margin(offset[valid])
-            # train the model
-            model[k] = run_gbm(Xtrain, Xvalid, param)
+            X_dict[k].set_base_margin(offset[train])
+            k += 1
+        del X
+        # train and predict
+        for k in range(1, kfold+1):
+            logger.info('Training GBM fold {}/{}'.format(k, kfold))
+            # data fold used in validation
+            k_valid = k + 1 if k < kfold else 1
+            # train with fold k and valid with k_valid
+            model[k] = run_gbm(X_dict[k], X_dict[k_valid], param)
             # predict on valid
-            yhat[valid] = model[k].predict(Xvalid)
+            yhat[X_idx[k_valid]] = model[k].predict(X_dict[k_valid])
             # get feature importance score
             fi_scores_all['fold' + str(k)] = pd.Series(model[k].get_score(importance_type='gain'))
-            k += 1
         # Save feature importance result
         fi_scores_all.fillna(0, inplace=True)
         fi_scores = fi_scores_all.mean(axis=1).values  # get average score for each feature
