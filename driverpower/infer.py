@@ -253,9 +253,10 @@ def functional_adjustment(y, fs_path, fs_cut, test_method,
         ct += 1
     # Use combined weights if more than 2 scores are used
     if ct >= 2:
+        logger.info('Using average weights')
         y['avg_weight'] = avg_weight / ct
-        y['avg_p'] = y.raw_p
         y['avg_nMut'] = y.avg_weight * y.nMut
+        y['avg_p'] = y.raw_p
         count = np.sqrt(y.loc[y.raw_q<=.25, 'avg_nMut'] * y.loc[y.raw_q<=.25, 'nSample'])\
             if use_gmean else y.loc[y.raw_q<=.25, 'avg_nMut']
         offset = y.loc[y.raw_q<=.25, 'length'] * y.loc[y.raw_q<=.25, 'N'] + 1
