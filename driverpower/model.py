@@ -61,7 +61,7 @@ def run_bmr(model_name, X_path, y_path,
     # down-sampling 0 mutation elements
     pct_zero = y[y.nMut == 0].shape[0] / y.shape[0] * 100
     pct_req = 0.1
-    if pct_zero > 10:
+    if pct_zero > 99:  # This disable down-sampling
         logger.info('{:.2f}% elements have zero mutation. Downsampling to {}%'.format(pct_zero, pct_req*100))
         ct_req = int(y.shape[0] * pct_req)
         y_nonzero = y[y.nMut>0]
