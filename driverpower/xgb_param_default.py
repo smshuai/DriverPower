@@ -3,7 +3,7 @@ import pickle
 # Default parameter for XGBoost used in DriverPower
 param = {'max_depth': 8,
          'eta': 0.05,  # learning rate
-         'subsample': 0.1,
+         'subsample': 0.6,
          'nthread': 15,  # number of threads; recommend using the number of available CPUs
          'objective': 'count:poisson',
          'max_delta_step': 1.2,
