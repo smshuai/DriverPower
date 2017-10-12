@@ -53,6 +53,8 @@ def make_inference(model_path,
         project_name = model['project_name']  # use old project name if it's not provided
     # check/make output dir
     os.makedirs(out_dir, exist_ok=True)
+    # print out_dir, project_name
+    logger.info('Results will be saved to {} with prefix {}'.format(out_dir, project_name))
     # Load data
     X = read_feature(X_path)
     # order X by feature names of training data
