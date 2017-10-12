@@ -99,7 +99,7 @@ def get_args():
                            help='Scaling factor for theta in negative binomial distribution [optional]', default=1)
     par_infer.add_argument('--funcScoreCut', dest='fs_cut', required=False, type=str,
                            help='Score name:cutoff pairs for all scores e.g.,'
-                                '"CADD:0.01;DANN:0.03;EIGEN:0.03" [optional]',
+                                '"CADD:0.01,DANN:0.03,EIGEN:0.03" [optional]',
                            default=None)
     par_infer.add_argument('--geoMean', dest='use_gmean', required=False, type=bool,
                            help='Use geometric mean in test [optional]', default=True)
