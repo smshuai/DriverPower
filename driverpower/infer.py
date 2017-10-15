@@ -238,12 +238,11 @@ def functional_adjustment(y, fs_path, fs_cut, test_method,
         # set 1 to the rest
         y.loc[y.raw_q>.25, weight] = 1
         y[weight].fillna(1, inplace=True)
-        # Calculate nMut * weight for near-significant elements
+        # Calculate sqrt(nMut*nSample) * weight for near-significant elements
         n_score = score+'_nMut'
-        y[n_score] = y[weight] * y.nMut
+        y[n_score] = y[weight] * np.sqrt(y.nMut * y.nSample) if use_gmean else y[weight] * y.nMut
         # Calculate p-values (q-values) for near-significant elements
-        count = np.sqrt(y.loc[y.raw_q<=.25, n_score] * y.loc[y.raw_q<=.25, 'nSample'])\
-            if use_gmean else y.loc[y.raw_q<=.25, n_score]
+        count = y.loc[y.raw_q<=.25, n_score]
         offset = y.loc[y.raw_q<=.25, 'length'] * y.loc[y.raw_q<=.25, 'N'] + 1
         p_adj = score+'_p'
         y[p_adj] = y.raw_p
@@ -257,10 +256,9 @@ def functional_adjustment(y, fs_path, fs_cut, test_method,
     if ct >= 2:
         logger.info('Using average weights')
         y['avg_weight'] = avg_weight / ct
-        y['avg_nMut'] = y.avg_weight * y.nMut
+        y['avg_nMut'] = y.avg_weight * np.sqrt(y.nMut * y.nSample) if use_gmean else y.avg_weight * y.nMut
         y['avg_p'] = y.raw_p
-        count = np.sqrt(y.loc[y.raw_q<=.25, 'avg_nMut'] * y.loc[y.raw_q<=.25, 'nSample'])\
-            if use_gmean else y.loc[y.raw_q<=.25, 'avg_nMut']
+        count = y.loc[y.raw_q<=.25, 'avg_nMut']
         offset = y.loc[y.raw_q<=.25, 'length'] * y.loc[y.raw_q<=.25, 'N'] + 1
         y.loc[y.raw_q<=.25, 'avg_p'] = burden_test(count, y.loc[y.raw_q<=.25, 'nPred'],
                                                    offset, test_method, model, scale)
