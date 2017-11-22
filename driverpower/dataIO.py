@@ -9,14 +9,11 @@ import os
 import pkg_resources
 import pandas as pd
 import numpy as np
-from sklearn.externals import joblib
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     import xgboost as xgb
-    import statsmodels
-    from statsmodels.iolib import smpickle
 
 
 logger = logging.getLogger('IO')
@@ -108,38 +105,6 @@ def read_fs(path, fs_cut):
     return fs
 
 
-def read_scaler(path):
-    """ Load the scaler from disk.
-
-    Args:
-        path (str): path to the pkl.
-
-    Returns:
-        RobustScaler.
-
-    """
-    scaler = joblib.load(path)
-    return scaler
-
-
-
-def save_scaler(scaler, project_name, out_dir):
-    """ Dump the scaler to disk.
-
-    Args:
-        scaler (RobustScaler):
-        project_name (str): name of the project, prefix of the output file.
-        out_dir (str): output directory.
-
-    Returns:
-        None.
-
-    """
-    path = os.path.join(out_dir, project_name+'.feature_scaler.pkl')
-    joblib.dump(scaler, path)
-    return
-
-
 def read_fi(path, cutoff=0.5):
     """Read feature importance table in TSV format.
 
@@ -183,41 +148,6 @@ def save_fi(fi_scores, feature_names, project_name, out_dir):
     return res
 
 
-def read_glm(path):
-    """ Load the saved GLM model
-
-    Args:
-        path (str): path to the model
-
-    Returns:
-
-    """
-    model = smpickle.load_pickle(path)
-    return model
-
-
-def save_glm(model, project_name, out_dir):
-    """ Save the trained GLM model
-
-    When saving the model, all training data are removed to save space.
-
-    Args:
-        model (sm GLMResultsWrapper): trained GLM model
-        project_name (str): name of the project, prefix of the output file.
-        out_dir (str): output directory.
-
-    Returns:
-        None.
-
-    """
-    path = os.path.join(out_dir, project_name+'.GLM.model.pkl')
-    with warnings.catch_warnings():
-        # https://github.com/statsmodels/statsmodels/issues/3563
-        warnings.filterwarnings('ignore', category=statsmodels.CacheWriteWarning)
-        model.save(path, remove_data=True)
-    return
-
-
 def read_param(path=None):
     """ Load the parameter for xgboost.
 
@@ -234,28 +164,23 @@ def read_param(path=None):
     return param
 
 
-def save_gbm(bst, k, project_name, out_dir):
-    path = os.path.join(out_dir, '{}.GBM.model.fold{}'.format(project_name, k))
-    bst.save_model(path)
+def save_prediction(ypred, y, project_name, out_dir, model_name):
+    y['pred'] = ypred
+    path = os.path.join(out_dir, '{}.{}.model.train.pred.tsv'.format(project_name, model_name))
+    y.to_csv(path, sep='\t')
     return
 
 
-def read_gbm(k, project_name, out_dir, param):
-    path = os.path.join(out_dir, '{}.GBM.model.fold{}'.format(project_name, k))
-    bst = xgb.Booster(params=param, model_file=path)  # param is keeping to bypass the max_delta_step bug.
-    return bst
-
-
-def read_model_info(path):
+def read_model(path):
     with open(path, 'rb') as f:
-        model_info = pickle.load(f)
-    return model_info
+        model = pickle.load(f)
+    return model
 
 
-def save_model_info(model_info, project_name, out_dir, model_name):
-    path = os.path.join(out_dir, '{}.{}.model_info.pkl'.format(project_name, model_name))
+def save_model(model, project_name, out_dir, model_name):
+    path = os.path.join(out_dir, '{}.{}.model.pkl'.format(project_name, model_name))
     with open(path, 'wb') as f:
-        pickle.dump(model_info, f)
+        pickle.dump(model, f)
 
 
 def save_result(y, project_name, out_dir):
