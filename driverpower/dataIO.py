@@ -69,7 +69,7 @@ def read_feature(path, use_features=None):
 def read_response(path):
     """Read y (response) table in TSV format.
     
-    y should have exactly four columns: binID, length, nMut, nSample, N
+    y should have exactly five columns: binID, length, nMut, nSample, N
     
     Args:
         path (str): Path to the file.

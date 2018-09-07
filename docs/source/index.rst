@@ -5,6 +5,7 @@ DriverPower: a tool for computational cancer driver discovery
     :maxdepth: 2
     :caption: Documentation
 
+    tutorial
     install
     quick_start
     command_line

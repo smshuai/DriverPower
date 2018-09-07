@@ -8,6 +8,6 @@
 *.pyc
 *.Rhistory
 *.log
-
+/venv/
 /docs/build
 *.html
