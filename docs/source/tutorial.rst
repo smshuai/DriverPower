@@ -1,5 +1,5 @@
-Tutorial with an working example
-===================================
+Tutorial with example data
+==========================
 
 DriverPower aims to identify cancer driver candidates from **somatic** variants of a tumour cohort. The minimal number of
 samples required in the PCAWG study is 15. However, more samples will have more power to detect rare driver events.
@@ -23,14 +23,14 @@ report a p-value and q-value associated with that element.
 Our example data are hosted on `figshare
 <https://figshare.com/projects/DriverPower_Dataset/36065>`_, on which you can find the following files:
 
-1. random_mutations.tsv.gz [14 MB]
+1. random_mutations.tsv.gz [14 MB]: randomized whole-genome somatic mutations from 50 patients.
 2. train_feature.hdf5.part1 [4 GB]
 3. train_feature.hdf5.part2 [4 GB]
 4. train_feature.hdf5.part3 [900 MB]
 5. test_feature.hdf5 [1.4 GB]
 6. train_elements.tsv.gz [7 MB]
-7. test_elements.tsv []
-8. whitelist.bed.gz []
+7. test_elements.bed12.gz [6 MB]
+8. callable.bed.gz [5 MB]: whitelisted genomic regions used in DriverPower; can be substituted with a chromosome length file (BED format) to use the entire genome.
 
 .. important:: You can run DriverPower for your own data by simply replacing
     **random_mutations.tsv** with your mutations.
@@ -67,6 +67,7 @@ Then we can install required packages and DriverPower:
 
 .. code-block:: bash
 
+    conda install pytables
     conda install -c conda-forge xgboost
     conda install -c bioconda pybedtools
     pip install driverpower
@@ -78,14 +79,17 @@ Then we can install required packages and DriverPower:
 The response (y; dependent variable) table records the observed number of mutations, number of mutated samples and the length per genomic element.
 This table is required for both ``model`` (training) and ``infer`` (test) sub-commands.
 
-You can make them easily using our helper script ``script/prepare.py``. Inputs will be mutations and elements:
+You can make them easily using our helper script ``prepare.py``. Inputs will be mutations and elements:
 
 .. code-block:: bash
 
+    # Get the helper
+    wget https://raw.githubusercontent.com/smshuai/DriverPower/master/script/prepare.py
     # Training responses
-    python script/prepare.py random_mutations.tsv train_elements.tsv whitelist.bed train_y.tsv
+    python ./prepare.py random_mutations.tsv.gz train_elements.tsv.gz callable.bed.gz train_y.tsv
     # Test responses
-    python script/prepare.py random_mutations.tsv test_elements.tsv whitelist.bed test_y.tsv
+    bedtools bed12tobed6 -i ./test_elements.bed12.gz  | cut -f1-4 > test_elements.tsv
+    python ./prepare.py random_mutations.tsv.gz test_elements.tsv callable.bed.gz test_y.tsv
 
 
 2: Build the background mutation rate model
@@ -99,48 +103,58 @@ Here we show how to build a GBM with our example data:
 
 .. code-block:: bash
 
+    mkdir output
     driverpower model \
-        --feature train_features.hdf5 \
+        --feature train_feature.hdf5 \
         --response train_y.tsv \
-        --method GBM
+        --method GBM \
+        --name tutorial \
+        --modelDir ./output
 
-Step 2: Build the background mutation rate model
-------------------------------------------------
+You should see the following log info (taking ~3 hours on our VM):
 
-See :ref:`the model sub-command <model>` for all parameters and notes. Example code snippets are as follows:
+.. code-block:: console
+
+    09/08/2018 20:42:37 | INFO: Welcome to DriverPower v1.0.1
+    09/08/2018 20:42:59 | INFO: Successfully load 1373 features for 867266 bins
+    09/08/2018 20:43:05 | INFO: Use 867266 bins in model training
+    09/08/2018 20:43:14 | INFO: Split data fold 1/3
+    09/08/2018 20:43:19 | INFO: Split data fold 2/3
+    09/08/2018 20:43:25 | INFO: Split data fold 3/3
+    09/08/2018 20:43:31 | INFO: Training GBM fold 1/3
+    [0]     eval-poisson-nloglik:114024
+    Will train until eval-poisson-nloglik hasn't improved in 5 rounds.
+    [100]   eval-poisson-nloglik:25279.4
+    .......omit many lines.............
+    Stopping. Best iteration:
+    [1128]  eval-poisson-nloglik:1.38992
+
+    09/08/2018 23:56:35 | INFO: Model metrics for training set: r2=0.63, Variance explained=0.63, Pearson'r=0.79
+    09/08/2018 23:56:42 | INFO: Job done!
+
+3: Infer driver candidates
+--------------------------
+DriverPower can be used to find driver candidates with or without
+functional information. This step will use the model file ``./output/tutorial.GBM.model.pkl``
+from last step.
+
+We first show how to call driver candidates **without** functional information,
+aka, burden-test only:
 
 .. code-block:: bash
-    :caption: *Train a generalized linear model with feature selection by randomized lasso*
-    :name: train-glm
 
-    $ driverpower model \
-        --feature PATH_TO_X \
-        --response PATH_TO_y \
-        --method GLM
-
-.. code-block:: bash
-    :caption: *Train a gradient boosting machine with default parameters*
-    :name: train-gbm
-
-    $ driverpower model \
-        --feature PATH_TO_X \
-        --response PATH_TO_y \
-        --method GBM
-
-
-
-
-Step 3: Call the driver candidates
-----------------------------------
-
-.. code-block:: bash
-    :caption: *Call driver candidates with CADD scores*
-
-    $ driverpower infer \
-        --feature PATH_TO_X \
-        --response PATH_TO_y \
-        --modelInfo PATH_TO_model_info \
-        --funcScore PATH_TO_func_score \
-        --funcScoreCut 'CADD:0.01' \
+    driverpower infer \
+        --feature test_feature.hdf5 \
+        --response test_y.tsv \
+        --model ./output/tutorial.GBM.model.pkl \
         --name 'DriverPower' \
         --outDir ./output/
+
+To use functional information, one or more types of functional measurements (e.g., CADD, EIGEN, LINSIGHT etc)
+need to be collected first. The CADD scores can be retrived via its
+`web interface <https://cadd.gs.washington.edu/score>`_ without downloading the large file for all possible SNVs (~80 G).
+After obtaining the per-mutation score, you can calculate the average score per element, which will be used by DriverPower.
+
+4: Misc.
+--------
+
