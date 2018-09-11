@@ -70,7 +70,7 @@ def get_args():
     par_bmr.add_argument('--name', dest='project_name', required=False, type=str,
                          help='Identifier for output files [optional]', default='DriverPower')
     par_bmr.add_argument('--modelDir', dest='out_dir', type=str,
-                         help='Directory of output model files [optional]', default='./output/')
+                         help='Directory of output model files [optional]', default='./')
     #
     # Inference
     #
@@ -106,7 +106,7 @@ def get_args():
     par_infer.add_argument('--name', dest='project_name', required=False, type=str,
                            help='Identifier for output files [optional]', default=None)
     par_infer.add_argument('--outDir', dest='out_dir', type=str,
-                           help='Directory of output files [optional]', default='./output/')
+                           help='Directory of output files [optional]', default='./')
     args = parser.parse_args()
     ###
     # Check and modify args
