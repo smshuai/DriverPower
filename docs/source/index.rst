@@ -7,7 +7,6 @@ DriverPower: a tool for computational cancer driver discovery
 
     tutorial
     install
-    quick_start
     command_line
     data_format
 

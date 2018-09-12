@@ -165,7 +165,7 @@ Here we show how to score 1,000 mutations and calculate per-element score:
     # We omit INDELs here; but CADD can score INDELs in VCF format
     zcat ./random_mutations.tsv.gz | \
     awk 'BEGIN{OFS="\t"} $4 != "-" && $5 != "-" {print $1,$3,".",$4,$5}' | \
-    head -100000 | gzip > random_mutations.1K.vcf.gz
+    head -1000 | gzip > random_mutations.1K.vcf.gz
     # Upload formatted variants (random_mutations.1K.vcf.gz) to CADD's web interface
     # and download the result file (something like GRCh37-v1.4_f8600bd0c0aa23d4f6abc99eb8201222.tsv.gz).
     #####
