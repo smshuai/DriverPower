@@ -147,14 +147,50 @@ aka, burden-test only:
         --feature test_feature.hdf5 \
         --response test_y.tsv \
         --model ./output/tutorial.GBM.model.pkl \
-        --name 'DriverPower' \
+        --name 'DriverPower_burden' \
         --outDir ./output/
 
 To use functional information, one or more types of functional measurements (e.g., CADD, EIGEN, LINSIGHT etc)
-need to be collected first. The CADD scores can be retrived via its
-`web interface <https://cadd.gs.washington.edu/score>`_ without downloading the large file for all possible SNVs (~80 G).
+need to be collected first. The CADD scores can be retrieved via its
+`web interface <https://cadd.gs.washington.edu/score>`_ (up tp 100K variants each time) without downloading the
+large file for all possible SNVs (~80 G). If you have more than 100K variants, you can either split your file and run
+the web app multiple times, or download the large file and try ``tabix``.
+Other scores can be obtained using a similar method after download.
 After obtaining the per-mutation score, you can calculate the average score per element, which will be used by DriverPower.
+
+Here we show how to score 1,000 mutations and calculate per-element score:
+
+.. code-block:: bash
+
+    # We omit INDELs here; but CADD can score INDELs in VCF format
+    zcat ./random_mutations.tsv.gz | \
+    awk 'BEGIN{OFS="\t"} $4 != "-" && $5 != "-" {print $1,$3,".",$4,$5}' | \
+    head -100000 | gzip > random_mutations.1K.vcf.gz
+    # Upload formatted variants (random_mutations.1K.vcf.gz) to CADD's web interface
+    # and download the result file (something like GRCh37-v1.4_f8600bd0c0aa23d4f6abc99eb8201222.tsv.gz).
+    #####
+    # Intersect the score file (we use the PHRED score) with test elements
+    zcat ./GRCh37-v1.4_f8600bd0c0aa23d4f6abc99eb8201222.tsv.gz | \
+    tail -n +3 | awk 'BEGIN {OFS="\t"} {print "chr"$1, $2-1, $2, $6}' | \
+    bedtools intersect -a ./test_elements.tsv -b stdin -wa -wb > CADD_ele.tsv
+    # The 4th column is the element ID and the 8th column is the CADD PHRED score
+    printf "binID\tCADD\n" > CADD_per_ele_score.tsv
+    bedtools groupby -i ./CADD_ele.tsv -g 4 -c 8 -o mean  >> CADD_per_ele_score.tsv
+
+We can now supply the per-element score file to DriverPower and call driver candidates:
+
+.. code-block:: bash
+
+    driverpower infer \
+        --feature test_feature.hdf5 \
+        --response test_y.tsv \
+        --model ./output/tutorial.GBM.model.pkl \
+        --name 'DriverPower_burden_function' \
+        --outDir ./output/ \
+        --funcScore CADD_per_ele_score.tsv \
+        --funcScoreCut "CADD:0.01"
 
 4: Misc.
 --------
 
+TODO

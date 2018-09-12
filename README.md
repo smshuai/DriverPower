@@ -1,7 +1,7 @@
 # <img align="left" width="172" height="127" src="https://raw.githubusercontent.com/smshuai/DriverPower/v1.0/docs/source/pics/logo.png">
 ***A tool for computational cancer driver discovery***
 
-![Github version](https://img.shields.io/badge/version-1.0.1-yellow.svg)
+![Github version](https://img.shields.io/badge/version-1.0.2-yellow.svg)
 [![GitHub license](https://img.shields.io/badge/license-AGPL-blue.svg)](./LICENSE)
 [![PyPI version](https://badge.fury.io/py/DriverPower.svg)](https://badge.fury.io/py/DriverPower)
 [![Documentation Status](https://readthedocs.org/projects/driverpower/badge/?version=latest)](http://driverpower.readthedocs.io/en/latest/?badge=latest)
