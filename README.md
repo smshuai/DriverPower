@@ -14,7 +14,7 @@ DriverPower is a tool used to discover potential coding and non-coding cancer dr
 
 ## How to use DriverPower
 If you only have somatic mutations (in hg19) at hand and
-would like to find drivers in well-annotated regions. Please use our [example data](https://figshare.com/projects/DriverPower_Dataset/36065)
+would like to find drivers in well-annotated regions, please use our [example data](https://figshare.com/projects/DriverPower_Dataset/36065)
 and follow the [tutorial](https://driverpower.readthedocs.org/en/latest/tutorial.html).
 
 ## Citation
@@ -31,7 +31,7 @@ Please cite the PCAWG driver paper as well when you use our example data in your
 DriverPower is distributed under the terms of the [GNU General Public License 3.0](https://www.gnu.org/licenses/gpl-3.0.txt).
 
 ## Change log
-- 2018/09/12: Release version 1.0.2, which has minor modification.
+- 2018/09/12: Release version 1.0.2, which has some minor modifications.
 - 2017/11/22: Release version 1.0.1, which has bugs fixes and improved performance.
 - 2017/08/03: Release version 1.0.0, which is used in our manuscript.
 - 2017/03/02: Release version 0.4.0, which is used in the PCAWG driver analysis.
