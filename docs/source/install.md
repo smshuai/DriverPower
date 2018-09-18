@@ -11,16 +11,10 @@ by simply typing the following command in your terminal:
 $ pip install driverpower
 ```
 
-```eval_rst
-.. important:: DriverPower requires `XGBoost <https://github.com/dmlc/xgboost>`_ for building gradient boosting machines. ``pip`` may not install XGBoost correctly especially for OS X owing to C++ compiler issue. See `XGBoost installation guides <https://pypi.python.org/pypi/xgboost/>`_ for more information.
-```
-
-
 ## Install from source
 You can also download the [latest source](https://github.com/smshuai/DriverPower/releases/latest/) from GitHub to install.
-For example, to install version 1.0.0:
+For example, to install version 1.0.x (change x to the right version number):
 ```console
-$ tar -xzf DriverPower-1.0.0.tar.gz
-$ cd DriverPower-1.0.0/ && pip install .
+$ tar -xzf DriverPower-1.0.x.tar.gz
+$ cd DriverPower-1.0.x/ && pip install .
 ```
-See the importance note above if you have issue with the XGBoost installation.
