@@ -33,7 +33,7 @@ Our example data are hosted on `figshare
 8. callable.bed.gz [5 MB]: whitelisted genomic regions used in DriverPower; can be substituted with a chromosome length file (BED format) to use the entire genome.
 
 .. important:: You can run DriverPower for your own data by simply replacing
-    **random_mutations.tsv** with your mutations.
+    **random_mutations.tsv.gz** with your mutations.
 
 The training features has been divided into three parts,
 so you will need to merge them:
@@ -58,10 +58,16 @@ To install Python3 using Anaconda3 if you don't already have:
     # You may need sudo to run this
     ./Anaconda3-5.2.0-Linux-x86_64.sh
     . .bashrc
-    # [Optional] Create a new environment for DriverPower
-    conda create --name driverpower
-    # [Optional] Activate the environment
-    source activate driverpower
+
+
+It's always better to create a new conda environment, so that all your existing packages won't get messed up:
+
+.. code-block:: bash
+
+   # [Optional] Create a new environment for DriverPower
+   conda create --name driverpower
+   # [Optional] Activate the environment
+   source activate driverpower
 
 Then we can install required packages and DriverPower:
 
@@ -92,7 +98,7 @@ You can make them easily using our helper script ``prepare.py``. Inputs will be 
     python ./prepare.py random_mutations.tsv.gz test_elements.tsv callable.bed.gz test_y.tsv
 
 
-2: Build the background mutation rate model
+3: Build the background mutation rate model
 -------------------------------------------
 The background mutation rate (BMR) model is used to estimate the expected number of somatic mutations for each genomic element,
 given its features. DriverPower sub-command ``model`` is used to train BMR models. To build the BMR model, training features
@@ -132,7 +138,7 @@ You should see the following log info (taking ~3 hours on our VM):
     09/08/2018 23:56:35 | INFO: Model metrics for training set: r2=0.63, Variance explained=0.63, Pearson'r=0.79
     09/08/2018 23:56:42 | INFO: Job done!
 
-3: Infer driver candidates
+4: Infer driver candidates
 --------------------------
 DriverPower can be used to find driver candidates with or without
 functional information. This step will use the model file ``./output/tutorial.GBM.model.pkl``
@@ -190,7 +196,7 @@ We can now supply the per-element score file to DriverPower and call driver cand
         --funcScore CADD_per_ele_score.tsv \
         --funcScoreCut "CADD:0.01"
 
-4: Misc.
+5: Misc.
 --------
 
 TODO
