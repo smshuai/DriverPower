@@ -21,7 +21,7 @@ and follow the [tutorial](https://driverpower.readthedocs.org/en/latest/tutorial
 Please cite our paper when you use DriverPower in your study:
 
 - Shuai, S., Gallinger, S., Stein, L. D., PCAWG Drivers and Functional Interpretation Group & ICGC/TCGA Pan-Cancer Analysis of Whole Genomes Net. **DriverPower: Combined burden and functional impact tests for cancer driver discovery**. bioRxiv 215244 (2017).
-[doi:10.1101/215244](https://doi.org/10.1101/215244])
+[doi:10.1101/215244](https://doi.org/10.1101/215244)
 
 Please cite the PCAWG driver paper as well when you use our example data in your study:
 
