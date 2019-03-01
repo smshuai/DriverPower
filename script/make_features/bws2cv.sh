@@ -17,7 +17,7 @@ then
 fi
 
 # generate random tmp dir
-tmp_dir=$bw_dir/tmp.`cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32`
+tmp_dir=./tmp.`cat /dev/urandom | tr -cd 'a-f0-9' | head -c 32`
 if [[ ! -d $tmp_dir ]]
 then
     # dir not exist
@@ -33,7 +33,7 @@ a=($(wc -l $bed))
 nrow=${a[0]}
 
 # iterate through bigwigs
-ls $bw_dir/*.bigwig $bw_dir/*.bigWig | xargs -n 1 -P $nproc onebw.sh $bed $tmp_dir
+ls $bw_dir/*.bigwig $bw_dir/*.bigWig | xargs -n 1 -P $nproc onebw.sh $bed $tmp_dir $nrow
 
 echo "binID" > $tmp_dir/binID
 cut -f4 $bed | sort -k1,1 >> $tmp_dir/binID

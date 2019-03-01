@@ -24,7 +24,7 @@ generate_nuc_covar.py ./tmp/example.cg ./output/example_nuc_features.tsv
 ## STEP 3: make bigwig features
 # INPUT: ./database/bw/ ./example_element.bed12
 # OUPUT: ./example_bw_features.tsv
-bws2cv.sh ./bw/ ./example_element.bed12 ./output/example_bw_features.tsv
+bws2cv.sh ./feature_database/bw/ ./example_element.bed12 ./output/example_bw_features.tsv 16
 
 ## STEP 4: make bed-like features
 # INPUT: ./database/bed/ ./example_element.bed6

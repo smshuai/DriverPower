@@ -2,7 +2,8 @@
 
 bed=$1
 tmp_dir=$2
-bw=$3
+nrow=$3  # nrow in bed
+bw=$4
 
 if [[ -f $bw ]]
 then
