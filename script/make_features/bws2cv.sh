@@ -35,6 +35,9 @@ nrow=${a[0]}
 # iterate through bigwigs
 ls $bw_dir/*.bigwig $bw_dir/*.bigWig | xargs -n 1 -P $nproc onebw.sh $bed $tmp_dir $nrow
 
+# Increase maximum number of open file descriptors
+ulimit -Sn 5000
+ulimit -Hn 5000
 echo "binID" > $tmp_dir/binID
 cut -f4 $bed | sort -k1,1 >> $tmp_dir/binID
 paste $tmp_dir/binID $tmp_dir/*.tab > $out_path
