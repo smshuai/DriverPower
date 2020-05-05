@@ -53,10 +53,10 @@ To install Python3 using Anaconda3 if you don't already have:
 
 .. code-block:: bash
 
-    # This is the most recent version as of 2018-09-07
-    wget https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh
+    # Find the current version from Anaconda (https://repo.anaconda.com/archive/)
+    wget https://repo.anaconda.com/archive/Anaconda3-[version]-Linux-x86_64.sh
     # You may need sudo to run this
-    ./Anaconda3-5.2.0-Linux-x86_64.sh
+    ./Anaconda3-[version]-Linux-x86_64.sh
     . .bashrc
 
 
@@ -67,16 +67,19 @@ It's always better to create a new conda environment, so that all your existing 
    # [Optional] Create a new environment for DriverPower
    conda create --name driverpower
    # [Optional] Activate the environment
-   source activate driverpower
+   conda activate driverpower
 
 Then we can install required packages and DriverPower:
 
 .. code-block:: bash
 
-    conda install pytables
-    conda install -c conda-forge xgboost
-    conda install -c bioconda pybedtools
-    pip install driverpower
+    # Setup Bioconda Channels if not set before
+    # https://bioconda.github.io/user/install.html#set-up-channels
+    conda config --add channels defaults
+    conda config --add channels bioconda
+    conda config --add channels conda-forge
+    # Install DriverPower
+    conda install -c smshuai driverpower
 
 
 2: Make response tables

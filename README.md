@@ -3,8 +3,10 @@
 
 ![Github version](https://img.shields.io/badge/version-1.0.2-yellow.svg)
 [![GitHub license](https://img.shields.io/badge/license-AGPL-blue.svg)](./LICENSE)
-[![PyPI version](https://badge.fury.io/py/DriverPower.svg)](https://badge.fury.io/py/DriverPower)
-[![Documentation Status](https://readthedocs.org/projects/driverpower/badge/?version=latest)](http://driverpower.readthedocs.io/en/latest/?badge=latest)
+![Platform](https://anaconda.org/smshuai/driverpower/badges/platforms.svg)
+![conda](https://anaconda.org/smshuai/driverpower/badges/installer/conda.svg
+)
+![Documentation Status](https://readthedocs.org/projects/driverpower/badge/?version=latest)
 
 [Installation](https://driverpower.readthedocs.org/en/latest/install.html) |
 [Tutorial](https://driverpower.readthedocs.org/en/latest/tutorial.html) |
