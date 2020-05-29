@@ -17,7 +17,7 @@ setup(
         'numpy >= 1.13.0',
         'scipy >= 0.18.1',
         'pandas >= 0.18.1',
-        'scikit-learn >= 0.18',
+        'scikit-learn == 0.19.2',
         'statsmodels >= 0.6.1',
         'xgboost >= 0.6a',
         'pybedtools >= 0.7.10',
