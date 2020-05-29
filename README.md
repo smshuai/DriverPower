@@ -22,12 +22,11 @@ and follow the [tutorial](https://driverpower.readthedocs.org/en/latest/tutorial
 ## Citation
 Please cite our paper when you use DriverPower in your study:
 
-- Shuai, S., Gallinger, S., Stein, L. D., PCAWG Drivers and Functional Interpretation Group & ICGC/TCGA Pan-Cancer Analysis of Whole Genomes Net. **DriverPower: Combined burden and functional impact tests for cancer driver discovery**. bioRxiv 215244 (2017).
-[doi:10.1101/215244](https://doi.org/10.1101/215244)
+- Shuai S, PCAWG Drivers and Functional Interpretation Working Group, Gallinger S, Stein L & PCAWG Consortium (2020) **Combined burden and functional impact tests for cancer driver discovery using DriverPower**. *Nat. Commun.* 11: 734–734 Available at: https://www.ncbi.nlm.nih.gov/pubmed/32024818
 
 Please cite the PCAWG driver paper as well when you use our example data in your study:
 
-- Rheinbay, E. et al. **Discovery and characterization of coding and non-coding driver mutations in more than 2,500 whole cancer genomes**. bioRxiv 237313 (2017). [doi:10.1101/237313](https://doi.org/10.1101/237313)
+- Rheinbay E, Nielsen MM, Abascal F, Wala JA, Shapira O, Tiao G, Hornshøj H, Hess JM, Juul RI, Lin Z, Feuerbach L, Sabarinathan R, Madsen T, Kim J, Mularoni L, Shuai S, Lanzós A, Herrmann C, Maruvka YE, Shen C, et al (2020) **Analyses of non-coding somatic drivers in 2,658 cancer whole genomes**. *Nature* 578: 102–111 Available at: https://www.ncbi.nlm.nih.gov/pubmed/32025015
 
 ## License
 DriverPower is distributed under the terms of the [GNU General Public License 3.0](https://www.gnu.org/licenses/gpl-3.0.txt).
