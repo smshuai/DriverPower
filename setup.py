@@ -21,7 +21,7 @@ setup(
         'statsmodels >= 0.6.1',
         'xgboost >= 0.6a',
         'pybedtools >= 0.7.10',
-        'pytables >= 3.4.4',
+        'tables >= 3.4.4',
     ],
     entry_points = {
         'console_scripts': [
