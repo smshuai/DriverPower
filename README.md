@@ -4,8 +4,7 @@
 ![Github version](https://img.shields.io/badge/version-1.0.2-yellow.svg)
 [![GitHub license](https://img.shields.io/badge/license-AGPL-blue.svg)](./LICENSE)
 ![Platform](https://anaconda.org/smshuai/driverpower/badges/platforms.svg)
-![conda](https://anaconda.org/smshuai/driverpower/badges/installer/conda.svg
-)
+![conda](https://anaconda.org/smshuai/driverpower/badges/version.svg)
 ![Documentation Status](https://readthedocs.org/projects/driverpower/badge/?version=latest)
 
 [Installation](https://driverpower.readthedocs.org/en/latest/install.html) |
